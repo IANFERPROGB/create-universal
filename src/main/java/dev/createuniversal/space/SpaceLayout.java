@@ -12,7 +12,7 @@ public final class SpaceLayout {
     /** Capa de atmósfera alrededor de la esfera: al tocarla empieza la reentrada. */
     public static final double EARTH_ATMOSPHERE = 40.0;
     /** Altura sobre la superficie a la que apareces al salir (órbita baja). */
-    public static final double ARRIVAL_ALTITUDE = 60.0;
+    public static final double ARRIVAL_ALTITUDE = 150.0;
     /** Centro de la Tierra. Va bajo el suelo de la dimensión para que la órbita baja quede dentro de la altura construible. */
     public static final Vec3 EARTH_CENTER = new Vec3(100_000.0, -400.0, 0.0);
 

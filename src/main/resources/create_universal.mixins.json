@@ -3,7 +3,7 @@
   "minVersion": "0.8",
   "package": "dev.createuniversal.mixin",
   "compatibilityLevel": "JAVA_21",
-  "mixins": [],
+  "mixins": ["SubLevelPhysicsSystemMixin"],
   "client": [],
   "injectors": { "defaultRequire": 1 }
 }
