@@ -79,6 +79,12 @@ public final class ShipAnchor {
         }
         registered = true;
         SableEventPlatform.INSTANCE.onPhysicsTick(ShipAnchor::prePhysicsTick);
+        SableEventPlatform.INSTANCE.onPhysicsTick(SpaceGravityCompensation::prePhysicsTick);
+    }
+
+    /** ¿Está la nave congelada en la espera de llegada? */
+    public static boolean isHeld(ServerSubLevel ship) {
+        return HOLDS.containsKey(ship.getUniqueId());
     }
 
     /** Congela la nave recién llegada. */
