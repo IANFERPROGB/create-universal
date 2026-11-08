@@ -1,68 +1,197 @@
 package dev.createuniversal.space;
 
 import dev.createuniversal.CreateUniversal;
+import dev.ryanhcode.sable.api.physics.handle.RigidBodyHandle;
 import dev.ryanhcode.sable.api.sublevel.ServerSubLevelContainer;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
+import dev.ryanhcode.sable.platform.SableEventPlatform;
+import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
+import dev.ryanhcode.sable.sublevel.system.SubLevelPhysicsSystem;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Quaterniond;
+import org.joml.Vector3d;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
- * Ancla a la nave, durante un momento después del cambio de dimensión, a los jugadores que viajan de pie.
- * Al llegar, la nave ya va a toda velocidad y el cliente todavía no la tiene cargada: sin ancla el jugador la atraviesa y
- * se queda atrás. Mientras dura el ancla, cada tick se coloca al jugador en su mismo punto de la nave, como si fuera un
- * bloque más; al soltarlo se le da la velocidad de la nave para que sigan juntos.
+ * Espera de llegada tras un cambio de dimensión (D10).
+ *
+ * Problema: la nave llega a toda velocidad, a menudo acelerando por sus motores, y el cliente del jugador todavía no la
+ * tiene cargada. Quien viaja de pie la atraviesa o se queda atrás; en gravedad cero nada le aprieta contra el suelo para
+ * que Sable lo vuelva a "pegar" a la nave.
+ *
+ * Solución (lo que hace Cosmonautics, cuyas naves llegan paradas):
+ * <ol>
+ *   <li>La nave se congela en el punto de llegada: en cada paso de física se la recoloca y se le quita la velocidad.</li>
+ *   <li>Los jugadores que iban de pie quedan anclados en su mismo punto de la nave.</li>
+ *   <li>Se espera a que el cliente de cada jugador tenga la nave cargada (Sable lo indica en {@code getTrackingPlayers})
+ *       y un margen más. El tiempo se mide con reloj real: tras el traslado el servidor recupera ticks atrasados muy deprisa.</li>
+ *   <li>Al soltar, nave y jugadores recuperan a la vez la velocidad que llevaba la nave.</li>
+ * </ol>
  */
 public final class ShipAnchor {
-    /** 1,5 segundos. */
-    public static final int ANCHOR_TICKS = 30;
+    /** Margen tras ver la nave cargada en todos los clientes. */
+    private static final long SETTLE_MS = 750;
+    /** Mínimo congelado, aunque los clientes ya la tengan. */
+    private static final long MIN_HOLD_MS = 1000;
+    /** Máximo congelado pase lo que pase. */
+    private static final long MAX_HOLD_MS = 5000;
 
-    private record Anchored(UUID player, UUID ship, ServerLevel level, Vec3 plotPos, int ticksLeft, Vec3 lastWorldPos) {}
+    private static final class Hold {
+        final UUID ship;
+        final ServerLevel level;
+        final Vector3d position;
+        final Quaterniond orientation;
+        final Vector3d linearVelocity;
+        final Vector3d angularVelocity;
+        final Map<UUID, Vec3> standing = new HashMap<>();
+        final List<UUID> passengers = new ArrayList<>();
+        final long startMs = System.currentTimeMillis();
+        long allTrackingSinceMs = -1;
 
-    private static final List<Anchored> ANCHORED = new ArrayList<>();
+        Hold(ServerSubLevel ship, ServerLevel level, Vector3d linear, Vector3d angular) {
+            this.ship = ship.getUniqueId();
+            this.level = level;
+            this.position = new Vector3d(ship.logicalPose().position());
+            this.orientation = new Quaterniond(ship.logicalPose().orientation());
+            this.linearVelocity = new Vector3d(linear);
+            this.angularVelocity = new Vector3d(angular);
+        }
+    }
+
+    private static final Map<UUID, Hold> HOLDS = new HashMap<>();
+    private static boolean registered;
 
     private ShipAnchor() {}
 
-    /** @param plotPos posición del jugador en coordenadas del plot de la nave (ya desplazada si la nave cambió de plot) */
-    public static void anchor(ServerPlayer player, SubLevel ship, ServerLevel level, Vec3 plotPos) {
-        ANCHORED.removeIf(a -> a.player().equals(player.getUUID()));
-        ANCHORED.add(new Anchored(player.getUUID(), ship.getUniqueId(), level, plotPos, ANCHOR_TICKS,
-                ship.logicalPose().transformPosition(plotPos)));
-    }
-
-    public static void tick() {
-        if (ANCHORED.isEmpty()) {
+    /** Se llama una vez al arrancar el mod: engancha el congelado al paso de física de Sable. */
+    public static void register() {
+        if (registered) {
             return;
         }
-        List<Anchored> next = new ArrayList<>();
-        for (Anchored a : ANCHORED) {
-            ServerSubLevelContainer container = SubLevelContainer.getContainer(a.level());
-            SubLevel ship = container != null ? container.getSubLevel(a.ship()) : null;
-            if (!(a.level().getPlayerByUUID(a.player()) instanceof ServerPlayer player) || ship == null || ship.isRemoved()
-                    || player.level() != a.level()) {
+        registered = true;
+        SableEventPlatform.INSTANCE.onPhysicsTick(ShipAnchor::prePhysicsTick);
+    }
+
+    /** Congela la nave recién llegada. */
+    public static void holdShip(ServerSubLevel ship, ServerLevel level, Vector3d linearVelocity, Vector3d angularVelocity) {
+        HOLDS.put(ship.getUniqueId(), new Hold(ship, level, linearVelocity, angularVelocity));
+    }
+
+    /** Ancla a un jugador de pie en su punto de la nave (coordenadas del plot) mientras la nave esté congelada. */
+    public static void anchorStanding(ServerPlayer player, ServerSubLevel ship, Vec3 plotPos) {
+        Hold hold = HOLDS.get(ship.getUniqueId());
+        if (hold != null) {
+            hold.standing.put(player.getUUID(), plotPos);
+        }
+    }
+
+    /** Registra a un jugador sentado: también hay que esperar a que su cliente tenga la nave. */
+    public static void addPassenger(ServerPlayer player, ServerSubLevel ship) {
+        Hold hold = HOLDS.get(ship.getUniqueId());
+        if (hold != null) {
+            hold.passengers.add(player.getUUID());
+        }
+    }
+
+    private static void prePhysicsTick(SubLevelPhysicsSystem system, double timeStep) {
+        if (HOLDS.isEmpty()) {
+            return;
+        }
+        ServerSubLevelContainer container = SubLevelContainer.getContainer(system.getLevel());
+        if (container == null) {
+            return;
+        }
+        for (Hold hold : HOLDS.values()) {
+            if (hold.level != system.getLevel()) {
                 continue;
             }
-            Vec3 pos = ship.logicalPose().transformPosition(a.plotPos());
-            Vec3 velocity = pos.subtract(a.lastWorldPos());
-            player.connection.teleport(pos.x, pos.y, pos.z, player.getYRot(), player.getXRot());
-            player.setDeltaMovement(velocity);
-            player.resetFallDistance();
-            if (a.ticksLeft() > 1) {
-                next.add(new Anchored(a.player(), a.ship(), a.level(), a.plotPos(), a.ticksLeft() - 1, pos));
-            } else {
-                // Soltar con la velocidad de la nave para seguir juntos.
-                player.connection.send(new ClientboundSetEntityMotionPacket(player));
-                CreateUniversal.LOGGER.info("{} se suelta del ancla de la nave {} con velocidad {} b/tick",
-                        player.getScoreboardName(), a.ship(), velocity);
+            SubLevel s = container.getSubLevel(hold.ship);
+            if (!(s instanceof ServerSubLevel ship) || ship.isRemoved()) {
+                continue;
+            }
+            RigidBodyHandle handle = system.getPhysicsHandle(ship);
+            if (handle == null || !handle.isValid()) {
+                continue;
+            }
+            handle.teleport(hold.position, hold.orientation);
+            Vector3d lin = handle.getLinearVelocity(new Vector3d()).negate();
+            Vector3d ang = handle.getAngularVelocity(new Vector3d()).negate();
+            handle.addLinearAndAngularVelocity(lin, ang);
+        }
+    }
+
+    /** Cada tick del servidor: mantiene anclados a los jugadores y suelta las naves cuando toca. */
+    public static void tick() {
+        if (HOLDS.isEmpty()) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        List<UUID> released = new ArrayList<>();
+        for (Hold hold : HOLDS.values()) {
+            ServerSubLevelContainer container = SubLevelContainer.getContainer(hold.level);
+            SubLevel s = container != null ? container.getSubLevel(hold.ship) : null;
+            if (!(s instanceof ServerSubLevel ship) || ship.isRemoved()) {
+                released.add(hold.ship);
+                continue;
+            }
+            for (Map.Entry<UUID, Vec3> e : hold.standing.entrySet()) {
+                if (hold.level.getPlayerByUUID(e.getKey()) instanceof ServerPlayer p && p.level() == hold.level) {
+                    Vec3 pos = ship.logicalPose().transformPosition(e.getValue());
+                    p.connection.teleport(pos.x, pos.y, pos.z, p.getYRot(), p.getXRot());
+                    p.setDeltaMovement(Vec3.ZERO);
+                    p.resetFallDistance();
+                }
+            }
+
+            boolean allTracking = true;
+            for (UUID player : allPlayers(hold)) {
+                if (!ship.getTrackingPlayers().contains(player)) {
+                    allTracking = false;
+                    break;
+                }
+            }
+            if (allTracking && hold.allTrackingSinceMs < 0) {
+                hold.allTrackingSinceMs = now;
+            }
+            long held = now - hold.startMs;
+            boolean ready = held >= MIN_HOLD_MS && hold.allTrackingSinceMs >= 0 && now - hold.allTrackingSinceMs >= SETTLE_MS;
+            if (ready || held >= MAX_HOLD_MS) {
+                release(hold, ship, container, held, ready);
+                released.add(hold.ship);
             }
         }
-        ANCHORED.clear();
-        ANCHORED.addAll(next);
+        released.forEach(HOLDS::remove);
+    }
+
+    private static List<UUID> allPlayers(Hold hold) {
+        List<UUID> all = new ArrayList<>(hold.standing.keySet());
+        all.addAll(hold.passengers);
+        return all;
+    }
+
+    private static void release(Hold hold, ServerSubLevel ship, ServerSubLevelContainer container, long heldMs, boolean clientsReady) {
+        RigidBodyHandle handle = container.physicsSystem().getPhysicsHandle(ship);
+        if (handle != null && handle.isValid()) {
+            handle.addLinearAndAngularVelocity(hold.linearVelocity, hold.angularVelocity);
+        }
+        Vec3 tickVelocity = new Vec3(hold.linearVelocity.x, hold.linearVelocity.y, hold.linearVelocity.z).scale(1.0 / 20.0);
+        for (UUID id : hold.standing.keySet()) {
+            if (hold.level.getPlayerByUUID(id) instanceof ServerPlayer p && p.level() == hold.level) {
+                p.setDeltaMovement(tickVelocity);
+                p.connection.send(new ClientboundSetEntityMotionPacket(p));
+            }
+        }
+        CreateUniversal.LOGGER.info("Nave {} sale de la espera de llegada tras {} ms ({}), velocidad devuelta {} b/s, {} de pie, {} sentados",
+                hold.ship, heldMs, clientsReady ? "clientes listos" : "tiempo máximo", hold.linearVelocity,
+                hold.standing.size(), hold.passengers.size());
     }
 }

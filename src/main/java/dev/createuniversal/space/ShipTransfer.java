@@ -210,6 +210,11 @@ public final class ShipTransfer {
                 continue;
             }
             loaded.put(data.uuid(), ship);
+            // Congelar la nave hasta que los clientes la tengan cargada (ShipAnchor). Se le devolverá esta velocidad.
+            CompoundTag tag = data.fullTag();
+            Vector3d lin = tag.contains("linear_velocity") ? SableNBTUtils.readVector3d(tag.getCompound("linear_velocity")) : new Vector3d();
+            Vector3d ang = tag.contains("angular_velocity") ? SableNBTUtils.readVector3d(tag.getCompound("angular_velocity")) : new Vector3d();
+            ShipAnchor.holdShip(ship, target, lin, ang);
         }
 
         // 4. Volver a crear las entidades del plot (mismas coordenadas de plot) y las del mundo (con la pose nueva).
@@ -244,17 +249,20 @@ public final class ShipTransfer {
                 Vec3 pos = newShip != null && worldEntityPlotPos.containsKey(p)
                         ? newShip.logicalPose().transformPosition(shifted(worldEntityPlotPos.get(p), plotShift.get(oldShip.getUniqueId())))
                         : newRootPosition;
-                Vec3 tickVelocity = new Vec3(shipVelocity.x, shipVelocity.y, shipVelocity.z).scale(1.0 / 20.0);
-                p.changeDimension(new DimensionTransition(target, pos, tickVelocity, p.getYRot(), p.getXRot(), DimensionTransition.DO_NOTHING));
+                // Llega parado: la nave también está congelada y los dos recuperan la velocidad a la vez al soltarla.
+                p.changeDimension(new DimensionTransition(target, pos, Vec3.ZERO, p.getYRot(), p.getXRot(), DimensionTransition.DO_NOTHING));
                 UUID vehicleId = riding.get(p.getUUID());
                 if (vehicleId == null && newShip != null && worldEntityPlotPos.containsKey(p)) {
                     // De pie: anclado a la nave 1,5 s para no atravesarla mientras el cliente la carga.
-                    ShipAnchor.anchor(p, newShip, target, shifted(worldEntityPlotPos.get(p), plotShift.get(oldShip.getUniqueId())));
+                    ShipAnchor.anchorStanding(p, newShip, shifted(worldEntityPlotPos.get(p), plotShift.get(oldShip.getUniqueId())));
                 }
                 if (vehicleId != null) {
                     // Se sienta en el mismo tick: el asiento de Create se borra solo si en su primer tick no tiene pasajero.
                     Entity vehicle = recreated.get(vehicleId);
                     boolean seated = vehicle != null && p.startRiding(vehicle, true);
+                    if (newShip != null) {
+                        ShipAnchor.addPassenger(p, newShip);
+                    }
                     CreateUniversal.LOGGER.info("{} vuelve a su asiento {}: {}", p.getScoreboardName(), vehicleId,
                             seated ? "sí" : (vehicle == null ? "no (el asiento no se ha recreado)" : "no (startRiding rechazado)"));
                     if (!seated) {

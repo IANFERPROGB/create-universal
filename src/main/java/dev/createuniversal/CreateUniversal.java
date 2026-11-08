@@ -18,6 +18,7 @@ public final class CreateUniversal {
     public CreateUniversal(IEventBus modBus, ModContainer container) {
         container.registerConfig(ModConfig.Type.COMMON, CUConfig.SPEC);
         NeoForge.EVENT_BUS.register(SpaceTransitions.class);
+        dev.createuniversal.space.ShipAnchor.register();
         LOGGER.info("Create Universal cargando");
     }
 
