@@ -71,6 +71,7 @@ public final class SpaceTransitions {
         }
         ShipTransfer.tickRemounts();
         ShipTracker.tick();
+        ShipAnchor.tick();
     }
 
     /** Un fallo al mover una nave se registra en el log, pero nunca debe cerrar el servidor. */

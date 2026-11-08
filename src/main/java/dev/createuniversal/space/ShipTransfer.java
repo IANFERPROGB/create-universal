@@ -247,6 +247,10 @@ public final class ShipTransfer {
                 Vec3 tickVelocity = new Vec3(shipVelocity.x, shipVelocity.y, shipVelocity.z).scale(1.0 / 20.0);
                 p.changeDimension(new DimensionTransition(target, pos, tickVelocity, p.getYRot(), p.getXRot(), DimensionTransition.DO_NOTHING));
                 UUID vehicleId = riding.get(p.getUUID());
+                if (vehicleId == null && newShip != null && worldEntityPlotPos.containsKey(p)) {
+                    // De pie: anclado a la nave 1,5 s para no atravesarla mientras el cliente la carga.
+                    ShipAnchor.anchor(p, newShip, target, shifted(worldEntityPlotPos.get(p), plotShift.get(oldShip.getUniqueId())));
+                }
                 if (vehicleId != null) {
                     // Se sienta en el mismo tick: el asiento de Create se borra solo si en su primer tick no tiene pasajero.
                     Entity vehicle = recreated.get(vehicleId);
