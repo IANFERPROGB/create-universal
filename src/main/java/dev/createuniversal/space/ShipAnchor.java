@@ -43,7 +43,7 @@ public final class ShipAnchor {
     /** Mínimo congelado, aunque los clientes ya la tengan. */
     private static final long MIN_HOLD_MS = 1000;
     /** Máximo congelado pase lo que pase. */
-    private static final long MAX_HOLD_MS = 5000;
+    private static final long MAX_HOLD_MS = 15000;
 
     private static final class Hold {
         final UUID ship;
