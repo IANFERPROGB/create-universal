@@ -53,6 +53,8 @@ public final class PlanetRenderer {
     private static final double DOT_PIXELS = 1.2;
     private static final double DETAIL_PIXELS = 50.0;
     private static final double DOT_SIZE_PIXELS = 2.5;
+    /** Los astros más pequeños que esto en pantalla llevan un halo de luz. */
+    private static final double HALO_MAX_PIXELS = 40.0;
 
     static final int MODE_SURFACE = 0;
     static final int MODE_CLOUDS = 1;
@@ -179,6 +181,9 @@ public final class PlanetRenderer {
         for (Item it : items) {
             if (it.pixels() >= DOT_PIXELS) {
                 drawBody(it, view, projection, sunPos, time, seconds);
+                if (it.pixels() < HALO_MAX_PIXELS && !it.body().isSun()) {
+                    drawHalo(it, view, projection, sunPos, cam, tanHalfFov, halfHeight);
+                }
             }
         }
 
@@ -351,12 +356,46 @@ public final class PlanetRenderer {
         draw(quad, model(view, center, facingCamera(center), half), projection);
     }
 
+    /**
+     * Halo de los astros pequeños y brillantes. La Luna real mide medio grado, como aquí (unos 7 píxeles), pero brilla
+     * tanto más que las estrellas que el ojo la ve al instante; una pantalla no tiene ese brillo, así que se imita como lo
+     * hace una cámara: un resplandor alrededor que se apaga cuando el astro ya se ve grande.
+     */
+    private static void drawHalo(Item it, Matrix4f view, Matrix4f projection, Vec3 sunPos, Vec3 cam, double tanHalfFov,
+                                 double halfHeight) {
+        Vec3 toSun = sunPos.subtract(it.pos()).normalize();
+        Vec3 toCam = cam.subtract(it.pos()).normalize();
+        double lit = (1.0 + toSun.dot(toCam)) * 0.5;
+        double fade = 1.0 - smooth(6.0, HALO_MAX_PIXELS, it.pixels());
+        float strength = (float) (1.1 * Math.pow(lit, 0.6) * fade);
+        if (strength < 0.01F) {
+            return;
+        }
+        double haloPixels = Math.max(18.0, it.pixels() * 6.0);
+        double half = SKY_DISTANCE * tanHalfFov * haloPixels / halfHeight;
+        float[] c = dotColor(it.body());
+        float grey = (c[0] + c[1] + c[2]) / 3.0F;
+        Vector3f center = vec(it.rel().scale(SKY_DISTANCE / it.dist()));
+        additive();
+        RenderSystem.disableCull();
+        // Color del astro aclarado: el halo de algo muy brillante tira a blanco.
+        shader.safeGetUniform("Tint").set((c[0] + grey) * 0.5F, (c[1] + grey) * 0.5F, (c[2] + grey) * 0.5F, strength);
+        set(MODE_DOT, 0, 0, 0, new Vector3f(0, 1, 0), new Vector3f(0, 0, 1));
+        draw(quad, model(view, center, facingCamera(center), (float) half), projection);
+        shader.safeGetUniform("Tint").set(1.0F, 1.0F, 1.0F, 1.0F);
+    }
+
+    private static double smooth(double e0, double e1, double x) {
+        double t = Math.max(0.0, Math.min(1.0, (x - e0) / (e1 - e0)));
+        return t * t * (3.0 - 2.0 * t);
+    }
+
     private static void drawDot(Item it, Matrix4f view, Matrix4f projection, Vec3 sunPos, Vec3 cam, double half) {
         double brightness = it.pixels() / DOT_PIXELS;
         Vec3 toSun = sunPos.subtract(it.pos()).normalize();
         Vec3 toCam = cam.subtract(it.pos()).normalize();
         double phase = 0.25 + 0.75 * (1.0 + toSun.dot(toCam)) * 0.5;
-        float b = (float) Math.min(1.0, brightness * phase * 1.6);
+        float b = (float) Math.min(1.0, Math.sqrt(brightness) * phase * 1.6);
         if (b < 0.03F) {
             return;
         }
