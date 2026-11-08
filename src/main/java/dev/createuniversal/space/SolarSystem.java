@@ -18,7 +18,8 @@ import java.util.Map;
  *       los planetas. Año terrestre = 100 días MC; el resto de periodos en proporción real (Kepler).</li>
  *   <li>Las lunas de los gigantes están más cerca de su planeta que en la realidad para que quepan entre órbitas: misma
  *       ordenación y proporciones aproximadas, periodos reales × 0,274 (como la Luna: 27,3 días → 7,48 días MC).</li>
- *   <li>Plano de las órbitas: horizontal, a la altura {@link #ECLIPTIC_Y}.</li>
+ *   <li>Plano de las órbitas: horizontal, a la altura {@link #ECLIPTIC_Y}. +Y es el norte de la eclíptica y +X el punto
+ *       vernal, así las estrellas del catálogo de la NASA quedan donde están de verdad.</li>
  * </ul>
  * Todo es determinista y se calcula igual en servidor y cliente a partir del tiempo, sin sincronizar nada.
  */
@@ -118,8 +119,9 @@ public final class SolarSystem {
         }
         Vec3 parent = position(BY_ID.get(body.parent()), time);
         double angle = body.phase() + Math.PI * 2.0 * time / (body.periodDays() * TICKS_PER_DAY);
+        // Sentido antihorario visto desde arriba (+Y = norte de la eclíptica), como en el sistema solar real.
         double x = Math.cos(angle) * body.orbitRadius();
-        double z = Math.sin(angle) * body.orbitRadius();
+        double z = -Math.sin(angle) * body.orbitRadius();
         double tilt = Math.toRadians(body.orbitTiltDeg());
         double y = -z * Math.sin(tilt);
         z = z * Math.cos(tilt);

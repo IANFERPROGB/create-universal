@@ -5,6 +5,7 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexFormat;
@@ -36,47 +37,75 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Dibuja el Sol, los planetas y sus lunas en el cielo del espacio (alpha.4), con los mapas de la NASA.
+ * Dibuja el Sol, los planetas y sus lunas con los mapas de la NASA.
  *
  * <p>Cada astro se dibuja "proyectado": la esfera se encoge hacia la cámara hasta quedar a {@link #SKY_DISTANCE} bloques,
  * con el mismo tamaño aparente que tendría de verdad. Así nunca la corta la distancia de renderizado y no hay problemas de
  * precisión a un millón de bloques. Se pintan del más lejano al más cercano.</p>
  *
- * <p>Para que vaya fluido: una sola esfera en la tarjeta gráfica (dos resoluciones) que se reutiliza para todo, un solo
- * shader, mipmaps en las texturas y los astros que ocupan menos de un píxel se dibujan como un punto de luz.</p>
+ * <p>Por astro: superficie (relieve, mar con reflejos, luces de ciudades, sombras de nubes y de anillos, eclipses), capa de
+ * nubes que cambia con el tiempo, atmósfera con dispersión de la luz calculada por píxel (Rayleigh y Mie, como la real:
+ * borde azul, atardeceres rojos, auroras), anillos y, si está lejos, un punto de luz. Rendimiento: una malla de esfera en
+ * la tarjeta gráfica que sirve para todo, un shader, texturas con mipmaps y carga única.</p>
  */
 public final class PlanetRenderer {
-    private static final float SKY_DISTANCE = 30.0F;
-    /** Por debajo de este radio en píxeles el astro es un punto de luz. */
+    static final float SKY_DISTANCE = 30.0F;
     private static final double DOT_PIXELS = 1.2;
-    /** Radio en píxeles a partir del que se usa la esfera detallada. */
-    private static final double DETAIL_PIXELS = 60.0;
-    /** Tamaño del punto de luz, en píxeles. */
+    private static final double DETAIL_PIXELS = 50.0;
     private static final double DOT_SIZE_PIXELS = 2.5;
 
-    private static final int MODE_SURFACE = 0;
-    private static final int MODE_CLOUDS = 1;
-    private static final int MODE_ATMOSPHERE = 2;
-    private static final int MODE_SUN = 3;
-    private static final int MODE_SUN_GLOW = 4;
-    private static final int MODE_RINGS = 5;
-    private static final int MODE_DOT = 6;
+    static final int MODE_SURFACE = 0;
+    static final int MODE_CLOUDS = 1;
+    static final int MODE_ATMOSPHERE = 2;
+    static final int MODE_SUN = 3;
+    static final int MODE_CORONA = 4;
+    static final int MODE_RINGS = 5;
+    static final int MODE_DOT = 6;
+    static final int MODE_BLACK = 7;
+    static final int MODE_MILKY_WAY = 8;
+    static final int MODE_FLARE = 9;
 
-    /** Cómo se ve cada astro: texturas, atmósfera (radio relativo, 0 = sin), brillo del agua y luz ambiente. */
-    private record Look(String surface, String night, String clouds, float atmoRadius, float specular, float ambient) {}
+    private static final int F_NIGHT = 1;
+    private static final int F_RING_SHADOW = 2;
+    private static final int F_CLOUDS = 4;
+    private static final int F_NORMAL = 8;
+    private static final int F_BUMP = 16;
+    private static final int F_BANDS = 32;
+    private static final int F_AURORA = 64;
+    private static final int F_RED_ECLIPSE = 128;
 
-    private static final Look AIRLESS = new Look(null, null, null, 0.0F, 0.0F, 0.008F);
+    /**
+     * Atmósfera, en radios del astro: Rayleigh RGB y su altura de escala, Mie y su altura, asimetría g, borde y exposición.
+     * Tierra: el espesor óptico real (azul 0,27 en el cénit), con la capa algo más gruesa para que se vea desde lejos.
+     */
+    private record Atmosphere(float rayleighR, float rayleighG, float rayleighB, float rayleighHeight,
+                              float mie, float mieHeight, float g, float top, float exposure) {}
+
+    private record Look(String surface, String night, String clouds, String normal, int flags, float ambient, float specular,
+                        Atmosphere atmosphere) {}
+
+    private static final Look AIRLESS = new Look(null, null, null, null, F_BUMP, 0.006F, 0.0F, null);
     private static final Map<String, Look> LOOKS = new HashMap<>();
 
     static {
-        LOOKS.put("earth", new Look("earth_day", "earth_night", "earth_clouds", 1.035F, 0.9F, 0.01F));
-        LOOKS.put("venus", new Look("venus", null, null, 1.05F, 0.0F, 0.01F));
-        LOOKS.put("mars", new Look("mars", null, null, 1.02F, 0.0F, 0.008F));
-        LOOKS.put("jupiter", new Look("jupiter", null, null, 1.015F, 0.0F, 0.008F));
-        LOOKS.put("saturn", new Look("saturn", null, null, 1.015F, 0.0F, 0.008F));
-        LOOKS.put("uranus", new Look("uranus", null, null, 1.03F, 0.0F, 0.008F));
-        LOOKS.put("neptune", new Look("neptune", null, null, 1.03F, 0.0F, 0.008F));
-        LOOKS.put("titan", new Look("titan", null, null, 1.12F, 0.0F, 0.01F));
+        LOOKS.put("earth", new Look("earth_day", "earth_night", "earth_clouds", null, F_NIGHT | F_CLOUDS | F_AURORA, 0.008F, 1.0F,
+                new Atmosphere(10.4F, 24.0F, 59.0F, 0.0045F, 16.0F, 0.0016F, 0.76F, 1.036F, 1.0F)));
+        LOOKS.put("moon", new Look("moon", null, null, "moon_normal", F_NORMAL | F_RED_ECLIPSE, 0.012F, 0.0F, null));
+        LOOKS.put("venus", new Look("venus", null, null, null, 0, 0.01F, 0.0F,
+                new Atmosphere(9.0F, 8.0F, 4.5F, 0.012F, 25.0F, 0.006F, 0.7F, 1.09F, 1.0F)));
+        LOOKS.put("mars", new Look("mars", null, null, null, F_BUMP, 0.008F, 0.0F,
+                new Atmosphere(7.0F, 4.5F, 2.6F, 0.008F, 6.0F, 0.006F, 0.65F, 1.05F, 1.0F)));
+        LOOKS.put("jupiter", new Look("jupiter", null, null, null, F_BANDS, 0.006F, 0.0F,
+                new Atmosphere(2.0F, 2.5F, 4.0F, 0.004F, 2.0F, 0.003F, 0.7F, 1.025F, 1.0F)));
+        LOOKS.put("saturn", new Look("saturn", null, null, null, F_BANDS | F_RING_SHADOW, 0.006F, 0.0F,
+                new Atmosphere(2.0F, 2.3F, 3.0F, 0.004F, 3.0F, 0.003F, 0.7F, 1.025F, 1.0F)));
+        LOOKS.put("uranus", new Look("uranus", null, null, null, F_BANDS, 0.006F, 0.0F,
+                new Atmosphere(2.0F, 6.0F, 10.0F, 0.006F, 2.0F, 0.004F, 0.7F, 1.035F, 1.0F)));
+        LOOKS.put("neptune", new Look("neptune", null, null, null, F_BANDS, 0.006F, 0.0F,
+                new Atmosphere(2.0F, 5.0F, 12.0F, 0.006F, 2.0F, 0.004F, 0.7F, 1.035F, 1.0F)));
+        LOOKS.put("titan", new Look("titan", null, null, null, 0, 0.01F, 0.0F,
+                new Atmosphere(14.0F, 7.0F, 2.0F, 0.03F, 10.0F, 0.02F, 0.7F, 1.2F, 1.0F)));
+        LOOKS.put("sun", new Look("sun", null, null, null, 0, 0.0F, 0.0F, null));
     }
 
     private static ShaderInstance shader;
@@ -100,13 +129,19 @@ public final class PlanetRenderer {
         preloaded = false;
     }
 
+    static ShaderInstance shader() {
+        return shader;
+    }
+
     /**
      * @param view       rotación de la cámara (sin traslación)
      * @param projection proyección
      * @param cam        posición de la cámara en la dimensión espacio
      * @param time       tiempo del sistema solar, con decimales
+     * @param seconds    segundos de juego, para las animaciones
+     * @param farDepth   dibujar en el plano lejano con prueba de profundidad (después de Iris)
      */
-    public static void render(Matrix4f view, Matrix4f projection, Vec3 cam, double time) {
+    public static void render(Matrix4f view, Matrix4f projection, Vec3 cam, double time, float seconds, boolean farDepth) {
         if (shader == null) {
             return;
         }
@@ -114,7 +149,7 @@ public final class PlanetRenderer {
         preload();
 
         Minecraft mc = Minecraft.getInstance();
-        double tanHalfFov = Math.tan(Math.toRadians(mc.options.fov().get()) * 0.5);
+        double tanHalfFov = 1.0 / Math.max(1e-4, projection.m11());
         double halfHeight = mc.getWindow().getHeight() * 0.5;
         Vec3 sunPos = SolarSystem.position(SolarSystem.get("sun"), time);
 
@@ -132,10 +167,7 @@ public final class PlanetRenderer {
         }
         items.sort(Comparator.comparingDouble(Item::dist).reversed());
 
-        RenderSystem.disableDepthTest();
-        RenderSystem.depthMask(false);
-
-        // Primero los puntos de luz: cualquier esfera más cercana los tapa.
+        commonUniforms(seconds, farDepth);
         additive();
         RenderSystem.disableCull();
         double dotHalf = SKY_DISTANCE * tanHalfFov * DOT_SIZE_PIXELS / halfHeight;
@@ -146,7 +178,7 @@ public final class PlanetRenderer {
         }
         for (Item it : items) {
             if (it.pixels() >= DOT_PIXELS) {
-                drawBody(it, view, projection, sunPos, time, tanHalfFov);
+                drawBody(it, view, projection, sunPos, time, seconds);
             }
         }
 
@@ -154,12 +186,21 @@ public final class PlanetRenderer {
         RenderSystem.disableCull();
         RenderSystem.disableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.enableDepthTest();
+    }
+
+    /** Uniformes que no cambian en todo el fotograma. */
+    static void commonUniforms(float seconds, boolean farDepth) {
+        shader.safeGetUniform("FarDepth").set(farDepth ? 1.0F : 0.0F);
+        shader.safeGetUniform("Occluder").set(0.0F, 0.0F, 0.0F, 0.0F);
+        shader.safeGetUniform("ScatterR").set(0.0F, 0.0F, 0.0F, 0.01F);
+        shader.safeGetUniform("ScatterM").set(0.0F, 0.01F, 0.7F, 0.0F);
+        shader.safeGetUniform("Tint").set(1.0F, 1.0F, 1.0F, 1.0F);
+        shader.safeGetUniform("Anim").set(seconds, 0.0F, 0.0F, 0.005F);
     }
 
     // ---------------------------------------------------------------- astros
 
-    private static void drawBody(Item it, Matrix4f view, Matrix4f projection, Vec3 sunPos, double time, double tanHalfFov) {
+    private static void drawBody(Item it, Matrix4f view, Matrix4f projection, Vec3 sunPos, double time, float seconds) {
         Body body = it.body();
         double k = SKY_DISTANCE / it.dist();
         Vector3f center = vec(it.rel().scale(k));
@@ -168,18 +209,21 @@ public final class PlanetRenderer {
         Vector3f sunDir = vec(sunPos.subtract(it.pos()).normalize());
         VertexBuffer sphere = it.pixels() > DETAIL_PIXELS ? sphereDetailed : sphereSimple;
         Look look = LOOKS.getOrDefault(body.id(), AIRLESS);
+        Atmosphere atmo = look.atmosphere();
 
         if (body.isSun()) {
-            drawSunGlow(it, view, projection, center, tanHalfFov);
+            drawCorona(it, view, projection, center);
             Quaternionf q = orientation(body, time, true, 0.0);
             opaque();
             RenderSystem.enableCull();
-            bind(0, body.id() + "_hi", true);
-            set(MODE_SUN, 0, 0, 0, new Vector3f(0, 1, 0), toObject(q, camRel), 0, 0, 0, 0, 0, 0, 0, 0);
+            bind(0, "sun_hi", true);
+            set(MODE_SUN, 0, 0, 0, new Vector3f(0, 1, 0), toObject(q, camRel));
             draw(sphere, model(view, center, q, radius), projection);
             return;
         }
 
+        float sunAngular = (float) (SolarSystem.get("sun").radius() / sunPos.distanceTo(it.pos()));
+        float bandShear = (float) ((time / 24000.0) * 0.015 % 1.0);
         Quaternionf tilt = orientation(body, time, false, 0.0);
         boolean rings = body.hasRings() && saturnRings != null;
         if (rings) {
@@ -188,45 +232,100 @@ public final class PlanetRenderer {
 
         // Superficie
         Quaternionf q = orientation(body, time, true, 0.0);
+        double cloudExtra = Math.PI * 2.0 * (time / (24000.0 * 30.0) % 1.0);
         opaque();
         RenderSystem.enableCull();
         bind(0, (look.surface() != null ? look.surface() : body.id()) + "_hi", true);
-        float extra = 0.0F;
+        int flags = look.flags();
         if (look.night() != null) {
             bind(1, look.night() + "_hi", true);
-            extra = 1.0F;
         } else if (rings) {
             bind(1, "saturn_rings", false);
-            extra = 2.0F;
+        } else {
+            flags &= ~F_RING_SHADOW;
         }
-        float[] atmo = atmoColor(body);
-        set(MODE_SURFACE, look.ambient(), look.specular(), extra, toObject(q, sunDir), toObject(q, camRel),
-                atmo[0], atmo[1], atmo[2], look.atmoRadius() > 0 ? atmo[3] : 0.0F,
-                body.ringInner(), body.ringOuter(), 0, look.atmoRadius());
+        if (look.clouds() != null) {
+            bind(2, look.clouds() + "_hi", true);
+        } else if (look.normal() != null) {
+            bind(2, look.normal() + "_hi", true);
+        }
+        occluder(it, q, time);
+        scatter(atmo);
+        shader.safeGetUniform("Anim").set(seconds, (float) (-cloudExtra / (Math.PI * 2.0)), bandShear, sunAngular);
+        shader.safeGetUniform("Ring").set(body.ringInner(), body.ringOuter(), 0.0F, 0.0F);
+        shader.safeGetUniform("Tint").set(1.0F, 1.0F, 1.0F, atmo != null ? atmo.exposure() : 1.0F);
+        set(MODE_SURFACE, look.ambient(), look.specular(), flags, toObject(q, sunDir), toObject(q, camRel));
         draw(sphere, model(view, center, q, radius), projection);
 
-        // Nubes: una capa algo por encima que gira un poco más deprisa que el suelo.
+        // Nubes: capa algo por encima que gira un poco más deprisa que el suelo y cambia con el tiempo.
         if (look.clouds() != null) {
-            Quaternionf qc = orientation(body, time, true, Math.PI * 2.0 * (time / (24000.0 * 40.0) % 1.0));
+            Quaternionf qc = orientation(body, time, true, cloudExtra);
             alphaBlend();
             bind(0, look.clouds() + "_hi", true);
-            set(MODE_CLOUDS, look.ambient(), 0, 0, toObject(qc, sunDir), toObject(qc, camRel), 0, 0, 0, 0, 0, 0, 0, 0);
-            draw(sphere, model(view, center, qc, radius * 1.006F), projection);
+            occluder(it, qc, time);
+            set(MODE_CLOUDS, look.ambient(), 0, 0, toObject(qc, sunDir), toObject(qc, camRel));
+            draw(sphere, model(view, center, qc, radius * 1.004F), projection);
         }
 
-        // Atmósfera: halo calculado por píxel (se dibujan las caras de atrás de una esfera algo mayor).
-        if (look.atmoRadius() > 0.0F && it.pixels() > 3.0) {
-            additive();
+        // Atmósfera: se dibujan las caras de atrás de una esfera algo mayor y el shader calcula la luz dispersada.
+        if (atmo != null && it.pixels() > 2.5) {
+            RenderSystem.enableBlend();
+            RenderSystem.blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.SRC_ALPHA);
             GL11.glCullFace(GL11.GL_FRONT);
-            set(MODE_ATMOSPHERE, 0, 0, 0, toObject(q, sunDir), toObject(q, camRel), atmo[0], atmo[1], atmo[2], atmo[3],
-                    0, 0, 0, look.atmoRadius());
-            draw(sphere, model(view, center, q, radius * look.atmoRadius()), projection);
+            occluder(it, q, time);
+            set(MODE_ATMOSPHERE, 0, 0, look.flags(), toObject(q, sunDir), toObject(q, camRel));
+            draw(sphere, model(view, center, q, radius * atmo.top()), projection);
             GL11.glCullFace(GL11.GL_BACK);
         }
+        scatter(null);
+        shader.safeGetUniform("Occluder").set(0.0F, 0.0F, 0.0F, 0.0F);
 
         if (rings) {
             drawRings(body, view, projection, center, radius, tilt, camRel, sunDir, look, 1);
         }
+    }
+
+    /** El astro que puede hacer sombra sobre este (eclipses): las lunas, su planeta; los planetas, su luna mejor alineada. */
+    private static void occluder(Item it, Quaternionf q, double time) {
+        Body body = it.body();
+        Body best = null;
+        if (body.parent() != null && !"sun".equals(body.parent())) {
+            best = SolarSystem.get(body.parent());
+        } else {
+            Vec3 toSun = SolarSystem.position(SolarSystem.get("sun"), time).subtract(it.pos()).normalize();
+            double bestScore = Double.MAX_VALUE;
+            for (Body moon : SolarSystem.bodies()) {
+                if (!body.id().equals(moon.parent())) {
+                    continue;
+                }
+                Vec3 rel = SolarSystem.position(moon, time).subtract(it.pos());
+                double along = rel.dot(toSun);
+                if (along <= 0.0) {
+                    continue;
+                }
+                double off = rel.subtract(toSun.scale(along)).length() - moon.radius() - body.radius();
+                if (off < bestScore) {
+                    bestScore = off;
+                    best = moon;
+                }
+            }
+        }
+        if (best == null) {
+            shader.safeGetUniform("Occluder").set(0.0F, 0.0F, 0.0F, 0.0F);
+            return;
+        }
+        Vector3f rel = toObject(q, vec(SolarSystem.position(best, time).subtract(it.pos()).scale(1.0 / body.radius())));
+        shader.safeGetUniform("Occluder").set(rel.x, rel.y, rel.z, (float) (best.radius() / body.radius()));
+    }
+
+    private static void scatter(Atmosphere a) {
+        if (a == null) {
+            shader.safeGetUniform("ScatterR").set(0.0F, 0.0F, 0.0F, 0.01F);
+            shader.safeGetUniform("ScatterM").set(0.0F, 0.01F, 0.7F, 0.0F);
+            return;
+        }
+        shader.safeGetUniform("ScatterR").set(a.rayleighR(), a.rayleighG(), a.rayleighB(), a.rayleighHeight());
+        shader.safeGetUniform("ScatterM").set(a.mie(), a.mieHeight(), a.g(), a.top());
     }
 
     /** Los anillos en dos mitades: la de detrás antes del planeta y la de delante después. */
@@ -235,19 +334,20 @@ public final class PlanetRenderer {
         alphaBlend();
         RenderSystem.disableCull();
         bind(0, "saturn_rings", false);
-        set(MODE_RINGS, look.ambient(), 0, 0, toObject(tilt, sunDir), toObject(tilt, camRel), 0, 0, 0, 0,
-                body.ringInner(), body.ringOuter(), half, 0);
+        shader.safeGetUniform("Ring").set(body.ringInner(), body.ringOuter(), (float) half, 0.0F);
+        set(MODE_RINGS, look.ambient(), 0, 0, toObject(tilt, sunDir), toObject(tilt, camRel));
         draw(saturnRings, model(view, center, tilt, radius), projection);
     }
 
-    private static void drawSunGlow(Item it, Matrix4f view, Matrix4f projection, Vector3f center, double tanHalfFov) {
+    private static void drawCorona(Item it, Matrix4f view, Matrix4f projection, Vector3f center) {
         double sunAngular = Math.asin(Math.min(1.0, it.body().radius() / it.dist()));
-        double glowAngular = Math.max(sunAngular * 14.0, 0.06);
+        double glowAngular = Math.max(sunAngular * 16.0, 0.07);
         float half = (float) (SKY_DISTANCE * Math.tan(Math.min(glowAngular, 1.2)));
         additive();
         RenderSystem.disableCull();
-        set(MODE_SUN_GLOW, 0, 0, 0, new Vector3f(0, 1, 0), new Vector3f(0, 0, 1), 0, 0, 0, 1.0F,
-                (float) (glowAngular / sunAngular), 0, 0, 0);
+        shader.safeGetUniform("Ring").set((float) (glowAngular / sunAngular), 0.0F, 0.0F, 0.0F);
+        shader.safeGetUniform("Tint").set(1.0F, 1.0F, 1.0F, 1.0F);
+        set(MODE_CORONA, 0, 0, 0, new Vector3f(0, 1, 0), new Vector3f(0, 0, 1));
         draw(quad, model(view, center, facingCamera(center), half), projection);
     }
 
@@ -262,22 +362,23 @@ public final class PlanetRenderer {
         }
         float[] c = dotColor(it.body());
         Vector3f center = vec(it.rel().scale(SKY_DISTANCE / it.dist()));
-        set(MODE_DOT, 0, 0, 0, new Vector3f(0, 1, 0), new Vector3f(0, 0, 1), c[0], c[1], c[2], b, 0, 0, 0, 0);
+        shader.safeGetUniform("Tint").set(c[0], c[1], c[2], b);
+        set(MODE_DOT, 0, 0, 0, new Vector3f(0, 1, 0), new Vector3f(0, 0, 1));
         draw(quad, model(view, center, facingCamera(center), (float) half), projection);
     }
 
     // ---------------------------------------------------------------- utilidades de dibujo
 
+    /** Eje inclinado hacia −Z, como el de la Tierra hacia la estrella Polar en este cielo, y giro sobre ese eje. */
     private static Quaternionf orientation(Body body, double time, boolean spin, double extraSpin) {
-        Quaternionf q = new Quaternionf().rotationZ((float) Math.toRadians(body.tiltDeg()));
+        Quaternionf q = new Quaternionf().rotationX((float) Math.toRadians(-body.tiltDeg()));
         if (spin) {
             q.rotateY((float) ((SolarSystem.spinAngle(body, time) + extraSpin) % (Math.PI * 2.0)));
         }
         return q;
     }
 
-    /** Rotación que pone la cara +Z del cuadro mirando a la cámara (que está en el origen). */
-    private static Quaternionf facingCamera(Vector3f center) {
+    static Quaternionf facingCamera(Vector3f center) {
         return new Quaternionf().rotationTo(new Vector3f(0, 0, 1), new Vector3f(center).negate().normalize());
     }
 
@@ -285,32 +386,34 @@ public final class PlanetRenderer {
         return new Quaternionf(q).conjugate().transform(new Vector3f(world));
     }
 
-    private static Matrix4f model(Matrix4f view, Vector3f center, Quaternionf q, float scale) {
+    static Matrix4f model(Matrix4f view, Vector3f center, Quaternionf q, float scale) {
         return new Matrix4f(view).translate(center).rotate(q).scale(scale);
     }
 
-    private static Vector3f vec(Vec3 v) {
+    static Vector3f vec(Vec3 v) {
         return new Vector3f((float) v.x, (float) v.y, (float) v.z);
     }
 
-    private static float[] atmoColor(Body body) {
-        int c = body.atmoColor();
-        return new float[] {(c >> 16 & 255) / 255.0F, (c >> 8 & 255) / 255.0F, (c & 255) / 255.0F, body.atmoStrength()};
-    }
-
-    private static void set(int mode, float ambient, float specular, float extra, Vector3f sun, Vector3f cam,
-                            float ar, float ag, float ab, float aa, float r0, float r1, float r2, float r3) {
-        shader.safeGetUniform("Params").set((float) mode, ambient, specular, extra);
+    static void set(int mode, float ambient, float specular, int flags, Vector3f sun, Vector3f cam) {
+        shader.safeGetUniform("Params").set((float) mode, ambient, specular, (float) flags);
         shader.safeGetUniform("SunDir").set(sun.x, sun.y, sun.z);
         shader.safeGetUniform("CamPos").set(cam.x, cam.y, cam.z);
-        shader.safeGetUniform("AtmoColor").set(ar, ag, ab, aa);
-        shader.safeGetUniform("Ring").set(r0, r1, r2, r3);
     }
 
-    private static void draw(VertexBuffer buffer, Matrix4f modelView, Matrix4f projection) {
+    static void draw(VertexBuffer buffer, Matrix4f modelView, Matrix4f projection) {
         buffer.bind();
         buffer.drawWithShader(modelView, projection, shader);
         VertexBuffer.unbind();
+    }
+
+    static VertexBuffer quad() {
+        ensureBuffers();
+        return quad;
+    }
+
+    static VertexBuffer sphere() {
+        ensureBuffers();
+        return sphereSimple;
     }
 
     private static void opaque() {
@@ -322,20 +425,24 @@ public final class PlanetRenderer {
         RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
     }
 
-    private static void additive() {
+    static void additive() {
         RenderSystem.enableBlend();
         RenderSystem.blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE);
     }
 
     // ---------------------------------------------------------------- texturas
 
-    private static ResourceLocation texture(String name) {
+    static ResourceLocation texture(String name) {
         return CreateUniversal.id("textures/planet/" + name + ".png");
     }
 
-    /** Enlaza una textura con mipmaps (sin ellos, un mapa de 2048 en un planeta pequeño parpadea). */
-    private static void bind(int unit, String name, boolean wrapAround) {
-        AbstractTexture tex = Minecraft.getInstance().getTextureManager().getTexture(texture(name));
+    /** Enlaza una textura con mipmaps y filtrado anisótropo (sin ellos, un mapa de 4096 en un planeta pequeño parpadea). */
+    static void bind(int unit, String name, boolean wrapAround) {
+        bind(unit, texture(name), wrapAround);
+    }
+
+    static void bind(int unit, ResourceLocation location, boolean wrapAround) {
+        AbstractTexture tex = Minecraft.getInstance().getTextureManager().getTexture(location);
         int id = tex.getId();
         if (PREPARED_TEXTURES.add(id)) {
             GlStateManager._activeTexture(GL30.GL_TEXTURE0);
@@ -365,11 +472,10 @@ public final class PlanetRenderer {
         for (Body body : SolarSystem.bodies()) {
             Look look = LOOKS.getOrDefault(body.id(), AIRLESS);
             bind(0, (look.surface() != null ? look.surface() : body.id()) + "_hi", true);
-            if (look.night() != null) {
-                bind(0, look.night() + "_hi", true);
-            }
-            if (look.clouds() != null) {
-                bind(0, look.clouds() + "_hi", true);
+            for (String extra : new String[] {look.night(), look.clouds(), look.normal()}) {
+                if (extra != null) {
+                    bind(0, extra + "_hi", true);
+                }
             }
             dotColor(body);
         }
@@ -415,14 +521,14 @@ public final class PlanetRenderer {
         if (sphereDetailed != null) {
             return;
         }
-        sphereDetailed = upload(sphere(96, 48));
-        sphereSimple = upload(sphere(32, 16));
-        quad = upload(quad());
+        sphereDetailed = upload(sphereMesh(128, 64));
+        sphereSimple = upload(sphereMesh(40, 20));
+        quad = upload(quadMesh());
         Body saturn = SolarSystem.get("saturn");
-        saturnRings = upload(rings(saturn.ringInner(), saturn.ringOuter(), 160));
+        saturnRings = upload(ringMesh(saturn.ringInner(), saturn.ringOuter(), 192));
     }
 
-    private static VertexBuffer upload(com.mojang.blaze3d.vertex.MeshData mesh) {
+    private static VertexBuffer upload(MeshData mesh) {
         VertexBuffer buffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
         buffer.bind();
         buffer.upload(mesh);
@@ -431,7 +537,7 @@ public final class PlanetRenderer {
     }
 
     /** Esfera de radio 1 con las coordenadas del mapa equirectangular: u = longitud (0 en +X, hacia el este), v = latitud. */
-    private static com.mojang.blaze3d.vertex.MeshData sphere(int lonSegments, int latSegments) {
+    private static MeshData sphereMesh(int lonSegments, int latSegments) {
         BufferBuilder buf = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
         for (int la = 0; la < latSegments; la++) {
             double t0 = Math.PI * la / latSegments;
@@ -457,7 +563,7 @@ public final class PlanetRenderer {
         buf.addVertex((float) (s * Math.cos(phi)), (float) Math.cos(theta), (float) (-s * Math.sin(phi))).setUv(u, v);
     }
 
-    private static com.mojang.blaze3d.vertex.MeshData quad() {
+    private static MeshData quadMesh() {
         BufferBuilder buf = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
         buf.addVertex(-1, -1, 0).setUv(0, 0);
         buf.addVertex(1, -1, 0).setUv(1, 0);
@@ -467,17 +573,17 @@ public final class PlanetRenderer {
     }
 
     /** Anillo plano en el ecuador (y = 0), radios en radios del planeta. */
-    private static com.mojang.blaze3d.vertex.MeshData rings(float inner, float outer, int segments) {
+    private static MeshData ringMesh(float inner, float outer, int segments) {
         BufferBuilder buf = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        float in = (float) (inner * Math.cos(Math.PI / segments));
+        float out = (float) (outer / Math.cos(Math.PI / segments));
         for (int i = 0; i < segments; i++) {
             double a0 = Math.PI * 2.0 * i / segments;
             double a1 = Math.PI * 2.0 * (i + 1) / segments;
-            // El anillo exterior se agranda un poco para que el polígono no recorte el borde redondo.
-            float out = (float) (outer / Math.cos(Math.PI / segments));
-            buf.addVertex((float) (Math.cos(a0) * inner), 0, (float) (Math.sin(a0) * inner)).setUv(0, 0.5F);
+            buf.addVertex((float) (Math.cos(a0) * in), 0, (float) (Math.sin(a0) * in)).setUv(0, 0.5F);
             buf.addVertex((float) (Math.cos(a0) * out), 0, (float) (Math.sin(a0) * out)).setUv(1, 0.5F);
             buf.addVertex((float) (Math.cos(a1) * out), 0, (float) (Math.sin(a1) * out)).setUv(1, 0.5F);
-            buf.addVertex((float) (Math.cos(a1) * inner), 0, (float) (Math.sin(a1) * inner)).setUv(0, 0.5F);
+            buf.addVertex((float) (Math.cos(a1) * in), 0, (float) (Math.sin(a1) * in)).setUv(0, 0.5F);
         }
         return buf.buildOrThrow();
     }

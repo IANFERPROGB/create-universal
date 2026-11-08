@@ -19,6 +19,7 @@ public final class CreateUniversal {
         container.registerConfig(ModConfig.Type.COMMON, CUConfig.SPEC);
         modBus.addListener(CreateUniversal::registerPayloads);
         NeoForge.EVENT_BUS.register(SpaceTransitions.class);
+        NeoForge.EVENT_BUS.register(dev.createuniversal.space.SpaceCommands.class);
         dev.createuniversal.space.ShipAnchor.register();
         LOGGER.info("Create Universal cargando");
     }

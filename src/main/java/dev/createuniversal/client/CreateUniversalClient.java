@@ -25,6 +25,8 @@ public final class CreateUniversalClient {
         try {
             event.registerShader(new net.minecraft.client.renderer.ShaderInstance(event.getResourceProvider(), CreateUniversal.id("planet"),
                     com.mojang.blaze3d.vertex.DefaultVertexFormat.POSITION_TEX), dev.createuniversal.client.sky.PlanetRenderer::setShader);
+            event.registerShader(new net.minecraft.client.renderer.ShaderInstance(event.getResourceProvider(), CreateUniversal.id("stars"),
+                    com.mojang.blaze3d.vertex.DefaultVertexFormat.POSITION_TEX_COLOR), dev.createuniversal.client.sky.SpaceSky::setStarShader);
         } catch (java.io.IOException e) {
             CreateUniversal.LOGGER.error("No se pudo cargar el shader de los planetas", e);
         }
