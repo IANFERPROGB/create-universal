@@ -14,6 +14,10 @@ public final class CreateUniversalClient {
     public CreateUniversalClient(IEventBus modBus) {
         modBus.addListener(CreateUniversalClient::registerDimensionEffects);
         NeoForge.EVENT_BUS.register(AtmosphericsCompat.class);
+        NeoForge.EVENT_BUS.register(dev.createuniversal.client.effects.TransitionEffects.class);
+        NeoForge.EVENT_BUS.register(dev.createuniversal.client.effects.AltitudeAtmosphere.class);
+        modBus.addListener((net.neoforged.neoforge.client.event.RegisterGuiLayersEvent e) ->
+                e.registerAboveAll(CreateUniversal.id("transition"), dev.createuniversal.client.effects.TransitionEffects::render));
     }
 
     private static void registerDimensionEffects(RegisterDimensionSpecialEffectsEvent event) {

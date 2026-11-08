@@ -166,6 +166,8 @@ public final class SpaceTransitions {
         Vec3 target = SpaceLayout.arrivalPoint();
         CreateUniversal.LOGGER.info("{} sale al espacio desde {} -> {}", player.getScoreboardName(), player.position(), target);
         player.changeDimension(new DimensionTransition(space, target, Vec3.ZERO, player.getYRot(), player.getXRot(), DimensionTransition.DO_NOTHING));
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                new dev.createuniversal.network.TransitionEffectPayload(dev.createuniversal.network.TransitionEffectPayload.EXIT));
     }
 
     private static void returnToEarth(ServerPlayer player) {
@@ -176,6 +178,8 @@ public final class SpaceTransitions {
         Vec3 target = new Vec3(x, CUConfig.EXIT_ALTITUDE.get() - 100.0, z);
         CreateUniversal.LOGGER.info("{} vuelve a la Tierra -> {}", player.getScoreboardName(), target);
         player.changeDimension(new DimensionTransition(overworld, target, Vec3.ZERO, player.getYRot(), player.getXRot(), DimensionTransition.DO_NOTHING));
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                new dev.createuniversal.network.TransitionEffectPayload(dev.createuniversal.network.TransitionEffectPayload.REENTRY));
     }
 
     /** En el espacio no hay gravedad para el jugador (D4). Las naves ya la pierden por la física de Sable (dimension_physics/space.json). */

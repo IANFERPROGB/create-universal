@@ -33,7 +33,8 @@ public final class AtmosphericsCompat {
             return;
         }
         Minecraft mc = Minecraft.getInstance();
-        boolean inSpace = mc.level != null && mc.level.dimension() == CUDimensions.SPACE;
+        // En el espacio o ya muy arriba en el Overworld (la atmósfera se está apagando).
+        boolean inSpace = dev.createuniversal.client.effects.AltitudeAtmosphere.atmosphericsShouldBeOff();
         try {
             Object config = config();
             if (config == null) {

@@ -17,9 +17,15 @@ public final class CreateUniversal {
 
     public CreateUniversal(IEventBus modBus, ModContainer container) {
         container.registerConfig(ModConfig.Type.COMMON, CUConfig.SPEC);
+        modBus.addListener(CreateUniversal::registerPayloads);
         NeoForge.EVENT_BUS.register(SpaceTransitions.class);
         dev.createuniversal.space.ShipAnchor.register();
         LOGGER.info("Create Universal cargando");
+    }
+
+    private static void registerPayloads(net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent event) {
+        event.registrar("1").playToClient(dev.createuniversal.network.TransitionEffectPayload.TYPE,
+                dev.createuniversal.network.TransitionEffectPayload.STREAM_CODEC, dev.createuniversal.network.TransitionEffectPayload::handle);
     }
 
     public static ResourceLocation id(String path) {

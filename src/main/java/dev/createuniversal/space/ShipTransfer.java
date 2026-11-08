@@ -251,6 +251,9 @@ public final class ShipTransfer {
                         : newRootPosition;
                 // Llega parado: la nave también está congelada y los dos recuperan la velocidad a la vez al soltarla.
                 p.changeDimension(new DimensionTransition(target, pos, Vec3.ZERO, p.getYRot(), p.getXRot(), DimensionTransition.DO_NOTHING));
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(p, new dev.createuniversal.network.TransitionEffectPayload(
+                        target.dimension() == CUDimensions.SPACE ? dev.createuniversal.network.TransitionEffectPayload.EXIT
+                                : dev.createuniversal.network.TransitionEffectPayload.REENTRY));
                 UUID vehicleId = riding.get(p.getUUID());
                 if (vehicleId == null && newShip != null && worldEntityPlotPos.containsKey(p)) {
                     // De pie: anclado a la nave 1,5 s para no atravesarla mientras el cliente la carga.
