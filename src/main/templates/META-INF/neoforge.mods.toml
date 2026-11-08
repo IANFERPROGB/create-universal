@@ -1,0 +1,99 @@
+modLoader="javafml"
+loaderVersion="${loader_version_range}"
+license="${mod_license}"
+issueTrackerURL=""
+
+[[mods]]
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+authors="superian"
+credits="Hecho con Create, Sable, Create Aeronautics y Create Deep Seas."
+description='''
+El espacio para Create Aeronautics: sube a 15.000 bloques con cualquier nave y sal al sistema solar.
+Space for Create Aeronautics: climb to 15,000 blocks with any ship and leave for the solar system.
+'''
+
+[[mixins]]
+config="${mod_id}.mixins.json"
+
+[[dependencies.${mod_id}]]
+    modId="neoforge"
+    type="required"
+    versionRange="[${neo_version},)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="minecraft"
+    type="required"
+    versionRange="${minecraft_version_range}"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="create"
+    type="required"
+    versionRange="[6.0.10,6.1.0)"
+    ordering="AFTER"
+    side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="sable"
+    type="required"
+    versionRange="[2.0.6,2.1)"
+    ordering="AFTER"
+    side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="aeronautics"
+    type="required"
+    versionRange="[1.3.2,1.4)"
+    ordering="AFTER"
+    side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="create_submarine"
+    type="required"
+    versionRange="[3.3.0,)"
+    ordering="AFTER"
+    side="BOTH"
+
+# D57: otros mods del espacio no pueden convivir con Create Universal
+[[dependencies.${mod_id}]]
+    modId="rocketnautics"
+    type="incompatible"
+    reason="Create Universal y Create: Cosmonautics añaden los dos el espacio. Quita uno de los dos. / Both add space; remove one."
+    versionRange="*"
+    side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="dimensional_sable"
+    type="incompatible"
+    reason="Create Universal mueve las naves entre dimensiones a su manera. Quita Dimensional Sable. / Create Universal handles ship travel itself; remove Dimensional Sable."
+    versionRange="*"
+    side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="ultraflight"
+    type="incompatible"
+    reason="Create Universal y ultraFLIGHT añaden los dos el espacio. Quita uno de los dos. / Both add space; remove one."
+    versionRange="*"
+    side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="tornado7mod"
+    type="incompatible"
+    reason="Tornado7 trae su propio cohete y sistema solar. Quita uno de los dos. / Tornado7 has its own rocket and solar system; remove one."
+    versionRange="*"
+    side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="ad_astra"
+    type="incompatible"
+    reason="Create Universal y Ad Astra añaden los dos el espacio. Quita uno de los dos. / Both add space; remove one."
+    versionRange="*"
+    side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="stellaris"
+    type="incompatible"
+    reason="Create Universal y Stellaris añaden los dos el espacio. Quita uno de los dos. / Both add space; remove one."
+    versionRange="*"
+    side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="galacticraft"
+    type="incompatible"
+    reason="Create Universal y Galacticraft añaden los dos el espacio. Quita uno de los dos. / Both add space; remove one."
+    versionRange="*"
+    side="BOTH"
