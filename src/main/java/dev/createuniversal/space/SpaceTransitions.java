@@ -61,15 +61,24 @@ public final class SpaceTransitions {
             data.putDouble("earthX", from.x);
             data.putDouble("earthZ", from.z);
             Vec3 target = freeArrivalPoint(space, SpaceLayout.arrivalPoint());
-            ShipTransfer.transfer(ship, space, target, data);
+            safeTransfer(ship, space, target, data);
         }
         for (ServerSubLevel ship : shipsToMove(space, s -> SpaceLayout.insideEarthAtmosphere(centerOf(s)))) {
             CompoundTag ours = ship.getUserDataTag() != null ? ship.getUserDataTag().getCompound(CreateUniversal.MOD_ID) : new CompoundTag();
             double x = ours.contains("earthX") ? ours.getDouble("earthX") : overworld.getSharedSpawnPos().getX() + 0.5;
             double z = ours.contains("earthZ") ? ours.getDouble("earthZ") : overworld.getSharedSpawnPos().getZ() + 0.5;
-            ShipTransfer.transfer(ship, overworld, new Vec3(x, exit - 150.0, z), ours);
+            safeTransfer(ship, overworld, new Vec3(x, exit - 150.0, z), ours);
         }
         ShipTransfer.tickRemounts();
+    }
+
+    /** Un fallo al mover una nave se registra en el log, pero nunca debe cerrar el servidor. */
+    private static void safeTransfer(ServerSubLevel ship, ServerLevel target, Vec3 position, CompoundTag data) {
+        try {
+            ShipTransfer.transfer(ship, target, position, data);
+        } catch (RuntimeException e) {
+            CreateUniversal.LOGGER.error("Fallo al mover la nave {} a {}", ship.getUniqueId(), target.dimension().location(), e);
+        }
     }
 
     private interface ShipTest {

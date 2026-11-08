@@ -106,11 +106,15 @@ public final class ShipTransfer {
                 worldEntityPlotPos.put(e, ship.logicalPose().transformPositionInverse(e.position()));
             }
         }
-        // Pasajeros de asientos del plot (los jugadores sentados están en el mundo pero montan una entidad del plot).
-        for (List<Entity> list : plotEntities.values()) {
-            for (Entity vehicle : list) {
+        // Pasajeros de asientos del plot. Sable coloca a quien va sentado en coordenadas del plot, no del mundo, así que
+        // no aparece en la búsqueda por el volumen de la nave: se asigna a la nave de su asiento y su posición de plot es
+        // la del asiento.
+        for (Map.Entry<ServerSubLevel, List<Entity>> entry : plotEntities.entrySet()) {
+            for (Entity vehicle : entry.getValue()) {
                 for (Entity passenger : vehicle.getPassengers()) {
                     riding.put(passenger.getUUID(), vehicle.getUUID());
+                    worldEntityShip.put(passenger, entry.getKey());
+                    worldEntityPlotPos.put(passenger, vehicle.position().add(0.0, 0.5, 0.0));
                     if (!worldEntities.contains(passenger)) {
                         worldEntities.add(passenger);
                     }
@@ -175,13 +179,14 @@ public final class ShipTransfer {
                 players.add(p);
                 continue;
             }
+            ServerSubLevel ship = worldEntityShip.get(e);
             CompoundTag t = new CompoundTag();
-            if (e.saveAsPassenger(t)) {
+            if (ship != null && e.saveAsPassenger(t)) {
                 savedWorldMobs.add(t);
-                savedWorldMobPlotPos.add(shifted(worldEntityPlotPos.get(e), plotShift.get(worldEntityShip.get(e).getUniqueId())));
-                savedWorldMobShip.add(worldEntityShip.get(e));
+                savedWorldMobPlotPos.add(shifted(worldEntityPlotPos.get(e), plotShift.get(ship.getUniqueId())));
+                savedWorldMobShip.add(ship);
+                e.remove(Entity.RemovalReason.CHANGED_DIMENSION);
             }
-            e.remove(Entity.RemovalReason.CHANGED_DIMENSION);
         }
 
         // 3. Quitar la nave original (REMOVED: sin soltar objetos y sin dejar copia guardada) y crearla en el destino.
@@ -224,15 +229,21 @@ public final class ShipTransfer {
             }
         }
         for (ServerPlayer p : players) {
-            ServerSubLevel newShip = loaded.get(worldEntityShip.get(p).getUniqueId());
-            Vec3 pos = newShip != null
-                    ? newShip.logicalPose().transformPosition(
-                            shifted(worldEntityPlotPos.get(p), plotShift.get(worldEntityShip.get(p).getUniqueId())))
-                    : newRootPosition;
-            p.changeDimension(new DimensionTransition(target, pos, Vec3.ZERO, p.getYRot(), p.getXRot(), DimensionTransition.DO_NOTHING));
-            UUID vehicle = riding.get(p.getUUID());
-            if (vehicle != null) {
-                REMOUNTS.add(new PendingRemount(p.getUUID(), vehicle, target, 5));
+            try {
+                ServerSubLevel oldShip = worldEntityShip.get(p);
+                ServerSubLevel newShip = oldShip != null ? loaded.get(oldShip.getUniqueId()) : null;
+                Vec3 pos = newShip != null && worldEntityPlotPos.containsKey(p)
+                        ? newShip.logicalPose().transformPosition(shifted(worldEntityPlotPos.get(p), plotShift.get(oldShip.getUniqueId())))
+                        : newRootPosition;
+                p.changeDimension(new DimensionTransition(target, pos, Vec3.ZERO, p.getYRot(), p.getXRot(), DimensionTransition.DO_NOTHING));
+                UUID vehicle = riding.get(p.getUUID());
+                if (vehicle != null) {
+                    REMOUNTS.add(new PendingRemount(p.getUUID(), vehicle, target, 5));
+                }
+            } catch (RuntimeException ex) {
+                // Nunca dejar a un jugador atrás por un fallo: como último recurso va al punto de llegada de la nave.
+                CreateUniversal.LOGGER.error("Fallo al mover a {} con la nave; se le lleva al punto de llegada", p.getScoreboardName(), ex);
+                p.changeDimension(new DimensionTransition(target, newRootPosition, Vec3.ZERO, p.getYRot(), p.getXRot(), DimensionTransition.DO_NOTHING));
             }
         }
 
