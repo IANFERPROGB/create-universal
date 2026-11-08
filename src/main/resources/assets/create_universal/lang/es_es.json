@@ -1,3 +1,4 @@
 {
-  "create_universal.dimension.space": "Espacio"
+  "create_universal.dimension.space": "Espacio",
+  "create_universal.disassembly.blocked_in_space": "No se pueden desensamblar estructuras en el espacio"
 }

@@ -3,7 +3,7 @@
   "minVersion": "0.8",
   "package": "dev.createuniversal.mixin",
   "compatibilityLevel": "JAVA_21",
-  "mixins": ["SubLevelPhysicsSystemMixin", "EntitySpaceGravityMixin", "LivingEntitySpaceFrictionMixin", "ItemEntitySpaceDragMixin"],
+  "mixins": ["SubLevelPhysicsSystemMixin", "EntitySpaceGravityMixin", "LivingEntitySpaceFrictionMixin", "ItemEntitySpaceDragMixin", "EntitySpaceVoidMixin", "ServerSubLevelSpaceBoundsMixin", "PhysicsAssemblerNoSpaceDisassemblyMixin", "AssemblerStickNoSpaceDisassemblyMixin", "SimAssemblyHelperNoSpaceDisassemblyMixin"],
   "client": [],
   "injectors": { "defaultRequire": 1 }
 }
