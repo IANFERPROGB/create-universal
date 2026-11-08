@@ -1,4 +1,6 @@
 {
   "create_universal.dimension.space": "Espacio",
-  "create_universal.disassembly.blocked_in_space": "No se pueden desensamblar estructuras en el espacio"
+  "create_universal.disassembly.blocked_in_space": "No se pueden desensamblar estructuras en el espacio",
+  "create_universal.toolgun.pack_blocked_in_space": "No se pueden empaquetar naves en un contenedor en el espacio",
+  "create_universal.toolgun.release_blocked_in_space": "No se pueden sacar naves guardadas en el espacio"
 }

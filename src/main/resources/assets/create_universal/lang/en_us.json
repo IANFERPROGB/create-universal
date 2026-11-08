@@ -1,4 +1,6 @@
 {
   "create_universal.dimension.space": "Space",
-  "create_universal.disassembly.blocked_in_space": "Structures can't be disassembled in space"
+  "create_universal.disassembly.blocked_in_space": "Structures can't be disassembled in space",
+  "create_universal.toolgun.pack_blocked_in_space": "Vehicles can't be packed into a container in space",
+  "create_universal.toolgun.release_blocked_in_space": "Stored vehicles can't be released in space"
 }
