@@ -54,7 +54,7 @@ public final class PlanetRenderer {
     private static final double DETAIL_PIXELS = 50.0;
     private static final double DOT_SIZE_PIXELS = 2.5;
     /** Los astros más pequeños que esto en pantalla llevan un halo de luz. */
-    private static final double HALO_MAX_PIXELS = 40.0;
+    private static final double HALO_MAX_PIXELS = 20.0;
 
     static final int MODE_SURFACE = 0;
     static final int MODE_CLOUDS = 1;
@@ -366,12 +366,12 @@ public final class PlanetRenderer {
         Vec3 toSun = sunPos.subtract(it.pos()).normalize();
         Vec3 toCam = cam.subtract(it.pos()).normalize();
         double lit = (1.0 + toSun.dot(toCam)) * 0.5;
-        double fade = 1.0 - smooth(6.0, HALO_MAX_PIXELS, it.pixels());
-        float strength = (float) (1.1 * Math.pow(lit, 0.6) * fade);
+        double fade = 1.0 - smooth(3.0, HALO_MAX_PIXELS, it.pixels());
+        float strength = (float) (0.4 * Math.pow(lit, 0.6) * fade);
         if (strength < 0.01F) {
             return;
         }
-        double haloPixels = Math.max(18.0, it.pixels() * 6.0);
+        double haloPixels = Math.max(7.0, it.pixels() * 2.5);
         double half = SKY_DISTANCE * tanHalfFov * haloPixels / halfHeight;
         float[] c = dotColor(it.body());
         float grey = (c[0] + c[1] + c[2]) / 3.0F;
