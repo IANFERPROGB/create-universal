@@ -14,20 +14,25 @@ import dev.ryanhcode.sable.sublevel.storage.serialization.SubLevelData;
 import dev.ryanhcode.sable.sublevel.storage.serialization.SubLevelSerializer;
 import dev.ryanhcode.sable.util.SableNBTUtils;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.DoubleTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.portal.DimensionTransition;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3d;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -72,18 +77,6 @@ public final class ShipTransfer {
         }
         if (!chain.contains(root)) {
             chain.add(root);
-        }
-
-        // Cada nave vuelve a su mismo índice de plot: si en el destino está ocupado, no se puede mover todavía.
-        for (ServerSubLevel ship : chain) {
-            ChunkPos plot = ship.getPlot().plotPos;
-            for (ServerSubLevel other : targetContainer.getAllSubLevels()) {
-                if (!other.isRemoved() && other.getPlot().plotPos.equals(plot)) {
-                    CreateUniversal.LOGGER.warn("No se puede mover la nave {}: el plot {} está ocupado en {}",
-                            ship.getUniqueId(), plot, target.dimension().location());
-                    return false;
-                }
-            }
         }
 
         Vector3d delta = new Vector3d(newRootPosition.x, newRootPosition.y, newRootPosition.z).sub(root.logicalPose().position());
@@ -133,12 +126,24 @@ public final class ShipTransfer {
         }
 
         // 2. Guardar las naves y las entidades que no son jugadores.
+        //    Cada nave intenta volver a su mismo índice de plot. Si en el destino está ocupado (también por naves
+        //    descargadas, que siguen marcadas en el registro de ocupación de Sable), se pasa a uno libre y se desplaza
+        //    todo lo que guarda coordenadas absolutas del plot.
         List<SubLevelData> datas = new ArrayList<>();
+        Map<UUID, int[]> plotShift = new HashMap<>();
+        Set<Integer> reserved = new HashSet<>();
         for (ServerSubLevel ship : chain) {
             SubLevelData data = SubLevelSerializer.toData(ship, new ArrayList<>(chainIds));
             CompoundTag tag = data.fullTag();
+            int[] shift = assignFreePlot(targetContainer, tag.getCompound("plot"), reserved);
+            if (shift == null) {
+                CreateUniversal.LOGGER.error("No quedan plots libres en {}: la nave {} no se mueve", target.dimension().location(), ship.getUniqueId());
+                return false;
+            }
+            plotShift.put(ship.getUniqueId(), shift);
             Pose3d pose = SableNBTUtils.readPose3d(tag.getCompound("pose"));
             pose.position().add(delta);
+            pose.rotationPoint().add(shift[0], 0.0, shift[1]);
             tag.put("pose", SableNBTUtils.writePose3d(pose));
             if (userData != null) {
                 CompoundTag ud = tag.contains("user_data") ? tag.getCompound("user_data") : new CompoundTag();
@@ -149,10 +154,12 @@ public final class ShipTransfer {
         }
         Map<ServerSubLevel, List<CompoundTag>> savedPlotEntities = new HashMap<>();
         for (Map.Entry<ServerSubLevel, List<Entity>> entry : plotEntities.entrySet()) {
+            int[] shift = plotShift.get(entry.getKey().getUniqueId());
             List<CompoundTag> saved = new ArrayList<>();
             for (Entity e : entry.getValue()) {
                 CompoundTag t = new CompoundTag();
                 if (e.saveAsPassenger(t)) {
+                    shiftEntityPos(t, shift);
                     saved.add(t);
                 }
                 e.remove(Entity.RemovalReason.CHANGED_DIMENSION);
@@ -171,7 +178,7 @@ public final class ShipTransfer {
             CompoundTag t = new CompoundTag();
             if (e.saveAsPassenger(t)) {
                 savedWorldMobs.add(t);
-                savedWorldMobPlotPos.add(worldEntityPlotPos.get(e));
+                savedWorldMobPlotPos.add(shifted(worldEntityPlotPos.get(e), plotShift.get(worldEntityShip.get(e).getUniqueId())));
                 savedWorldMobShip.add(worldEntityShip.get(e));
             }
             e.remove(Entity.RemovalReason.CHANGED_DIMENSION);
@@ -219,7 +226,8 @@ public final class ShipTransfer {
         for (ServerPlayer p : players) {
             ServerSubLevel newShip = loaded.get(worldEntityShip.get(p).getUniqueId());
             Vec3 pos = newShip != null
-                    ? newShip.logicalPose().transformPosition(worldEntityPlotPos.get(p))
+                    ? newShip.logicalPose().transformPosition(
+                            shifted(worldEntityPlotPos.get(p), plotShift.get(worldEntityShip.get(p).getUniqueId())))
                     : newRootPosition;
             p.changeDimension(new DimensionTransition(target, pos, Vec3.ZERO, p.getYRot(), p.getXRot(), DimensionTransition.DO_NOTHING));
             UUID vehicle = riding.get(p.getUUID());
@@ -233,6 +241,82 @@ public final class ShipTransfer {
                 savedWorldMobs.size() + savedPlotEntities.values().stream().mapToInt(List::size).sum(),
                 source.dimension().location(), target.dimension().location(), newRootPosition);
         return !loaded.isEmpty();
+    }
+
+    /**
+     * Reserva un índice de plot libre en el destino para la nave guardada en {@code plot} (el tag de {@code ServerLevelPlot.save}).
+     * Si su índice original está libre lo mantiene; si no, la pasa al primer índice libre y desplaza en el tag las
+     * coordenadas absolutas de block entities y ticks pendientes. Los chunks se guardan en coordenadas locales del plot y
+     * no hace falta tocarlos.
+     *
+     * @return desplazamiento en bloques {dx, dz} aplicado (0, 0 si no se ha movido), o null si no hay sitio
+     */
+    private static int[] assignFreePlot(ServerSubLevelContainer target, CompoundTag plot, Set<Integer> reserved) {
+        int x = plot.getInt("plot_x");
+        int z = plot.getInt("plot_z");
+        int logSize = plot.getInt("log_size");
+        int logSide = target.getLogSideLength();
+        int side = 1 << logSide;
+        BitSet occupancy = target.getOccupancy();
+
+        int index = target.getIndex(x, z);
+        if (x >= 0 && z >= 0 && x < side && z < side && !occupancy.get(index) && !reserved.contains(index)) {
+            reserved.add(index);
+            return new int[]{0, 0};
+        }
+        int free = -1;
+        do {
+            free = occupancy.nextClearBit(free + 1);
+        } while (reserved.contains(free));
+        if (free >= side * side) {
+            return null;
+        }
+        reserved.add(free);
+        int nx = free & (side - 1);
+        int nz = free >> logSide;
+        int dx = (nx - x) << (logSize + 4);
+        int dz = (nz - z) << (logSize + 4);
+
+        CompoundTag chunks = plot.getCompound("chunks");
+        for (String key : chunks.getAllKeys()) {
+            CompoundTag chunk = chunks.getCompound(key);
+            for (String list : new String[]{"block_entities", "block_ticks", "fluid_ticks"}) {
+                ListTag entries = chunk.getList(list, Tag.TAG_COMPOUND);
+                for (int i = 0; i < entries.size(); i++) {
+                    CompoundTag e = entries.getCompound(i);
+                    if (e.contains("x") && e.contains("z")) {
+                        e.putInt("x", e.getInt("x") + dx);
+                        e.putInt("z", e.getInt("z") + dz);
+                    }
+                }
+            }
+        }
+        plot.putInt("plot_x", nx);
+        plot.putInt("plot_z", nz);
+        CreateUniversal.LOGGER.info("Plot {},{} ocupado en el destino: la nave pasa al plot {},{} (desplazamiento {}, {})", x, z, nx, nz, dx, dz);
+        return new int[]{dx, dz};
+    }
+
+    private static void shiftEntityPos(CompoundTag entity, int[] shift) {
+        if (shift == null || (shift[0] == 0 && shift[1] == 0)) {
+            return;
+        }
+        ListTag pos = entity.getList("Pos", Tag.TAG_DOUBLE);
+        if (pos.size() == 3) {
+            ListTag moved = new ListTag();
+            moved.add(DoubleTag.valueOf(pos.getDouble(0) + shift[0]));
+            moved.add(DoubleTag.valueOf(pos.getDouble(1)));
+            moved.add(DoubleTag.valueOf(pos.getDouble(2) + shift[1]));
+            entity.put("Pos", moved);
+        }
+        ListTag passengers = entity.getList("Passengers", Tag.TAG_COMPOUND);
+        for (int i = 0; i < passengers.size(); i++) {
+            shiftEntityPos(passengers.getCompound(i), shift);
+        }
+    }
+
+    private static Vec3 shifted(Vec3 plotPos, int[] shift) {
+        return shift == null ? plotPos : plotPos.add(shift[0], 0.0, shift[1]);
     }
 
     /** Se llama cada tick del servidor: vuelve a sentar a los jugadores cuando el cliente ya conoce el asiento. */
