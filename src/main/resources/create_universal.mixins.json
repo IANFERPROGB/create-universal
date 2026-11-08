@@ -4,6 +4,6 @@
   "package": "dev.createuniversal.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": ["SubLevelPhysicsSystemMixin", "EntitySpaceGravityMixin", "LivingEntitySpaceFrictionMixin", "ItemEntitySpaceDragMixin", "EntitySpaceVoidMixin", "ServerSubLevelSpaceBoundsMixin", "PhysicsAssemblerNoSpaceDisassemblyMixin", "AssemblerStickNoSpaceDisassemblyMixin", "SimAssemblyHelperNoSpaceDisassemblyMixin", "ToolgunContainerNoSpaceMixin"],
-  "client": ["client.ClientLevelSkyMixin"],
+  "client": ["client.ClientLevelSkyMixin", "client.FogRendererAltitudeMixin"],
   "injectors": { "defaultRequire": 1 }
 }
