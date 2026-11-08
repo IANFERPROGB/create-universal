@@ -70,6 +70,7 @@ public final class SpaceTransitions {
             safeTransfer(ship, overworld, new Vec3(x, exit - 150.0, z), ours);
         }
         ShipTransfer.tickRemounts();
+        ShipTracker.tick();
     }
 
     /** Un fallo al mover una nave se registra en el log, pero nunca debe cerrar el servidor. */

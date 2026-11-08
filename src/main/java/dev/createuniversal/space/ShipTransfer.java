@@ -189,6 +189,13 @@ public final class ShipTransfer {
             }
         }
 
+        // Velocidad de la nave raíz (bloques/segundo), para que los jugadores de pie viajen con ella y para el log.
+        Vector3d shipVelocity = new Vector3d();
+        CompoundTag rootTag = datas.isEmpty() ? new CompoundTag() : datas.get(chain.indexOf(root)).fullTag();
+        if (rootTag.contains("linear_velocity")) {
+            shipVelocity.set(SableNBTUtils.readVector3d(rootTag.getCompound("linear_velocity")));
+        }
+
         // 3. Quitar la nave original (REMOVED: sin soltar objetos y sin dejar copia guardada) y crearla en el destino.
         for (ServerSubLevel ship : chain) {
             sourceContainer.removeSubLevel(ship, SubLevelRemovalReason.REMOVED);
@@ -206,11 +213,13 @@ public final class ShipTransfer {
         }
 
         // 4. Volver a crear las entidades del plot (mismas coordenadas de plot) y las del mundo (con la pose nueva).
+        Map<UUID, Entity> recreated = new HashMap<>();
         for (Map.Entry<ServerSubLevel, List<CompoundTag>> entry : savedPlotEntities.entrySet()) {
             for (CompoundTag t : entry.getValue()) {
-                Entity created = EntityType.loadEntityRecursive(t, target, e -> e);
-                if (created != null) {
-                    target.addFreshEntity(created);
+                Entity e = EntityType.loadEntityRecursive(t, target, x -> x);
+                if (e != null) {
+                    target.addFreshEntity(e);
+                    recreated.put(e.getUUID(), e);
                 }
             }
         }
@@ -235,10 +244,18 @@ public final class ShipTransfer {
                 Vec3 pos = newShip != null && worldEntityPlotPos.containsKey(p)
                         ? newShip.logicalPose().transformPosition(shifted(worldEntityPlotPos.get(p), plotShift.get(oldShip.getUniqueId())))
                         : newRootPosition;
-                p.changeDimension(new DimensionTransition(target, pos, Vec3.ZERO, p.getYRot(), p.getXRot(), DimensionTransition.DO_NOTHING));
-                UUID vehicle = riding.get(p.getUUID());
-                if (vehicle != null) {
-                    REMOUNTS.add(new PendingRemount(p.getUUID(), vehicle, target, 5));
+                Vec3 tickVelocity = new Vec3(shipVelocity.x, shipVelocity.y, shipVelocity.z).scale(1.0 / 20.0);
+                p.changeDimension(new DimensionTransition(target, pos, tickVelocity, p.getYRot(), p.getXRot(), DimensionTransition.DO_NOTHING));
+                UUID vehicleId = riding.get(p.getUUID());
+                if (vehicleId != null) {
+                    // Se sienta en el mismo tick: el asiento de Create se borra solo si en su primer tick no tiene pasajero.
+                    Entity vehicle = recreated.get(vehicleId);
+                    boolean seated = vehicle != null && p.startRiding(vehicle, true);
+                    CreateUniversal.LOGGER.info("{} vuelve a su asiento {}: {}", p.getScoreboardName(), vehicleId,
+                            seated ? "sí" : (vehicle == null ? "no (el asiento no se ha recreado)" : "no (startRiding rechazado)"));
+                    if (!seated) {
+                        REMOUNTS.add(new PendingRemount(p.getUUID(), vehicleId, target, 1));
+                    }
                 }
             } catch (RuntimeException ex) {
                 // Nunca dejar a un jugador atrás por un fallo: como último recurso va al punto de llegada de la nave.
@@ -247,10 +264,13 @@ public final class ShipTransfer {
             }
         }
 
-        CreateUniversal.LOGGER.info("Nave {} ({} piezas, {} jugadores, {} entidades) movida de {} a {} en {}",
+        CreateUniversal.LOGGER.info("Nave {} ({} piezas, {} jugadores, {} entidades) movida de {} a {} en {} con velocidad {} b/s",
                 root.getUniqueId(), chain.size(), players.size(),
                 savedWorldMobs.size() + savedPlotEntities.values().stream().mapToInt(List::size).sum(),
-                source.dimension().location(), target.dimension().location(), newRootPosition);
+                source.dimension().location(), target.dimension().location(), newRootPosition, shipVelocity);
+        for (ServerSubLevel ship : loaded.values()) {
+            ShipTracker.watch(ship, target);
+        }
         return !loaded.isEmpty();
     }
 
@@ -335,16 +355,20 @@ public final class ShipTransfer {
         if (REMOUNTS.isEmpty()) {
             return;
         }
+        // ticksLeft cuenta los intentos hechos: se reintenta cada tick hasta 20 veces.
         List<PendingRemount> next = new ArrayList<>();
         for (PendingRemount r : REMOUNTS) {
-            if (r.ticksLeft() > 0) {
-                next.add(new PendingRemount(r.player(), r.vehicle(), r.level(), r.ticksLeft() - 1));
-                continue;
-            }
             Entity player = r.level().getEntity(r.player());
             Entity vehicle = r.level().getEntity(r.vehicle());
-            if (player != null && vehicle != null) {
-                player.startRiding(vehicle, true);
+            boolean seated = player != null && vehicle != null
+                    && (player.getVehicle() == vehicle || player.startRiding(vehicle, true));
+            if (seated) {
+                CreateUniversal.LOGGER.info("{} vuelve a su asiento al intento {}", player.getScoreboardName(), r.ticksLeft());
+            } else if (r.ticksLeft() < 20) {
+                next.add(new PendingRemount(r.player(), r.vehicle(), r.level(), r.ticksLeft() + 1));
+            } else {
+                CreateUniversal.LOGGER.warn("No se pudo volver a sentar a {} (asiento {} {})", r.player(), r.vehicle(),
+                        vehicle == null ? "no existe" : "rechaza al pasajero");
             }
         }
         REMOUNTS.clear();
