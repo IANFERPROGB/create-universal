@@ -55,6 +55,9 @@ public final class ShipAnchor {
         final Map<UUID, Vec3> standing = new HashMap<>();
         final List<UUID> passengers = new ArrayList<>();
         final long startMs = System.currentTimeMillis();
+        /** En el espacio la nave se congela respecto al astro más cercano, que sigue moviéndose por su órbita. */
+        final SolarSystem.Body frame;
+        final double startTime;
         long allTrackingSinceMs = -1;
 
         Hold(ServerSubLevel ship, ServerLevel level, Vector3d linear, Vector3d angular) {
@@ -64,6 +67,18 @@ public final class ShipAnchor {
             this.orientation = new Quaterniond(ship.logicalPose().orientation());
             this.linearVelocity = new Vector3d(linear);
             this.angularVelocity = new Vector3d(angular);
+            this.startTime = SpaceLayout.time(level);
+            this.frame = level.dimension() == CUDimensions.SPACE
+                    ? SolarSystem.frameBody(new Vec3(position.x, position.y, position.z), startTime) : null;
+        }
+
+        /** Dónde debe estar la nave ahora: el punto de llegada, arrastrado con su astro. */
+        Vector3d positionAt(double time) {
+            if (frame == null) {
+                return position;
+            }
+            Vec3 shift = SolarSystem.position(frame, time).subtract(SolarSystem.position(frame, startTime));
+            return new Vector3d(position).add(shift.x, shift.y, shift.z);
         }
     }
 
@@ -80,6 +95,7 @@ public final class ShipAnchor {
         registered = true;
         SableEventPlatform.INSTANCE.onPhysicsTick(ShipAnchor::prePhysicsTick);
         SableEventPlatform.INSTANCE.onPhysicsTick(SpaceGravityCompensation::prePhysicsTick);
+        SableEventPlatform.INSTANCE.onPhysicsTick(OrbitalFrame::prePhysicsTick);
     }
 
     /** ¿Está la nave congelada en la espera de llegada? */
@@ -128,7 +144,7 @@ public final class ShipAnchor {
             if (handle == null || !handle.isValid()) {
                 continue;
             }
-            handle.teleport(hold.position, hold.orientation);
+            handle.teleport(hold.positionAt(SpaceLayout.time(system.getLevel())), hold.orientation);
             Vector3d lin = handle.getLinearVelocity(new Vector3d()).negate();
             Vector3d ang = handle.getAngularVelocity(new Vector3d()).negate();
             handle.addLinearAndAngularVelocity(lin, ang);

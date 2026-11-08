@@ -54,16 +54,17 @@ public final class SpaceTransitions {
             return;
         }
         int exit = CUConfig.EXIT_ALTITUDE.get();
+        double time = SpaceLayout.time(space);
 
         for (ServerSubLevel ship : shipsToMove(overworld, s -> centerOf(s).y >= exit)) {
             Vec3 from = centerOf(ship);
             CompoundTag data = new CompoundTag();
             data.putDouble("earthX", from.x);
             data.putDouble("earthZ", from.z);
-            Vec3 target = freeArrivalPoint(space, SpaceLayout.arrivalPoint());
+            Vec3 target = freeArrivalPoint(space, SpaceLayout.arrivalPoint(time));
             safeTransfer(ship, space, target, data);
         }
-        for (ServerSubLevel ship : shipsToMove(space, s -> SpaceLayout.insideEarthAtmosphere(centerOf(s)))) {
+        for (ServerSubLevel ship : shipsToMove(space, s -> SpaceLayout.insideEarthAtmosphere(centerOf(s), time))) {
             CompoundTag ours = ship.getUserDataTag() != null ? ship.getUserDataTag().getCompound(CreateUniversal.MOD_ID) : new CompoundTag();
             double x = ours.contains("earthX") ? ours.getDouble("earthX") : overworld.getSharedSpawnPos().getX() + 0.5;
             double z = ours.contains("earthZ") ? ours.getDouble("earthZ") : overworld.getSharedSpawnPos().getZ() + 0.5;
@@ -147,7 +148,7 @@ public final class SpaceTransitions {
         }
         if (level.dimension() == Level.OVERWORLD && player.getY() >= CUConfig.EXIT_ALTITUDE.get()) {
             leaveForSpace(player);
-        } else if (level.dimension() == CUDimensions.SPACE && SpaceLayout.insideEarthAtmosphere(player.position())) {
+        } else if (level.dimension() == CUDimensions.SPACE && SpaceLayout.insideEarthAtmosphere(player.position(), SpaceLayout.time(level))) {
             returnToEarth(player);
         }
     }
@@ -163,9 +164,14 @@ public final class SpaceTransitions {
         data.putDouble("earthZ", player.getZ());
         player.getPersistentData().put(TAG, data);
 
-        Vec3 target = SpaceLayout.arrivalPoint();
+        double time = SpaceLayout.time(space);
+        Vec3 target = SpaceLayout.arrivalPoint(time);
+        // Conserva su impulso y suma el de la Tierra, que se mueve por su órbita: así no se queda atrás al llegar.
+        Vec3 motion = player.getDeltaMovement().add(SpaceLayout.earthVelocity(time).scale(1.0 / 20.0));
         CreateUniversal.LOGGER.info("{} sale al espacio desde {} -> {}", player.getScoreboardName(), player.position(), target);
-        player.changeDimension(new DimensionTransition(space, target, Vec3.ZERO, player.getYRot(), player.getXRot(), DimensionTransition.DO_NOTHING));
+        player.changeDimension(new DimensionTransition(space, target, motion, player.getYRot(), player.getXRot(), DimensionTransition.DO_NOTHING));
+        player.setDeltaMovement(motion);
+        player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket(player));
         net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
                 new dev.createuniversal.network.TransitionEffectPayload(dev.createuniversal.network.TransitionEffectPayload.EXIT));
     }

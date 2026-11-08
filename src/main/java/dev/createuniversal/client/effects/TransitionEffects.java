@@ -112,9 +112,11 @@ public final class TransitionEffects {
             lastEarthDistance = Double.NaN;
             return;
         }
-        double distance = camera.distanceTo(SpaceLayout.EARTH_CENTER);
+        Vec3 earth = SpaceLayout.earthCenter(mc.level.getDayTime());
+        double distance = camera.distanceTo(earth);
         double aboveAtmosphere = distance - (SpaceLayout.EARTH_RADIUS + SpaceLayout.EARTH_ATMOSPHERE);
-        double closingSpeed = Double.isNaN(lastEarthDistance) ? 0.0 : (lastEarthDistance - distance) * 20.0; // bloques/s
+        // Velocidad de acercamiento (bloques/s). La Tierra se mueve y quien va con ella no se acerca, aunque se mueva.
+        double closingSpeed = Double.isNaN(lastEarthDistance) ? 0.0 : (lastEarthDistance - distance) * 20.0;
         lastEarthDistance = distance;
 
         float target = 0.0F;
@@ -126,8 +128,8 @@ public final class TransitionEffects {
         reentryGlow += (target - reentryGlow) * 0.15F;
 
         if (reentryGlow > 0.05F && lastCamera != null) {
-            Vec3 motion = camera.subtract(lastCamera);
-            Vec3 dir = motion.lengthSqr() > 1.0E-4 ? motion.normalize() : SpaceLayout.EARTH_CENTER.subtract(camera).normalize();
+            Vec3 motion = camera.subtract(lastCamera).subtract(SpaceLayout.earthVelocity(mc.level.getDayTime()).scale(1.0 / 20.0));
+            Vec3 dir = motion.lengthSqr() > 1.0E-4 ? motion.normalize() : earth.subtract(camera).normalize();
             int count = Math.round(reentryGlow * 8.0F);
             for (int i = 0; i < count; i++) {
                 Vec3 p = camera.add(dir.scale(2.5 + RANDOM.nextDouble() * 2.0))

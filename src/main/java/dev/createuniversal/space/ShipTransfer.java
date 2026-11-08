@@ -214,7 +214,9 @@ public final class ShipTransfer {
             CompoundTag tag = data.fullTag();
             Vector3d lin = tag.contains("linear_velocity") ? SableNBTUtils.readVector3d(tag.getCompound("linear_velocity")) : new Vector3d();
             Vector3d ang = tag.contains("angular_velocity") ? SableNBTUtils.readVector3d(tag.getCompound("angular_velocity")) : new Vector3d();
-            ShipAnchor.holdShip(ship, target, lin, ang);
+            // La Tierra recorre su órbita (~16 b/s): lo que sale de ella la lleva consigo y lo que vuelve la pierde.
+            Vector3d earth = earthVelocity(source, target);
+            ShipAnchor.holdShip(ship, target, lin.add(earth), ang);
         }
 
         // 4. Volver a crear las entidades del plot (mismas coordenadas de plot) y las del mundo (con la pose nueva).
@@ -366,6 +368,18 @@ public final class ShipTransfer {
     }
 
     /** Se llama cada tick del servidor: vuelve a sentar a los jugadores cuando el cliente ya conoce el asiento. */
+    /** Velocidad que se suma al pasar de {@code source} a {@code target}: la de la Tierra al subir, la contraria al bajar. */
+    private static Vector3d earthVelocity(ServerLevel source, ServerLevel target) {
+        Vec3 v = SpaceLayout.earthVelocity(SpaceLayout.time(target));
+        if (target.dimension() == CUDimensions.SPACE && source.dimension() != CUDimensions.SPACE) {
+            return new Vector3d(v.x, v.y, v.z);
+        }
+        if (source.dimension() == CUDimensions.SPACE && target.dimension() != CUDimensions.SPACE) {
+            return new Vector3d(-v.x, -v.y, -v.z);
+        }
+        return new Vector3d();
+    }
+
     public static void tickRemounts() {
         if (REMOUNTS.isEmpty()) {
             return;

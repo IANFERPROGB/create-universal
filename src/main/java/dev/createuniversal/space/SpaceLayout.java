@@ -1,11 +1,11 @@
 package dev.createuniversal.space;
 
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * Dónde está cada cosa dentro de la dimensión espacio.
- * alpha.2: la Tierra está fija en su punto de la órbita. En la alpha.4 se sustituye por el sistema solar con órbitas
- * (escala B, sección 4.4 y D73: 1 bloque ≈ 6 km, la Luna a 8,5 min yendo a 125 bloques/s).
+ * La Tierra dentro de la dimensión espacio: dónde se sale al espacio y dónde empieza la reentrada.
+ * Desde la alpha.4 la Tierra se mueve por su órbita ({@link SolarSystem}), así que todo depende del tiempo.
  */
 public final class SpaceLayout {
     /** 1 bloque ≈ 6 km: la Tierra mide ~2.110 bloques de diámetro (D73). */
@@ -14,19 +14,28 @@ public final class SpaceLayout {
     public static final double EARTH_ATMOSPHERE = 125.0;
     /** Altura sobre la superficie a la que apareces al salir (órbita baja). */
     public static final double ARRIVAL_ALTITUDE = 470.0;
-    /**
-     * Centro de la Tierra: en su radio de órbita alrededor del Sol (312.500, D73) y bajo el suelo de la dimensión, para que
-     * la órbita baja de llegada (Y = 56) quede dentro de la altura construible.
-     */
-    public static final Vec3 EARTH_CENTER = new Vec3(312_500.0, -1470.0, 0.0);
 
     private SpaceLayout() {}
 
-    public static Vec3 arrivalPoint() {
-        return EARTH_CENTER.add(0.0, EARTH_RADIUS + ARRIVAL_ALTITUDE, 0.0);
+    /** Tiempo del sistema solar: dayTime del Overworld (compartido por todas las dimensiones). */
+    public static double time(Level level) {
+        return level.getDayTime();
     }
 
-    public static boolean insideEarthAtmosphere(Vec3 pos) {
-        return pos.distanceTo(EARTH_CENTER) < EARTH_RADIUS + EARTH_ATMOSPHERE;
+    public static Vec3 earthCenter(double time) {
+        return SolarSystem.position("earth", time);
+    }
+
+    /** Velocidad orbital de la Tierra en bloques/segundo (~16 b/s): lo que llega de la Tierra la lleva consigo. */
+    public static Vec3 earthVelocity(double time) {
+        return SolarSystem.velocity(SolarSystem.get("earth"), time);
+    }
+
+    public static Vec3 arrivalPoint(double time) {
+        return earthCenter(time).add(0.0, EARTH_RADIUS + ARRIVAL_ALTITUDE, 0.0);
+    }
+
+    public static boolean insideEarthAtmosphere(Vec3 pos, double time) {
+        return pos.distanceTo(earthCenter(time)) < EARTH_RADIUS + EARTH_ATMOSPHERE;
     }
 }
