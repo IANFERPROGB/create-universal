@@ -35,7 +35,7 @@ import java.util.UUID;
  * </ul>
  */
 public final class SpaceTransitions {
-    private static final String TAG = CreateUniversal.MOD_ID;
+    static final String TAG = CreateUniversal.MOD_ID;
     private static final AttributeModifier ZERO_GRAVITY = new AttributeModifier(
             CreateUniversal.id("space_zero_gravity"), -1.0, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
     /** Separación entre naves que llegan al mismo punto, para que no aparezcan unas dentro de otras. */
@@ -76,6 +76,7 @@ public final class SpaceTransitions {
         ShipTransfer.tickRemounts();
         ShipTracker.tick();
         ShipAnchor.tick();
+        LandingLock.tick(server);
     }
 
     /** Un fallo al mover una nave se registra en el log, pero nunca debe cerrar el servidor. */
@@ -106,7 +107,8 @@ public final class SpaceTransitions {
             // Basta con que una pieza cruce para mover toda la nave; ninguna pieza se mueve dos veces.
             List<ServerSubLevel> group = ShipGroup.of(ship);
             group.forEach(s -> taken.add(s.getUniqueId()));
-            if (ShipGroup.settled(group, level)) {
+            // Lo que acaba de bajar del espacio no vuelve a subir hasta aterrizar (LandingLock).
+            if (ShipGroup.settled(group, level) && !LandingLock.mustLand(group)) {
                 result.add(ship);
             }
         }
@@ -147,6 +149,7 @@ public final class SpaceTransitions {
         ServerLevel level = player.serverLevel();
         updateGravity(player, level);
         rescueFromEmptyPlot(player, level);
+        boolean mustLand = LandingLock.playerMustLand(player);
 
         if (player.isPassenger() || isAboardShip(player, level)) {
             return;
@@ -154,7 +157,7 @@ public final class SpaceTransitions {
         if (dev.createuniversal.space.surface.SurfaceTransitions.tickPlayer(player)) {
             return;
         }
-        if (level.dimension() == Level.OVERWORLD && player.getY() >= CUConfig.EXIT_ALTITUDE.get()) {
+        if (level.dimension() == Level.OVERWORLD && player.getY() >= CUConfig.EXIT_ALTITUDE.get() && !mustLand) {
             leaveForSpace(player);
         } else if (level.dimension() == CUDimensions.SPACE && SpaceLayout.insideEarthAtmosphere(player.position(), SpaceLayout.time(level))) {
             returnToEarth(player);
@@ -192,6 +195,7 @@ public final class SpaceTransitions {
         Vec3 target = new Vec3(x, CUConfig.EXIT_ALTITUDE.get() - 100.0, z);
         CreateUniversal.LOGGER.info("{} vuelve a la Tierra -> {}", player.getScoreboardName(), target);
         player.changeDimension(new DimensionTransition(overworld, target, Vec3.ZERO, player.getYRot(), player.getXRot(), DimensionTransition.DO_NOTHING));
+        LandingLock.markPlayer(player);
         net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
                 new dev.createuniversal.network.TransitionEffectPayload(dev.createuniversal.network.TransitionEffectPayload.REENTRY));
     }

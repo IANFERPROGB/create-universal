@@ -4,7 +4,6 @@ import dev.createuniversal.CreateUniversal;
 import dev.ryanhcode.sable.api.sublevel.ServerSubLevelContainer;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
 import dev.ryanhcode.sable.companion.math.BoundingBox3dc;
-import dev.ryanhcode.sable.companion.math.BoundingBox3ic;
 import dev.ryanhcode.sable.companion.math.Pose3d;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
@@ -70,6 +69,12 @@ public final class ShipTransfer {
 
         // Toda la nave: cadena de Sable y piezas pegadas (remaches...). Si no, cada pieza se iría por su cuenta.
         List<ServerSubLevel> chain = ShipGroup.of(root);
+        // Lo que baja del espacio no puede volver a subir hasta aterrizar; al dar la vuelta al planeta se conserva la marca.
+        CompoundTag ourData = userData != null ? userData.copy() : new CompoundTag();
+        boolean descent = LandingLock.isDescent(source, target);
+        if (descent || (source == target && LandingLock.mustLand(chain))) {
+            ourData.putBoolean(LandingLock.KEY, true);
+        }
 
         Vector3d delta = new Vector3d(newRootPosition.x, newRootPosition.y, newRootPosition.z).sub(root.logicalPose().position());
         List<UUID> chainIds = chain.stream().map(SubLevel::getUniqueId).toList();
@@ -82,10 +87,13 @@ public final class ShipTransfer {
         Map<UUID, UUID> riding = new HashMap<>();
 
         for (ServerSubLevel ship : chain) {
-            BoundingBox3ic plotBox = ship.getPlot().getBoundingBox();
-            AABB plotAabb = new AABB(plotBox.minX(), plotBox.minY(), plotBox.minZ(),
-                    plotBox.maxX() + 1, plotBox.maxY() + 1, plotBox.maxZ() + 1).inflate(1.0);
-            plotEntities.put(ship, new ArrayList<>(source.getEntities((Entity) null, plotAabb, e -> !(e instanceof ServerPlayer))));
+            // Toda la zona interna de la nave, y solo lo que está dentro de ella: las zonas de las piezas de una misma nave
+            // son vecinas, y un asiento asignado a la pieza equivocada dejaba al jugador a miles de bloques de su nave.
+            var plot = ship.getPlot();
+            AABB plotAabb = new AABB(plot.getChunkMin().getMinBlockX(), source.getMinBuildHeight(), plot.getChunkMin().getMinBlockZ(),
+                    plot.getChunkMax().getMaxBlockX() + 1, source.getMaxBuildHeight(), plot.getChunkMax().getMaxBlockZ() + 1);
+            plotEntities.put(ship, new ArrayList<>(source.getEntities((Entity) null, plotAabb,
+                    e -> !(e instanceof ServerPlayer) && plot.contains(e.position()))));
 
             BoundingBox3dc world = ship.boundingBox();
             AABB worldAabb = new AABB(world.minX(), world.minY(), world.minZ(), world.maxX(), world.maxY(), world.maxZ()).inflate(2.0);
@@ -153,11 +161,9 @@ public final class ShipTransfer {
             pose.position().add(delta);
             pose.rotationPoint().add(shift[0], shift[1], shift[2]);
             tag.put("pose", SableNBTUtils.writePose3d(pose));
-            if (userData != null) {
-                CompoundTag ud = tag.contains("user_data") ? tag.getCompound("user_data") : new CompoundTag();
-                ud.put(CreateUniversal.MOD_ID, userData.copy());
-                tag.put("user_data", ud);
-            }
+            CompoundTag ud = tag.contains("user_data") ? tag.getCompound("user_data") : new CompoundTag();
+            ud.put(CreateUniversal.MOD_ID, ourData.copy());
+            tag.put("user_data", ud);
             datas.add(data);
         }
         shiftPlotReferences(datas, areas);
@@ -227,6 +233,7 @@ public final class ShipTransfer {
             ShipAnchor.holdShip(ship, target, lin.add(earth), ang);
         }
         ShipAnchor.group(new ArrayList<>(loaded.values()));
+        ArrivalChunks.load(target, loaded.values());
 
         // 4. Volver a crear las entidades del plot (mismas coordenadas de plot) y las del mundo (con la pose nueva).
         Map<UUID, Entity> recreated = new HashMap<>();
@@ -260,8 +267,22 @@ public final class ShipTransfer {
                 Vec3 pos = newShip != null && worldEntityPlotPos.containsKey(p)
                         ? newShip.logicalPose().transformPosition(shifted(worldEntityPlotPos.get(p), plotShift.get(oldShip.getUniqueId())))
                         : newRootPosition;
+                // Sentado: junto a su asiento ya recreado, con la pose de la pieza que de verdad lo lleva.
+                Entity seat = riding.containsKey(p.getUUID()) ? recreated.get(riding.get(p.getUUID())) : null;
+                if (seat != null) {
+                    for (ServerSubLevel candidate : loaded.values()) {
+                        if (candidate.getPlot().contains(seat.position())) {
+                            newShip = candidate;
+                            pos = candidate.logicalPose().transformPosition(seat.position().add(0.0, 0.5, 0.0));
+                            break;
+                        }
+                    }
+                }
                 // Llega parado: la nave también está congelada y los dos recuperan la velocidad a la vez al soltarla.
                 p.changeDimension(new DimensionTransition(target, pos, Vec3.ZERO, p.getYRot(), p.getXRot(), DimensionTransition.DO_NOTHING));
+                if (descent) {
+                    LandingLock.markPlayer(p);
+                }
                 net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(p, new dev.createuniversal.network.TransitionEffectPayload(
                         target.dimension() == CUDimensions.SPACE ? dev.createuniversal.network.TransitionEffectPayload.EXIT
                                 : dev.createuniversal.network.TransitionEffectPayload.REENTRY));
@@ -283,7 +304,7 @@ public final class ShipTransfer {
                         REMOUNTS.add(new PendingRemount(p.getUUID(), vehicleId, target, 1));
                         // Mientras tanto, anclado donde estaba su asiento: si no se puede volver a sentar, al menos
                         // viaja con la nave en vez de quedarse flotando mientras ella se va.
-                        if (newShip != null && worldEntityPlotPos.containsKey(p)) {
+                        if (newShip != null && oldShip != null && worldEntityPlotPos.containsKey(p)) {
                             ShipAnchor.anchorStanding(p, newShip, shifted(worldEntityPlotPos.get(p), plotShift.get(oldShip.getUniqueId())));
                         }
                     }

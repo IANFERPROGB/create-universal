@@ -73,7 +73,8 @@ public final class SurfaceTransitions {
                 Vec3 target = landingPoint(surface, centerOf(ship), time);
                 safeTransfer(ship, ground, target);
             }
-            for (ServerSubLevel ship : roots(ground, s -> centerOf(s).y >= surface.exitY())) {
+            for (ServerSubLevel ship : roots(ground, s -> centerOf(s).y >= surface.exitY()
+                    && !dev.createuniversal.space.LandingLock.mustLand(dev.createuniversal.space.ShipGroup.of(s)))) {
                 Vec3 c = centerOf(ship);
                 safeTransfer(ship, space, orbitPoint(surface, c.x, c.z, time));
             }
@@ -154,7 +155,7 @@ public final class SurfaceTransitions {
             return false;
         }
         PlanetSurface surface = PlanetSurface.byDimension(level.dimension());
-        if (surface != null && player.getY() >= surface.exitY()) {
+        if (surface != null && player.getY() >= surface.exitY() && !dev.createuniversal.space.LandingLock.playerMustLand(player)) {
             ServerLevel space = server.getLevel(CUDimensions.SPACE);
             if (space != null) {
                 double time = SpaceLayout.time(space);
@@ -174,6 +175,9 @@ public final class SurfaceTransitions {
         player.setDeltaMovement(motion);
         player.connection.send(new ClientboundSetEntityMotionPacket(player));
         PacketDistributor.sendToPlayer(player, new TransitionEffectPayload(effect));
+        if (target.dimension() != CUDimensions.SPACE) {
+            dev.createuniversal.space.LandingLock.markPlayer(player);
+        }
     }
 
     // ---------------------------------------------------------------- del globo al mapa y al revés
