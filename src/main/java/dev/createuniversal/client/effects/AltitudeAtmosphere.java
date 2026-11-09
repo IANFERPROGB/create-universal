@@ -30,9 +30,10 @@ public final class AltitudeAtmosphere {
         return (float) Mth.clamp((y - start) / (exit - start), 0.0, 1.0);
     }
 
-    /** Para AtmosphericsCompat: en el espacio, o ya muy arriba, su niebla y su cielo se apagan. */
+    /** Para AtmosphericsCompat: en el espacio, en la Luna y en Marte (tienen su cielo propio), o ya muy arriba, se apaga. */
     public static boolean atmosphericsShouldBeOff() {
         Minecraft mc = Minecraft.getInstance();
-        return mc.level != null && (mc.level.dimension() == CUDimensions.SPACE || fade() > 0.6F);
+        return mc.level != null && (mc.level.dimension() == CUDimensions.SPACE || fade() > 0.6F
+                || dev.createuniversal.space.surface.PlanetSurface.byDimension(mc.level.dimension()) != null);
     }
 }

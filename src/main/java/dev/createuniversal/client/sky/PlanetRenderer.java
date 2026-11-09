@@ -444,10 +444,15 @@ public final class PlanetRenderer {
         double lit = (1.0 + toSun.dot(toCam)) * 0.5;
         double fade = 1.0 - smooth(3.0, HALO_MAX_PIXELS, it.pixels());
         float strength = (float) (0.4 * Math.pow(lit, 0.6) * fade) * nightVisibility();
+        double haloPixels = Math.max(7.0, it.pixels() * 2.5);
+        if (groundUp != null && additiveBodies) {
+            // Desde el suelo de un planeta con aire, el aire dispersa la luz y hace un halo (como el de la Luna de noche).
+            strength *= 2.6F;
+            haloPixels = Math.max(26.0, it.pixels() * 8.0);
+        }
         if (strength < 0.01F) {
             return;
         }
-        double haloPixels = Math.max(7.0, it.pixels() * 2.5);
         double half = SKY_DISTANCE * tanHalfFov * haloPixels / halfHeight;
         float[] c = dotColor(it.body());
         float grey = (c[0] + c[1] + c[2]) / 3.0F;

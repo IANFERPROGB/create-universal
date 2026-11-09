@@ -212,9 +212,13 @@ public final class SolarSystem {
      * sobre ese eje. Lleva un punto del astro (en su espacio propio, radio 1) a la dirección en el espacio.
      */
     public static Quaterniond orientation(Body body, double time, boolean spin, double extraSpin) {
-        Quaterniond q = new Quaterniond().rotationX(Math.toRadians(-body.tiltDeg()));
+        // Componentes escritas a mano: en la JOML 1.10.5 que trae Minecraft, Quaterniond.rotationX deja el coseno en z en
+        // vez de en w y el giro sale mal (la versión float sí funciona). Medido el 2026-11-09.
+        double tilt = Math.toRadians(-body.tiltDeg()) * 0.5;
+        Quaterniond q = new Quaterniond(Math.sin(tilt), 0.0, 0.0, Math.cos(tilt));
         if (spin) {
-            q.rotateY((spinAngle(body, time) + extraSpin) % (Math.PI * 2.0));
+            double half = ((spinAngle(body, time) + extraSpin) % (Math.PI * 2.0)) * 0.5;
+            q.mul(new Quaterniond(0.0, Math.sin(half), 0.0, Math.cos(half)));
         }
         return q;
     }
