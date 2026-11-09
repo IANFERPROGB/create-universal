@@ -23,13 +23,15 @@ import java.util.List;
  * @param pressure presión del aire en la superficie respecto a la de la Tierra
  */
 public record PlanetSurface(String bodyId, ResourceKey<Level> dimension, double radiusMeters, int minY, int height, int exitY,
-                            double heightScale, double shoulderMeters, double shoulderScale, double gravity, double pressure,
-                            double entryAltitude, double craterDensity) {
+                            double datumY, double heightScale, double shoulderMeters, double shoulderScale, double gravity,
+                            double pressure, double entryAltitude, double craterDensity) {
 
+    // Minecraft solo permite alturas entre Y −2.032 y 2.031: Marte (del fondo de Hellas a la cima del Olimpo, con el
+    // "hombro") se baja 600 bloques para caber entero.
     public static final PlanetSurface MOON = new PlanetSurface("moon", key("moon"), 1_737_400.0, -1408, 3264, 1820,
-            0.15, 1.0e9, 0.15, 0.165, 0.0, 40.0, 1.0);
-    public static final PlanetSurface MARS = new PlanetSurface("mars", key("mars"), 3_389_500.0, -1328, 4064, 2700,
-            0.15, 12_000.0, 0.06, 0.38, 0.006, 60.0, 0.3);
+            0.0, 0.15, 1.0e9, 0.15, 0.165, 0.0, 40.0, 1.0);
+    public static final PlanetSurface MARS = new PlanetSurface("mars", key("mars"), 3_389_500.0, -2032, 4064, 2000,
+            -600.0, 0.15, 12_000.0, 0.06, 0.38, 0.006, 60.0, 0.3);
 
     public static final List<PlanetSurface> ALL = List.of(MOON, MARS);
 
@@ -85,11 +87,11 @@ public record PlanetSurface(String bodyId, ResourceKey<Level> dimension, double 
         return -latitude * radiusMeters;
     }
 
-    /** Altura real (metros) a bloques sobre el nivel 0, con el "hombro" para las montañas más altas. */
+    /** Altura real (metros) a la y de Minecraft, con el "hombro" para las montañas más altas. */
     public double scaleHeight(double meters) {
         if (meters <= shoulderMeters) {
-            return meters * heightScale;
+            return datumY + meters * heightScale;
         }
-        return shoulderMeters * heightScale + (meters - shoulderMeters) * shoulderScale;
+        return datumY + shoulderMeters * heightScale + (meters - shoulderMeters) * shoulderScale;
     }
 }

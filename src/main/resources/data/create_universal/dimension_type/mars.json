@@ -12,7 +12,7 @@
   "respawn_anchor_works": false,
   "has_raids": false,
   "logical_height": 4064,
-  "min_y": -1328,
+  "min_y": -2032,
   "height": 4064,
   "infiniburn": "#minecraft:infiniburn_overworld",
   "effects": "create_universal:mars"
