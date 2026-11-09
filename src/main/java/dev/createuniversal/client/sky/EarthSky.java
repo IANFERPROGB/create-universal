@@ -146,7 +146,7 @@ public final class EarthSky {
         PlanetRenderer.commonUniforms(seconds, false);
         SpaceSky.drawBackdrop(view, projection, night, false);
         if (rain < 0.95F) {
-            PlanetRenderer.setGroundObserver("earth", up, 1.0F - night);
+            PlanetRenderer.setGroundObserver("earth", up, 1.0F - night, true);
             try {
                 PlanetRenderer.render(view, projection, cam, time, seconds, false);
                 Vec3 sun = SolarSystem.position(SolarSystem.get("sun"), time);

@@ -34,5 +34,8 @@ public final class CreateUniversalClient {
 
     private static void registerDimensionEffects(RegisterDimensionSpecialEffectsEvent event) {
         event.register(CreateUniversal.id("space"), new SpaceSkyEffects());
+        for (dev.createuniversal.space.surface.PlanetSurface surface : dev.createuniversal.space.surface.PlanetSurface.ALL) {
+            event.register(surface.dimension().location(), new dev.createuniversal.client.sky.SurfaceSkyEffects(surface));
+        }
     }
 }

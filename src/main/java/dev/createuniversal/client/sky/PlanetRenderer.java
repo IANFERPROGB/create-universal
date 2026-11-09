@@ -127,22 +127,25 @@ public final class PlanetRenderer {
     private static String homeBody;
     private static Vec3 groundUp;
     private static float daylight;
+    private static boolean additiveBodies;
 
     /**
      * Para dibujar desde la superficie de {@code home}: ese astro no se dibuja, lo que está bajo el horizonte tampoco, los
      * astros se suman al color del cielo (de día la cara oscura de la Luna no tapa el azul) y los puntos de luz se
      * apagan con la luz del día ({@code daylight} de 0 a 1).
      */
-    public static void setGroundObserver(String home, Vec3 up, float daylightAmount) {
+    public static void setGroundObserver(String home, Vec3 up, float daylightAmount, boolean addToSky) {
         homeBody = home;
         groundUp = up;
         daylight = daylightAmount;
+        additiveBodies = addToSky;
     }
 
     public static void clearGroundObserver() {
         homeBody = null;
         groundUp = null;
         daylight = 0.0F;
+        additiveBodies = false;
     }
 
     private static float nightVisibility() {
@@ -324,6 +327,45 @@ public final class PlanetRenderer {
         }
     }
 
+    /**
+     * La atmósfera del astro donde se está de pie, vista desde dentro (cielo de Marte): el mismo cálculo de dispersión
+     * que desde el espacio, con la cámara dentro de la capa. Da el color del cielo de día, el atardecer azul de Marte y el
+     * Sol enrojecido cerca del horizonte.
+     */
+    public static void drawHomeAtmosphere(Matrix4f view, Matrix4f projection, Body body, Vec3 cam, double time, float seconds) {
+        Look look = LOOKS.getOrDefault(body.id(), AIRLESS);
+        Atmosphere atmo = look.atmosphere();
+        if (shader == null || atmo == null) {
+            return;
+        }
+        ensureBuffers();
+        Vec3 pos = SolarSystem.position(body, time);
+        Vec3 rel = pos.subtract(cam);
+        double dist = rel.length();
+        double k = SKY_DISTANCE / dist;
+        Vector3f center = vec(rel.scale(k));
+        float radius = (float) (body.radius() * k);
+        Vec3 sunPos = SolarSystem.position(SolarSystem.get("sun"), time);
+        Vector3f sunDir = vec(sunPos.subtract(pos).normalize());
+        Vector3f camRel = vec(rel.scale(-1.0 / body.radius()));
+        Quaternionf q = orientation(body, time, true, 0.0);
+        float sunAngular = (float) (SolarSystem.get("sun").radius() / sunPos.distanceTo(pos));
+        scatter(atmo);
+        shader.safeGetUniform("Occluder").set(0.0F, 0.0F, 0.0F, 0.0F);
+        shader.safeGetUniform("Anim").set(seconds, 0.0F, 0.0F, sunAngular);
+        shader.safeGetUniform("Tint").set(1.0F, 1.0F, 1.0F, atmo.exposure());
+        RenderSystem.enableBlend();
+        RenderSystem.blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.SRC_ALPHA);
+        RenderSystem.enableCull();
+        GL11.glCullFace(GL11.GL_FRONT);
+        set(MODE_ATMOSPHERE, 0, 0, look.flags(), toObject(q, sunDir), toObject(q, camRel));
+        draw(sphereDetailed, model(view, center, q, radius * atmo.top()), projection);
+        GL11.glCullFace(GL11.GL_BACK);
+        RenderSystem.disableCull();
+        scatter(null);
+        shader.safeGetUniform("Tint").set(1.0F, 1.0F, 1.0F, 1.0F);
+    }
+
     /** El astro que puede hacer sombra sobre este (eclipses): las lunas, su planeta; los planetas, su luna mejor alineada. */
     private static void occluder(Item it, Quaternionf q, double time) {
         Body body = it.body();
@@ -487,7 +529,7 @@ public final class PlanetRenderer {
     }
 
     private static void opaque() {
-        if (groundUp != null) {
+        if (groundUp != null && additiveBodies) {
             additive();
         } else {
             RenderSystem.disableBlend();

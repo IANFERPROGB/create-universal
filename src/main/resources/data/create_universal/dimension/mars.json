@@ -1,0 +1,11 @@
+{
+  "type": "create_universal:mars",
+  "generator": {
+    "type": "create_universal:planet",
+    "planet": "mars",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "create_universal:mars"
+    }
+  }
+}

@@ -10,7 +10,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * En el espacio no hay gravedad para ninguna entidad: jugadores, mobs, objetos tirados, flechas... (D4).
+ * En el espacio no hay gravedad para ninguna entidad: jugadores, mobs, objetos tirados, flechas... (D4). En la Luna y en
+ * Marte, la suya (1/6 y 0,38 de la de la Tierra).
  * Se hace en {@code Entity.getGravity()} y no con el atributo de gravedad del jugador porque otros mods del pack
  * (Sable, Immersive Portals) también calculan la gravedad de las entidades y el atributo no bastaba.
  * Se aplica en el servidor y en el cliente, que es quien mueve al jugador.
@@ -23,8 +24,17 @@ public abstract class EntitySpaceGravityMixin {
     @Inject(method = "getGravity", at = @At("RETURN"), cancellable = true)
     private void create_universal$noGravityInSpace(CallbackInfoReturnable<Double> cir) {
         Level level = level();
-        if (level != null && level.dimension() == CUDimensions.SPACE) {
+        if (level == null) {
+            return;
+        }
+        if (level.dimension() == CUDimensions.SPACE) {
             cir.setReturnValue(0.0);
+            return;
+        }
+        // En la Luna y en Marte, su gravedad (alpha.5).
+        dev.createuniversal.space.surface.PlanetSurface surface = dev.createuniversal.space.surface.PlanetSurface.byDimension(level.dimension());
+        if (surface != null) {
+            cir.setReturnValue(cir.getReturnValue() * surface.gravity());
         }
     }
 }

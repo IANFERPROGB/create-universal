@@ -18,6 +18,8 @@ public final class CreateUniversal {
     public CreateUniversal(IEventBus modBus, ModContainer container) {
         container.registerConfig(ModConfig.Type.COMMON, CUConfig.SPEC);
         modBus.addListener(CreateUniversal::registerPayloads);
+        dev.createuniversal.registry.CUBlocks.register(modBus);
+        dev.createuniversal.registry.CUWorldgen.register(modBus);
         NeoForge.EVENT_BUS.register(SpaceTransitions.class);
         NeoForge.EVENT_BUS.register(dev.createuniversal.space.SpaceCommands.class);
         dev.createuniversal.space.ShipAnchor.register();

@@ -35,5 +35,17 @@
   "create_universal.body.titania": "Titania",
   "create_universal.body.oberon": "Oberón",
   "create_universal.body.neptune": "Neptuno",
-  "create_universal.body.triton": "Tritón"
+  "create_universal.body.triton": "Tritón",
+  "block.create_universal.lunar_regolith": "Regolito lunar",
+  "block.create_universal.lunar_mare_regolith": "Regolito de mar lunar",
+  "block.create_universal.lunar_rock": "Roca lunar",
+  "block.create_universal.lunar_basalt": "Basalto lunar",
+  "block.create_universal.martian_dust": "Polvo marciano",
+  "block.create_universal.martian_regolith": "Regolito marciano",
+  "block.create_universal.martian_rock": "Roca marciana",
+  "block.create_universal.martian_basalt": "Basalto marciano",
+  "create_universal.dimension.moon": "Luna",
+  "create_universal.dimension.mars": "Marte",
+  "create_universal.command.land": "Has aterrizado en %s (latitud %s°, longitud %s°)",
+  "create_universal.command.no_surface": "%s no tiene superficie donde aterrizar todavía"
 }

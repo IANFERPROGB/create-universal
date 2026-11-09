@@ -70,6 +70,8 @@ public final class SpaceTransitions {
             double z = ours.contains("earthZ") ? ours.getDouble("earthZ") : overworld.getSharedSpawnPos().getZ() + 0.5;
             safeTransfer(ship, overworld, new Vec3(x, exit - 150.0, z), ours);
         }
+        dev.createuniversal.space.surface.SurfaceTransitions.tickShips(server, space);
+        dev.createuniversal.space.surface.SurfaceTransitions.tickWrap(server);
         SkyShipBroadcaster.tick(server);
         ShipTransfer.tickRemounts();
         ShipTracker.tick();
@@ -142,9 +144,12 @@ public final class SpaceTransitions {
             return;
         }
         ServerLevel level = player.serverLevel();
-        updateZeroGravity(player, level.dimension() == CUDimensions.SPACE);
+        updateGravity(player, level);
 
         if (player.isPassenger() || isAboardShip(player, level)) {
+            return;
+        }
+        if (dev.createuniversal.space.surface.SurfaceTransitions.tickPlayer(player)) {
             return;
         }
         if (level.dimension() == Level.OVERWORLD && player.getY() >= CUConfig.EXIT_ALTITUDE.get()) {
@@ -189,17 +194,23 @@ public final class SpaceTransitions {
                 new dev.createuniversal.network.TransitionEffectPayload(dev.createuniversal.network.TransitionEffectPayload.REENTRY));
     }
 
-    /** En el espacio no hay gravedad para el jugador (D4). Las naves ya la pierden por la física de Sable (dimension_physics/space.json). */
-    private static void updateZeroGravity(ServerPlayer player, boolean inSpace) {
+    /** Sin gravedad para el jugador en el espacio (D4). */
+    private static void updateGravity(ServerPlayer player, ServerLevel level) {
         AttributeInstance gravity = player.getAttribute(Attributes.GRAVITY);
         if (gravity == null) {
             return;
         }
-        boolean has = gravity.hasModifier(ZERO_GRAVITY.id());
-        if (inSpace && !has) {
-            gravity.addTransientModifier(ZERO_GRAVITY);
-        } else if (!inSpace && has) {
+        // En la Luna y en Marte la gravedad la escala EntitySpaceGravityMixin (para todas las entidades); aquí solo el espacio.
+        double wanted = level.dimension() == CUDimensions.SPACE ? -1.0 : 0.0;
+        AttributeModifier current = gravity.getModifier(ZERO_GRAVITY.id());
+        if (current != null && current.amount() == wanted) {
+            return;
+        }
+        if (current != null) {
             gravity.removeModifier(ZERO_GRAVITY.id());
+        }
+        if (wanted != 0.0) {
+            gravity.addTransientModifier(new AttributeModifier(ZERO_GRAVITY.id(), wanted, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
         }
     }
 

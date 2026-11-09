@@ -368,16 +368,15 @@ public final class ShipTransfer {
     }
 
     /** Se llama cada tick del servidor: vuelve a sentar a los jugadores cuando el cliente ya conoce el asiento. */
-    /** Velocidad que se suma al pasar de {@code source} a {@code target}: la de la Tierra al subir, la contraria al bajar. */
+    /**
+     * Velocidad que se suma al pasar de {@code source} a {@code target}: cada sitio se mueve con su astro (la Tierra, la
+     * Luna, Marte) y el espacio no; lo que sube hereda la velocidad de su astro y lo que baja la pierde.
+     */
     private static Vector3d earthVelocity(ServerLevel source, ServerLevel target) {
-        Vec3 v = SpaceLayout.earthVelocity(SpaceLayout.time(target));
-        if (target.dimension() == CUDimensions.SPACE && source.dimension() != CUDimensions.SPACE) {
-            return new Vector3d(v.x, v.y, v.z);
-        }
-        if (source.dimension() == CUDimensions.SPACE && target.dimension() != CUDimensions.SPACE) {
-            return new Vector3d(-v.x, -v.y, -v.z);
-        }
-        return new Vector3d();
+        double time = SpaceLayout.time(target);
+        Vec3 v = dev.createuniversal.space.surface.SurfaceTransitions.frameVelocity(source, time)
+                .subtract(dev.createuniversal.space.surface.SurfaceTransitions.frameVelocity(target, time));
+        return new Vector3d(v.x, v.y, v.z);
     }
 
     public static void tickRemounts() {

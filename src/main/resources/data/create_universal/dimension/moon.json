@@ -1,0 +1,11 @@
+{
+  "type": "create_universal:moon",
+  "generator": {
+    "type": "create_universal:planet",
+    "planet": "moon",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "create_universal:moon"
+    }
+  }
+}

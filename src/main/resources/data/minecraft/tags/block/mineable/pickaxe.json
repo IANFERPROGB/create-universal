@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "create_universal:lunar_rock",
+    "create_universal:lunar_basalt",
+    "create_universal:martian_rock",
+    "create_universal:martian_basalt"
+  ]
+}

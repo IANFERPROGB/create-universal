@@ -3,7 +3,7 @@
   "minVersion": "0.8",
   "package": "dev.createuniversal.mixin",
   "compatibilityLevel": "JAVA_21",
-  "mixins": ["SubLevelPhysicsSystemMixin", "EntitySpaceGravityMixin", "LivingEntitySpaceFrictionMixin", "ItemEntitySpaceDragMixin", "EntitySpaceVoidMixin", "ServerSubLevelSpaceBoundsMixin", "PhysicsAssemblerNoSpaceDisassemblyMixin", "AssemblerStickNoSpaceDisassemblyMixin", "SimAssemblyHelperNoSpaceDisassemblyMixin", "ToolgunContainerNoSpaceMixin"],
+  "mixins": ["SubLevelPhysicsSystemMixin", "EntitySpaceGravityMixin", "LivingEntitySpaceFrictionMixin", "ItemEntitySpaceDragMixin", "EntitySpaceVoidMixin", "ServerSubLevelSpaceBoundsMixin", "PhysicsAssemblerNoSpaceDisassemblyMixin", "AssemblerStickNoSpaceDisassemblyMixin", "SimAssemblyHelperNoSpaceDisassemblyMixin", "ToolgunContainerNoSpaceMixin", "EntityPlanetFallMixin"],
   "client": ["client.ClientLevelSkyMixin", "client.FogRendererAltitudeMixin", "client.GameRendererSpaceSkyMixin", "client.LevelRendererEarthSkyMixin"],
   "injectors": { "defaultRequire": 1 }
 }

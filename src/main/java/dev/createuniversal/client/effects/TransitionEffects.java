@@ -85,7 +85,7 @@ public final class TransitionEffects {
             return;
         }
         boolean exit = pendingKind == TransitionEffectPayload.EXIT;
-        boolean rightWorld = mc.level.dimension() == (exit ? CUDimensions.SPACE : Level.OVERWORLD);
+        boolean rightWorld = exit ? mc.level.dimension() == CUDimensions.SPACE : mc.level.dimension() != CUDimensions.SPACE;
         if (!rightWorld || mc.screen != null) {
             return;
         }

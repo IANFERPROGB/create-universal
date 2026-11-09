@@ -23,6 +23,7 @@ import java.util.Locale;
  * <ul>
  *   <li>{@code /cu goto <astro>}: te lleva al espacio, cerca del astro y por su lado de día, moviéndote con él.</li>
  *   <li>{@code /cu look <astro>}: gira tu vista hacia el astro y dice a qué distancia está.</li>
+ *   <li>{@code /cu land <astro> [latitud longitud]}: te deja en la superficie de la Luna o de Marte.</li>
  * </ul>
  */
 public final class SpaceCommands {
@@ -38,7 +39,15 @@ public final class SpaceCommands {
                             .executes(SpaceCommands::goTo)))
                     .then(Commands.literal("look").then(Commands.argument("body", StringArgumentType.word())
                             .suggests((c, b) -> SharedSuggestionProvider.suggest(SolarSystem.bodies().stream().map(SolarSystem.Body::id), b))
-                            .executes(SpaceCommands::look))));
+                            .executes(SpaceCommands::look)))
+                    .then(Commands.literal("land").then(Commands.argument("body", StringArgumentType.word())
+                            .suggests((c, b) -> SharedSuggestionProvider.suggest(
+                                    dev.createuniversal.space.surface.PlanetSurface.ALL.stream().map(p -> p.bodyId()), b))
+                            .executes(c -> land(c, Double.NaN, Double.NaN))
+                            .then(Commands.argument("latitude", com.mojang.brigadier.arguments.DoubleArgumentType.doubleArg(-90, 90))
+                                    .then(Commands.argument("longitude", com.mojang.brigadier.arguments.DoubleArgumentType.doubleArg(-180, 180))
+                                            .executes(c -> land(c, com.mojang.brigadier.arguments.DoubleArgumentType.getDouble(c, "latitude"),
+                                                    com.mojang.brigadier.arguments.DoubleArgumentType.getDouble(c, "longitude"))))))));
         }
     }
 
@@ -105,6 +114,37 @@ public final class SpaceCommands {
         c.getSource().sendSuccess(() -> Component.translatable("create_universal.command.look",
                 Component.translatable("create_universal.body." + body.id()), Math.round(surface),
                 String.format(Locale.ROOT, "%.1f", minutes), String.format(Locale.ROOT, "%.2f", degrees)), false);
+        return 1;
+    }
+
+    /**
+     * {@code /cu land <astro> [latitud longitud]}: te deja sobre la superficie, en el suelo real de ese punto. Sin
+     * coordenadas, en el punto del astro que mira a la Tierra (en la Luna, la cara visible).
+     */
+    private static int land(CommandContext<CommandSourceStack> c, double latDeg, double lonDeg) throws CommandSyntaxException {
+        ServerPlayer player = c.getSource().getPlayerOrException();
+        String id = StringArgumentType.getString(c, "body").toLowerCase(Locale.ROOT);
+        dev.createuniversal.space.surface.PlanetSurface surface = dev.createuniversal.space.surface.PlanetSurface.byBody(id);
+        if (surface == null) {
+            c.getSource().sendFailure(Component.translatable("create_universal.command.no_surface", Component.translatable("create_universal.body." + id)));
+            return 0;
+        }
+        ServerLevel level = player.server.getLevel(surface.dimension());
+        if (level == null) {
+            return 0;
+        }
+        double lat = Double.isNaN(latDeg) ? 0.0 : Math.toRadians(latDeg);
+        double lon = Double.isNaN(lonDeg) ? 0.0 : Math.toRadians(lonDeg);
+        double x = surface.x(lon);
+        double z = surface.z(lat);
+        double y = dev.createuniversal.space.surface.PlanetTerrain.get(surface).surfaceY(x, z) + 3.0;
+        if (player.isPassenger()) {
+            player.stopRiding();
+        }
+        player.changeDimension(new DimensionTransition(level, new Vec3(x + 0.5, y, z + 0.5), Vec3.ZERO, player.getYRot(), player.getXRot(),
+                DimensionTransition.DO_NOTHING));
+        c.getSource().sendSuccess(() -> Component.translatable("create_universal.command.land", Component.translatable("create_universal.body." + id),
+                String.format(Locale.ROOT, "%.2f", Math.toDegrees(lat)), String.format(Locale.ROOT, "%.2f", Math.toDegrees(lon))), false);
         return 1;
     }
 

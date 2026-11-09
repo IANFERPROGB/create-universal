@@ -25,25 +25,30 @@ import org.joml.Vector3d;
 public final class SpaceGravityCompensation {
     private static Boolean ipaBackend;
     private static boolean logged;
+    // (un aviso por arranque basta: el valor es el mismo en todas las dimensiones)
 
     private SpaceGravityCompensation() {}
 
     /** Llamado desde el paso de física de Sable (ver {@link ShipAnchor#register()}). */
     public static void prePhysicsTick(SubLevelPhysicsSystem system, double timeStep) {
         ServerLevel level = system.getLevel();
-        if (level.dimension() != CUDimensions.SPACE || !ipaBackendActive()) {
+        boolean space = level.dimension() == CUDimensions.SPACE;
+        dev.createuniversal.space.surface.PlanetSurface surface = dev.createuniversal.space.surface.PlanetSurface.byDimension(level.dimension());
+        if ((!space && surface == null) || !ipaBackendActive()) {
             return;
         }
         ServerSubLevelContainer container = SubLevelContainer.getContainer(level);
         if (container == null) {
             return;
         }
-        // Gravedad que se está colando: la del Overworld. Se suma la contraria.
+        // Gravedad que se está colando: la del Overworld. Se quita y se pone la que toca (0 en el espacio, la de la Luna...).
         Vector3d leaked = DimensionPhysicsData.getGravity(level.getServer().overworld());
-        Vector3d correction = new Vector3d(leaked).mul(-timeStep);
+        Vector3d wanted = space ? new Vector3d() : new Vector3d(leaked).mul(surface.gravity());
+        Vector3d correction = new Vector3d(wanted).sub(leaked).mul(timeStep);
         if (!logged) {
             logged = true;
-            CreateUniversal.LOGGER.info("Compensando en el espacio la gravedad del motor de Immersive Portals: {} por paso de {} s", leaked, timeStep);
+            CreateUniversal.LOGGER.info("Compensando en {} la gravedad del motor de Immersive Portals: {} por paso de {} s",
+                    level.dimension().location(), leaked, timeStep);
         }
         Vector3d noSpin = new Vector3d();
         for (ServerSubLevel ship : container.getAllSubLevels()) {

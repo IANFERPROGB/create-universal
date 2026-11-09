@@ -35,5 +35,17 @@
   "create_universal.body.titania": "Titania",
   "create_universal.body.oberon": "Oberon",
   "create_universal.body.neptune": "Neptune",
-  "create_universal.body.triton": "Triton"
+  "create_universal.body.triton": "Triton",
+  "block.create_universal.lunar_regolith": "Lunar Regolith",
+  "block.create_universal.lunar_mare_regolith": "Lunar Mare Regolith",
+  "block.create_universal.lunar_rock": "Lunar Rock",
+  "block.create_universal.lunar_basalt": "Lunar Basalt",
+  "block.create_universal.martian_dust": "Martian Dust",
+  "block.create_universal.martian_regolith": "Martian Regolith",
+  "block.create_universal.martian_rock": "Martian Rock",
+  "block.create_universal.martian_basalt": "Martian Basalt",
+  "create_universal.dimension.moon": "Moon",
+  "create_universal.dimension.mars": "Mars",
+  "create_universal.command.land": "You landed on %s (latitude %s°, longitude %s°)",
+  "create_universal.command.no_surface": "%s has no surface to land on yet"
 }

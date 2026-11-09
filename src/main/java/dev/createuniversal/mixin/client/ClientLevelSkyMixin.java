@@ -29,4 +29,21 @@ public abstract class ClientLevelSkyMixin {
             cir.setReturnValue(Math.max(cir.getReturnValueF(), f));
         }
     }
+
+    /**
+     * En la Luna y en Marte la luz del día depende de dónde esté el Sol sobre ese punto del globo, no de la hora de
+     * Minecraft: de noche oscurece de verdad (alpha.5).
+     */
+    @Inject(method = "getSkyDarken", at = @At("RETURN"), cancellable = true)
+    private void create_universal$surfaceDaylight(float partialTick, CallbackInfoReturnable<Float> cir) {
+        ClientLevel self = (ClientLevel) (Object) this;
+        dev.createuniversal.space.surface.PlanetSurface surface = dev.createuniversal.space.surface.PlanetSurface.byDimension(self.dimension());
+        if (surface == null) {
+            return;
+        }
+        Vec3 cam = net.minecraft.client.Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+        float day = dev.createuniversal.client.sky.SurfaceSky.daylight(surface,
+                dev.createuniversal.client.sky.SpaceClock.renderTime(partialTick), cam.x, cam.z);
+        cir.setReturnValue(0.2F + 0.8F * day);
+    }
 }

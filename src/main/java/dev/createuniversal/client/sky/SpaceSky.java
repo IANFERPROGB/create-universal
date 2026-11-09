@@ -49,6 +49,12 @@ public final class SpaceSky {
     private static final Matrix4f lastProjection = new Matrix4f();
     private static float lastPartialTick;
     private static boolean pendingAfterIris;
+    private static SkyPainter pendingPainter;
+
+    /** Algo que dibuja un cielo completo; con {@code farDepth} va después de Iris, en el plano lejano. */
+    public interface SkyPainter {
+        void paint(Matrix4f view, Matrix4f projection, Vec3 cam, float partialTick, boolean farDepth);
+    }
 
     private SpaceSky() {}
 
@@ -56,26 +62,32 @@ public final class SpaceSky {
         starShader = shader;
     }
 
-    /** Desde el paso del cielo de Minecraft. Devuelve false si se dejará para después de Iris. */
+    /** Desde el paso del cielo de Minecraft, en la dimensión espacio. */
     public static void renderSkyPass(Matrix4f view, Matrix4f projection, Camera camera, float partialTick) {
+        renderSkyPass(view, projection, camera, partialTick, SpaceSky::render);
+    }
+
+    /** Dibuja el cielo ahora o, con shaders de Iris, lo deja para después de que Iris termine el mundo. */
+    public static void renderSkyPass(Matrix4f view, Matrix4f projection, Camera camera, float partialTick, SkyPainter painter) {
         if (IrisCompat.shaderPackActive()) {
             lastView.set(view);
             lastProjection.set(projection);
             lastPartialTick = partialTick;
+            pendingPainter = painter;
             pendingAfterIris = true;
             return;
         }
         pendingAfterIris = false;
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
-        render(view, projection, camera.getPosition(), partialTick, false);
+        painter.paint(view, projection, camera.getPosition(), partialTick, false);
         RenderSystem.enableDepthTest();
     }
 
     /** Desde {@code GameRendererSpaceSkyMixin}, justo después de que el mundo (e Iris) terminen de dibujarse. */
     public static void renderAfterLevel() {
         Minecraft mc = Minecraft.getInstance();
-        if (!pendingAfterIris || mc.level == null || mc.level.dimension() != CUDimensions.SPACE) {
+        if (!pendingAfterIris || mc.level == null || pendingPainter == null) {
             pendingAfterIris = false;
             return;
         }
@@ -86,7 +98,7 @@ public final class SpaceSky {
         RenderSystem.enableDepthTest();
         RenderSystem.depthFunc(GL11.GL_LEQUAL);
         RenderSystem.depthMask(false);
-        render(lastView, lastProjection, mc.gameRenderer.getMainCamera().getPosition(), lastPartialTick, true);
+        pendingPainter.paint(lastView, lastProjection, mc.gameRenderer.getMainCamera().getPosition(), lastPartialTick, true);
         RenderSystem.depthMask(true);
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableBlend();
@@ -108,7 +120,7 @@ public final class SpaceSky {
         main.bindWrite(true);
     }
 
-    private static void render(Matrix4f view, Matrix4f projection, Vec3 cam, float partialTick, boolean farDepth) {
+    static void render(Matrix4f view, Matrix4f projection, Vec3 cam, float partialTick, boolean farDepth) {
         ShaderInstance shader = PlanetRenderer.shader();
         if (shader == null) {
             return;
@@ -119,10 +131,7 @@ public final class SpaceSky {
         PlanetRenderer.commonUniforms(seconds, farDepth);
 
         if (farDepth) {
-            // El cielo que había pintado el paquete de shaders se tapa de negro.
-            RenderSystem.disableBlend();
-            PlanetRenderer.set(PlanetRenderer.MODE_BLACK, 0, 0, 0, new Vector3f(0, 1, 0), new Vector3f());
-            PlanetRenderer.draw(PlanetRenderer.quad(), new Matrix4f(), new Matrix4f());
+            paintBlack();
         }
 
         drawBackdrop(view, projection, 1.0F, farDepth);
@@ -132,6 +141,13 @@ public final class SpaceSky {
         drawLensFlare(view, projection, cam, time);
         RenderSystem.disableBlend();
         RenderSystem.defaultBlendFunc();
+    }
+
+    /** Con shaders: el cielo que había pintado el paquete se tapa de negro. */
+    static void paintBlack() {
+        RenderSystem.disableBlend();
+        PlanetRenderer.set(PlanetRenderer.MODE_BLACK, 0, 0, 0, new Vector3f(0, 1, 0), new Vector3f());
+        PlanetRenderer.draw(PlanetRenderer.quad(), new Matrix4f(), new Matrix4f());
     }
 
     /** Vía Láctea y estrellas, con un brillo de 0 (de día no se ven) a 1. */

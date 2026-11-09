@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "create_universal:lunar_regolith",
+    "create_universal:lunar_mare_regolith",
+    "create_universal:martian_dust",
+    "create_universal:martian_regolith"
+  ]
+}
