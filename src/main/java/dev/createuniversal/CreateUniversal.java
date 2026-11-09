@@ -27,6 +27,8 @@ public final class CreateUniversal {
     private static void registerPayloads(net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent event) {
         event.registrar("1").playToClient(dev.createuniversal.network.TransitionEffectPayload.TYPE,
                 dev.createuniversal.network.TransitionEffectPayload.STREAM_CODEC, dev.createuniversal.network.TransitionEffectPayload::handle);
+        event.registrar("1").playToClient(dev.createuniversal.network.SkyShipsPayload.TYPE,
+                dev.createuniversal.network.SkyShipsPayload.STREAM_CODEC, dev.createuniversal.network.SkyShipsPayload::handle);
     }
 
     public static ResourceLocation id(String path) {

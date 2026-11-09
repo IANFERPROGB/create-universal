@@ -70,6 +70,7 @@ public final class SpaceTransitions {
             double z = ours.contains("earthZ") ? ours.getDouble("earthZ") : overworld.getSharedSpawnPos().getZ() + 0.5;
             safeTransfer(ship, overworld, new Vec3(x, exit - 150.0, z), ours);
         }
+        SkyShipBroadcaster.tick(server);
         ShipTransfer.tickRemounts();
         ShipTracker.tick();
         ShipAnchor.tick();

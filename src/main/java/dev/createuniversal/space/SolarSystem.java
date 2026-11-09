@@ -1,6 +1,8 @@
 package dev.createuniversal.space;
 
 import net.minecraft.world.phys.Vec3;
+import org.joml.Quaterniond;
+import org.joml.Vector3d;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -203,5 +205,55 @@ public final class SolarSystem {
         }
         angle %= Math.PI * 2.0;
         return angle < 0.0 ? angle + Math.PI * 2.0 : angle;
+    }
+
+    /**
+     * Orientación del astro: eje inclinado hacia −Z (como el de la Tierra hacia la estrella Polar en este cielo) y giro
+     * sobre ese eje. Lleva un punto del astro (en su espacio propio, radio 1) a la dirección en el espacio.
+     */
+    public static Quaterniond orientation(Body body, double time, boolean spin, double extraSpin) {
+        Quaterniond q = new Quaterniond().rotationX(Math.toRadians(-body.tiltDeg()));
+        if (spin) {
+            q.rotateY((spinAngle(body, time) + extraSpin) % (Math.PI * 2.0));
+        }
+        return q;
+    }
+
+    /**
+     * Punto del astro (radio 1, espacio propio) para una latitud y longitud en radianes. Mismo convenio que los mapas
+     * equirectangulares: longitud 0 hacia −X, positiva hacia el este; latitud positiva hacia +Y (norte).
+     */
+    public static Vector3d surfacePoint(double lat, double lon) {
+        double phi = lon + Math.PI;
+        return new Vector3d(Math.cos(lat) * Math.cos(phi), Math.sin(lat), -Math.cos(lat) * Math.sin(phi));
+    }
+
+    /** Latitud y longitud (radianes) de una dirección en el espacio propio del astro. */
+    public static double[] latLon(Vector3d local) {
+        Vector3d n = new Vector3d(local).normalize();
+        double lat = Math.asin(Math.max(-1.0, Math.min(1.0, n.y)));
+        double lon = Math.atan2(-n.z, n.x) - Math.PI;
+        if (lon < -Math.PI) {
+            lon += Math.PI * 2.0;
+        }
+        return new double[] {lat, lon};
+    }
+
+    /**
+     * Ejes del horizonte de alguien que está de pie en un astro, en coordenadas del espacio: este (+X de Minecraft),
+     * arriba (+Y) y sur (+Z). Sirve para dibujar el cielo desde la superficie.
+     */
+    public static Vector3d[] horizonAxes(Body body, double time, double lat, double lon) {
+        Quaterniond q = orientation(body, time, true, 0.0);
+        Vector3d up = q.transform(surfacePoint(lat, lon));
+        Vector3d axis = q.transform(new Vector3d(0, 1, 0));
+        Vector3d north = new Vector3d(axis).sub(new Vector3d(up).mul(axis.dot(up)));
+        if (north.lengthSquared() < 1e-12) {
+            north = q.transform(new Vector3d(0, 0, -1));
+        }
+        north.normalize();
+        Vector3d east = new Vector3d(north).cross(up).normalize();
+        Vector3d south = new Vector3d(north).negate();
+        return new Vector3d[] {east, up, south};
     }
 }

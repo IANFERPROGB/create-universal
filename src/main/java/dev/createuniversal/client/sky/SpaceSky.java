@@ -125,16 +125,7 @@ public final class SpaceSky {
             PlanetRenderer.draw(PlanetRenderer.quad(), new Matrix4f(), new Matrix4f());
         }
 
-        // Vía Láctea: una esfera alrededor de la cámara, vista desde dentro.
-        PlanetRenderer.additive();
-        RenderSystem.disableCull();
-        PlanetRenderer.bind(0, CreateUniversal.id("textures/sky/milkyway.png"), true);
-        shader.safeGetUniform("Tint").set(1.0F, 1.0F, 1.0F, MILKY_WAY_BRIGHTNESS);
-        PlanetRenderer.set(PlanetRenderer.MODE_MILKY_WAY, 0, 0, 0, new Vector3f(0, 1, 0), new Vector3f());
-        PlanetRenderer.draw(PlanetRenderer.sphere(), new Matrix4f(view).scale(STAR_DISTANCE * 0.9F), projection);
-        shader.safeGetUniform("Tint").set(1.0F, 1.0F, 1.0F, 1.0F);
-
-        drawStars(view, projection, farDepth);
+        drawBackdrop(view, projection, 1.0F, farDepth);
 
         PlanetRenderer.render(view, projection, cam, time, seconds, farDepth);
 
@@ -143,9 +134,26 @@ public final class SpaceSky {
         RenderSystem.defaultBlendFunc();
     }
 
+    /** Vía Láctea y estrellas, con un brillo de 0 (de día no se ven) a 1. */
+    static void drawBackdrop(Matrix4f view, Matrix4f projection, float brightness, boolean farDepth) {
+        ShaderInstance shader = PlanetRenderer.shader();
+        if (shader == null || brightness <= 0.001F) {
+            return;
+        }
+        // Vía Láctea: una esfera alrededor de la cámara, vista desde dentro.
+        PlanetRenderer.additive();
+        RenderSystem.disableCull();
+        PlanetRenderer.bind(0, CreateUniversal.id("textures/sky/milkyway.png"), true);
+        shader.safeGetUniform("Tint").set(1.0F, 1.0F, 1.0F, MILKY_WAY_BRIGHTNESS * brightness);
+        PlanetRenderer.set(PlanetRenderer.MODE_MILKY_WAY, 0, 0, 0, new Vector3f(0, 1, 0), new Vector3f());
+        PlanetRenderer.draw(PlanetRenderer.sphere(), new Matrix4f(view).scale(STAR_DISTANCE * 0.9F), projection);
+        shader.safeGetUniform("Tint").set(1.0F, 1.0F, 1.0F, 1.0F);
+        drawStars(view, projection, farDepth, brightness);
+    }
+
     // ---------------------------------------------------------------- estrellas
 
-    private static void drawStars(Matrix4f view, Matrix4f projection, boolean farDepth) {
+    private static void drawStars(Matrix4f view, Matrix4f projection, boolean farDepth, float brightness) {
         if (starShader == null || starsFailed) {
             return;
         }
@@ -162,7 +170,7 @@ public final class SpaceSky {
         }
         PlanetRenderer.additive();
         starShader.safeGetUniform("FarDepth").set(farDepth ? 1.0F : 0.0F);
-        starShader.safeGetUniform("Brightness").set(1.0F);
+        starShader.safeGetUniform("Brightness").set(brightness);
         stars.bind();
         stars.drawWithShader(view, projection, starShader);
         VertexBuffer.unbind();

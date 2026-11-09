@@ -431,6 +431,14 @@ void lensFlare() {
     fragColor = vec4(Tint.rgb * shape * Tint.a, 1.0);
 }
 
+// Nave lejana vista desde un planeta: caja iluminada por el Sol (cada cara con su luz).
+void solidBox() {
+    vec3 a = abs(objPos);
+    vec3 n = a.x > a.y && a.x > a.z ? vec3(sign(objPos.x), 0.0, 0.0) : (a.y > a.z ? vec3(0.0, sign(objPos.y), 0.0) : vec3(0.0, 0.0, sign(objPos.z)));
+    float l = max(dot(n, SunDir), 0.0);
+    fragColor = vec4(Tint.rgb * (l * 0.95 + 0.04) * Tint.a, 1.0);
+}
+
 void main() {
     int mode = int(Params.x + 0.5);
     if (mode == 0) {
@@ -451,6 +459,8 @@ void main() {
         fragColor = vec4(0.0, 0.0, 0.0, 1.0);
     } else if (mode == 8) {
         milkyWay();
+    } else if (mode == 10) {
+        solidBox();
     } else {
         lensFlare();
     }

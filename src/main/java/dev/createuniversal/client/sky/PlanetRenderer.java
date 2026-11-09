@@ -66,6 +66,7 @@ public final class PlanetRenderer {
     static final int MODE_BLACK = 7;
     static final int MODE_MILKY_WAY = 8;
     static final int MODE_FLARE = 9;
+    static final int MODE_BOX = 10;
 
     private static final int F_NIGHT = 1;
     private static final int F_RING_SHADOW = 2;
@@ -115,11 +116,38 @@ public final class PlanetRenderer {
     private static VertexBuffer sphereSimple;
     private static VertexBuffer quad;
     private static VertexBuffer saturnRings;
+    private static VertexBuffer cube;
     private static boolean preloaded;
     private static final Set<Integer> PREPARED_TEXTURES = new HashSet<>();
     private static final Map<String, float[]> DOT_COLORS = new HashMap<>();
 
     private record Item(Body body, Vec3 pos, Vec3 rel, double dist, double pixels) {}
+
+    // Observador en la superficie de un astro (cielo de la Tierra, de la Luna...). Se fija antes de cada render.
+    private static String homeBody;
+    private static Vec3 groundUp;
+    private static float daylight;
+
+    /**
+     * Para dibujar desde la superficie de {@code home}: ese astro no se dibuja, lo que está bajo el horizonte tampoco, los
+     * astros se suman al color del cielo (de día la cara oscura de la Luna no tapa el azul) y los puntos de luz se
+     * apagan con la luz del día ({@code daylight} de 0 a 1).
+     */
+    public static void setGroundObserver(String home, Vec3 up, float daylightAmount) {
+        homeBody = home;
+        groundUp = up;
+        daylight = daylightAmount;
+    }
+
+    public static void clearGroundObserver() {
+        homeBody = null;
+        groundUp = null;
+        daylight = 0.0F;
+    }
+
+    private static float nightVisibility() {
+        return 1.0F - 0.92F * daylight;
+    }
 
     private PlanetRenderer() {}
 
@@ -157,9 +185,15 @@ public final class PlanetRenderer {
 
         List<Item> items = new ArrayList<>();
         for (Body body : SolarSystem.bodies()) {
+            if (body.id().equals(homeBody)) {
+                continue;
+            }
             Vec3 pos = SolarSystem.position(body, time);
             Vec3 rel = pos.subtract(cam);
             double dist = rel.length();
+            if (groundUp != null && rel.dot(groundUp) < -body.radius()) {
+                continue; // bajo el horizonte
+            }
             if (dist <= body.radius() * 1.0005) {
                 continue;
             }
@@ -367,7 +401,7 @@ public final class PlanetRenderer {
         Vec3 toCam = cam.subtract(it.pos()).normalize();
         double lit = (1.0 + toSun.dot(toCam)) * 0.5;
         double fade = 1.0 - smooth(3.0, HALO_MAX_PIXELS, it.pixels());
-        float strength = (float) (0.4 * Math.pow(lit, 0.6) * fade);
+        float strength = (float) (0.4 * Math.pow(lit, 0.6) * fade) * nightVisibility();
         if (strength < 0.01F) {
             return;
         }
@@ -395,7 +429,7 @@ public final class PlanetRenderer {
         Vec3 toSun = sunPos.subtract(it.pos()).normalize();
         Vec3 toCam = cam.subtract(it.pos()).normalize();
         double phase = 0.25 + 0.75 * (1.0 + toSun.dot(toCam)) * 0.5;
-        float b = (float) Math.min(1.0, Math.sqrt(brightness) * phase * 1.6);
+        float b = (float) Math.min(1.0, Math.sqrt(brightness) * phase * 1.6) * nightVisibility();
         if (b < 0.03F) {
             return;
         }
@@ -410,11 +444,8 @@ public final class PlanetRenderer {
 
     /** Eje inclinado hacia −Z, como el de la Tierra hacia la estrella Polar en este cielo, y giro sobre ese eje. */
     private static Quaternionf orientation(Body body, double time, boolean spin, double extraSpin) {
-        Quaternionf q = new Quaternionf().rotationX((float) Math.toRadians(-body.tiltDeg()));
-        if (spin) {
-            q.rotateY((float) ((SolarSystem.spinAngle(body, time) + extraSpin) % (Math.PI * 2.0)));
-        }
-        return q;
+        org.joml.Quaterniond q = SolarSystem.orientation(body, time, spin, extraSpin);
+        return new Quaternionf((float) q.x, (float) q.y, (float) q.z, (float) q.w);
     }
 
     static Quaternionf facingCamera(Vector3f center) {
@@ -456,7 +487,11 @@ public final class PlanetRenderer {
     }
 
     private static void opaque() {
-        RenderSystem.disableBlend();
+        if (groundUp != null) {
+            additive();
+        } else {
+            RenderSystem.disableBlend();
+        }
     }
 
     private static void alphaBlend() {
@@ -565,6 +600,7 @@ public final class PlanetRenderer {
         quad = upload(quadMesh());
         Body saturn = SolarSystem.get("saturn");
         saturnRings = upload(ringMesh(saturn.ringInner(), saturn.ringOuter(), 192));
+        cube = upload(cubeMesh());
     }
 
     private static VertexBuffer upload(MeshData mesh) {
@@ -609,6 +645,58 @@ public final class PlanetRenderer {
         buf.addVertex(1, 1, 0).setUv(1, 1);
         buf.addVertex(-1, 1, 0).setUv(0, 1);
         return buf.buildOrThrow();
+    }
+
+    private static MeshData cubeMesh() {
+        BufferBuilder buf = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        float[][] faces = {
+                {1, -1, -1, 1, 1, -1, 1, 1, 1, 1, -1, 1}, {-1, -1, 1, -1, 1, 1, -1, 1, -1, -1, -1, -1},
+                {-1, 1, -1, -1, 1, 1, 1, 1, 1, 1, 1, -1}, {-1, -1, 1, -1, -1, -1, 1, -1, -1, 1, -1, 1},
+                {-1, -1, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1}, {1, -1, -1, -1, -1, -1, -1, 1, -1, 1, 1, -1}};
+        for (float[] f : faces) {
+            for (int i = 0; i < 4; i++) {
+                buf.addVertex(f[i * 3], f[i * 3 + 1], f[i * 3 + 2]).setUv(0, 0);
+            }
+        }
+        return buf.buildOrThrow();
+    }
+
+    /**
+     * Una nave del espacio vista desde la superficie de un planeta (cielo de la Tierra): caja iluminada por el Sol con su
+     * tamaño aparente real, o un punto de luz si mide menos de un píxel (como la Estación Espacial vista de noche).
+     */
+    public static void drawShip(Matrix4f view, Matrix4f projection, Vec3 cam, Vec3 center, Vec3 halfExtents, Vec3 sunPos) {
+        if (shader == null) {
+            return;
+        }
+        ensureBuffers();
+        Vec3 rel = center.subtract(cam);
+        double dist = rel.length();
+        if (dist < 1.0) {
+            return;
+        }
+        double tanHalfFov = 1.0 / Math.max(1e-4, projection.m11());
+        double halfHeight = Minecraft.getInstance().getWindow().getHeight() * 0.5;
+        double size = Math.max(halfExtents.x, Math.max(halfExtents.y, halfExtents.z));
+        double pixels = size / dist / tanHalfFov * halfHeight;
+        double k = SKY_DISTANCE / dist;
+        Vector3f c = vec(rel.scale(k));
+        Vector3f sun = vec(sunPos.subtract(center).normalize());
+        additive();
+        RenderSystem.disableCull();
+        if (pixels < 1.0) {
+            float b = (float) Math.min(1.0, 0.25 + pixels) * (0.35F + 0.65F * nightVisibility());
+            double half = SKY_DISTANCE * tanHalfFov * DOT_SIZE_PIXELS / halfHeight;
+            shader.safeGetUniform("Tint").set(0.95F, 0.95F, 1.0F, b);
+            set(MODE_DOT, 0, 0, 0, new Vector3f(0, 1, 0), new Vector3f(0, 0, 1));
+            draw(quad, model(view, c, facingCamera(c), (float) half), projection);
+        } else {
+            shader.safeGetUniform("Tint").set(0.82F, 0.82F, 0.86F, 1.1F);
+            set(MODE_BOX, 0, 0, 0, sun, new Vector3f());
+            Matrix4f m = new Matrix4f(view).translate(c).scale((float) (halfExtents.x * k), (float) (halfExtents.y * k), (float) (halfExtents.z * k));
+            draw(cube, m, projection);
+        }
+        shader.safeGetUniform("Tint").set(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
     /** Anillo plano en el ecuador (y = 0), radios en radios del planeta. */
