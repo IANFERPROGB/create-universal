@@ -100,14 +100,15 @@ public final class SpaceTransitions {
         }
         Set<UUID> taken = new HashSet<>();
         for (ServerSubLevel ship : new ArrayList<>(container.getAllSubLevels())) {
-            if (ship.isRemoved() || taken.contains(ship.getUniqueId()) || !ShipTracker.settled(ship, level) || !test.test(ship)) {
+            if (ship.isRemoved() || taken.contains(ship.getUniqueId()) || !test.test(ship)) {
                 continue;
             }
-            for (var linked : dev.ryanhcode.sable.api.SubLevelHelper.getConnectedChain(ship)) {
-                taken.add(linked.getUniqueId());
+            // Basta con que una pieza cruce para mover toda la nave; ninguna pieza se mueve dos veces.
+            List<ServerSubLevel> group = ShipGroup.of(ship);
+            group.forEach(s -> taken.add(s.getUniqueId()));
+            if (ShipGroup.settled(group, level)) {
+                result.add(ship);
             }
-            taken.add(ship.getUniqueId());
-            result.add(ship);
         }
         return result;
     }

@@ -1,7 +1,6 @@
 package dev.createuniversal.space;
 
 import dev.createuniversal.CreateUniversal;
-import dev.ryanhcode.sable.api.SubLevelHelper;
 import dev.ryanhcode.sable.api.sublevel.ServerSubLevelContainer;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
 import dev.ryanhcode.sable.companion.math.BoundingBox3dc;
@@ -69,15 +68,8 @@ public final class ShipTransfer {
             return false;
         }
 
-        List<ServerSubLevel> chain = new ArrayList<>();
-        for (SubLevel s : SubLevelHelper.getConnectedChain(root)) {
-            if (s instanceof ServerSubLevel ss && !ss.isRemoved()) {
-                chain.add(ss);
-            }
-        }
-        if (!chain.contains(root)) {
-            chain.add(root);
-        }
+        // Toda la nave: cadena de Sable y piezas pegadas (remaches...). Si no, cada pieza se iría por su cuenta.
+        List<ServerSubLevel> chain = ShipGroup.of(root);
 
         Vector3d delta = new Vector3d(newRootPosition.x, newRootPosition.y, newRootPosition.z).sub(root.logicalPose().position());
         List<UUID> chainIds = chain.stream().map(SubLevel::getUniqueId).toList();
@@ -99,6 +91,11 @@ public final class ShipTransfer {
             AABB worldAabb = new AABB(world.minX(), world.minY(), world.minZ(), world.maxX(), world.maxY(), world.maxZ()).inflate(2.0);
             for (Entity e : source.getEntities((Entity) null, worldAabb, e -> true)) {
                 if (worldEntityShip.containsKey(e) || plotEntities.get(ship).contains(e)) {
+                    continue;
+                }
+                // Sentado en un asiento de otra nave (los asientos están en la zona interna de su nave, lejísimos): viaja
+                // con la nave de su asiento. Si el asiento va en esta nave se recoge más abajo con sus pasajeros.
+                if (e.getVehicle() != null && !worldAabb.contains(e.getVehicle().position())) {
                     continue;
                 }
                 worldEntities.add(e);
@@ -229,6 +226,7 @@ public final class ShipTransfer {
             Vector3d earth = earthVelocity(source, target);
             ShipAnchor.holdShip(ship, target, lin.add(earth), ang);
         }
+        ShipAnchor.group(new ArrayList<>(loaded.values()));
 
         // 4. Volver a crear las entidades del plot (mismas coordenadas de plot) y las del mundo (con la pose nueva).
         Map<UUID, Entity> recreated = new HashMap<>();
@@ -283,6 +281,11 @@ public final class ShipTransfer {
                             seated ? "sí" : (vehicle == null ? "no (el asiento no se ha recreado)" : "no (startRiding rechazado)"));
                     if (!seated) {
                         REMOUNTS.add(new PendingRemount(p.getUUID(), vehicleId, target, 1));
+                        // Mientras tanto, anclado donde estaba su asiento: si no se puede volver a sentar, al menos
+                        // viaja con la nave en vez de quedarse flotando mientras ella se va.
+                        if (newShip != null && worldEntityPlotPos.containsKey(p)) {
+                            ShipAnchor.anchorStanding(p, newShip, shifted(worldEntityPlotPos.get(p), plotShift.get(oldShip.getUniqueId())));
+                        }
                     }
                 }
             } catch (RuntimeException ex) {

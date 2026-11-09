@@ -59,6 +59,8 @@ public final class ShipAnchor {
         final SolarSystem.Body frame;
         final double startTime;
         long allTrackingSinceMs = -1;
+        /** Piezas unidas que llegaron juntas: se sueltan todas a la vez para que no se separen ni tiren de sus uniones. */
+        UUID group;
 
         Hold(ServerSubLevel ship, ServerLevel level, Vector3d linear, Vector3d angular) {
             this.ship = ship.getUniqueId();
@@ -106,6 +108,17 @@ public final class ShipAnchor {
     /** Congela la nave recién llegada. */
     public static void holdShip(ServerSubLevel ship, ServerLevel level, Vector3d linearVelocity, Vector3d angularVelocity) {
         HOLDS.put(ship.getUniqueId(), new Hold(ship, level, linearVelocity, angularVelocity));
+    }
+
+    /** Marca las naves de un mismo grupo (piezas unidas por remaches, rodamientos...): se sueltan a la vez. */
+    public static void group(List<ServerSubLevel> ships) {
+        UUID id = UUID.randomUUID();
+        for (ServerSubLevel ship : ships) {
+            Hold hold = HOLDS.get(ship.getUniqueId());
+            if (hold != null) {
+                hold.group = id;
+            }
+        }
     }
 
     /** Ancla a un jugador de pie en su punto de la nave (coordenadas del plot) mientras la nave esté congelada. */
@@ -158,6 +171,10 @@ public final class ShipAnchor {
         }
         long now = System.currentTimeMillis();
         List<UUID> released = new ArrayList<>();
+        // Listas para soltar: por grupo, solo cuando lo están todas sus piezas (o alguna ha llegado al máximo).
+        Map<UUID, Boolean> groupReady = new HashMap<>();
+        java.util.Set<UUID> groupTimedOut = new java.util.HashSet<>();
+        Map<UUID, ServerSubLevel> alive = new HashMap<>();
         for (Hold hold : HOLDS.values()) {
             ServerSubLevelContainer container = SubLevelContainer.getContainer(hold.level);
             SubLevel s = container != null ? container.getSubLevel(hold.ship) : null;
@@ -186,8 +203,19 @@ public final class ShipAnchor {
             }
             long held = now - hold.startMs;
             boolean ready = held >= MIN_HOLD_MS && hold.allTrackingSinceMs >= 0 && now - hold.allTrackingSinceMs >= SETTLE_MS;
-            if (ready || held >= MAX_HOLD_MS) {
-                release(hold, ship, container, held, ready);
+            alive.put(hold.ship, ship);
+            UUID key = hold.group != null ? hold.group : hold.ship;
+            groupReady.merge(key, ready, (a, b) -> a && b);
+            if (held >= MAX_HOLD_MS) {
+                groupTimedOut.add(key);
+            }
+        }
+        for (Hold hold : HOLDS.values()) {
+            ServerSubLevel ship = alive.get(hold.ship);
+            UUID key = hold.group != null ? hold.group : hold.ship;
+            boolean timedOut = groupTimedOut.contains(key);
+            if (ship != null && (Boolean.TRUE.equals(groupReady.get(key)) || timedOut)) {
+                release(hold, ship, SubLevelContainer.getContainer(hold.level), now - hold.startMs, !timedOut);
                 released.add(hold.ship);
             }
         }

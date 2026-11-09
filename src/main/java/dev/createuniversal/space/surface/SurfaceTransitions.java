@@ -6,7 +6,6 @@ import dev.createuniversal.space.CUDimensions;
 import dev.createuniversal.space.ShipTransfer;
 import dev.createuniversal.space.SolarSystem;
 import dev.createuniversal.space.SpaceLayout;
-import dev.ryanhcode.sable.api.SubLevelHelper;
 import dev.ryanhcode.sable.api.sublevel.ServerSubLevelContainer;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
 import dev.ryanhcode.sable.companion.math.BoundingBox3dc;
@@ -216,14 +215,14 @@ public final class SurfaceTransitions {
         }
         Set<UUID> taken = new HashSet<>();
         for (ServerSubLevel ship : new ArrayList<>(container.getAllSubLevels())) {
-            if (ship.isRemoved() || taken.contains(ship.getUniqueId()) || !dev.createuniversal.space.ShipTracker.settled(ship, level)
-                    || !test.test(ship)) {
+            if (ship.isRemoved() || taken.contains(ship.getUniqueId()) || !test.test(ship)) {
                 continue;
             }
-            for (var linked : SubLevelHelper.getConnectedChain(ship)) {
-                taken.add(linked.getUniqueId());
+            List<ServerSubLevel> group = dev.createuniversal.space.ShipGroup.of(ship);
+            group.forEach(s -> taken.add(s.getUniqueId()));
+            if (dev.createuniversal.space.ShipGroup.settled(group, level)) {
+                result.add(ship);
             }
-            result.add(ship);
         }
         return result;
     }
