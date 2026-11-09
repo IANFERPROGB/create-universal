@@ -136,18 +136,25 @@ public final class ShipTransfer {
         List<SubLevelData> datas = new ArrayList<>();
         Map<UUID, int[]> plotShift = new HashMap<>();
         Set<Integer> reserved = new HashSet<>();
+        List<PlotArea> areas = new ArrayList<>();
         for (ServerSubLevel ship : chain) {
             SubLevelData data = SubLevelSerializer.toData(ship, new ArrayList<>(chainIds));
             CompoundTag tag = data.fullTag();
-            int[] shift = assignFreePlot(targetContainer, tag.getCompound("plot"), reserved);
-            if (shift == null) {
+            int plotBlocks = 1 << (tag.getCompound("plot").getInt("log_size") + 4);
+            int oldMinX = ship.getPlot().plotPos.x * plotBlocks;
+            int oldMinZ = ship.getPlot().plotPos.z * plotBlocks;
+            int[] xz = assignFreePlot(targetContainer, tag.getCompound("plot"), reserved);
+            if (xz == null) {
                 CreateUniversal.LOGGER.error("No quedan plots libres en {}: la nave {} no se mueve", target.dimension().location(), ship.getUniqueId());
                 return false;
             }
+            int dy = remapSections(tag.getCompound("plot"), source, target);
+            int[] shift = {xz[0], dy, xz[1]};
             plotShift.put(ship.getUniqueId(), shift);
+            areas.add(new PlotArea(oldMinX, oldMinZ, plotBlocks, shift));
             Pose3d pose = SableNBTUtils.readPose3d(tag.getCompound("pose"));
             pose.position().add(delta);
-            pose.rotationPoint().add(shift[0], 0.0, shift[1]);
+            pose.rotationPoint().add(shift[0], shift[1], shift[2]);
             tag.put("pose", SableNBTUtils.writePose3d(pose));
             if (userData != null) {
                 CompoundTag ud = tag.contains("user_data") ? tag.getCompound("user_data") : new CompoundTag();
@@ -156,6 +163,7 @@ public final class ShipTransfer {
             }
             datas.add(data);
         }
+        shiftPlotReferences(datas, areas);
         Map<ServerSubLevel, List<CompoundTag>> savedPlotEntities = new HashMap<>();
         for (Map.Entry<ServerSubLevel, List<Entity>> entry : plotEntities.entrySet()) {
             int[] shift = plotShift.get(entry.getKey().getUniqueId());
@@ -164,6 +172,7 @@ public final class ShipTransfer {
                 CompoundTag t = new CompoundTag();
                 if (e.saveAsPassenger(t)) {
                     shiftEntityPos(t, shift);
+                    shiftReferencesIn(t, areas, true);
                     saved.add(t);
                 }
                 e.remove(Entity.RemovalReason.CHANGED_DIMENSION);
@@ -210,6 +219,8 @@ public final class ShipTransfer {
                 continue;
             }
             loaded.put(data.uuid(), ship);
+            CreateUniversal.LOGGER.info("Nave {} cargada en {}: masa {}, plot {}", data.uuid(), target.dimension().location(),
+                    ship.getMassTracker().getMass(), ship.getPlot().plotPos);
             // Congelar la nave hasta que los clientes la tengan cargada (ShipAnchor). Se le devolverá esta velocidad.
             CompoundTag tag = data.fullTag();
             Vector3d lin = tag.contains("linear_velocity") ? SableNBTUtils.readVector3d(tag.getCompound("linear_velocity")) : new Vector3d();
@@ -312,11 +323,13 @@ public final class ShipTransfer {
             reserved.add(index);
             return new int[]{0, 0};
         }
-        int free = -1;
+        // Desde el final de la cuadrícula: los primeros plots suelen estar ocupados por naves guardadas que aún no se han
+        // cargado y que el registro de ocupación no siempre marca; una nave nueva ahí desaparecía nada más llegar.
+        int free = side * side;
         do {
-            free = occupancy.nextClearBit(free + 1);
-        } while (reserved.contains(free));
-        if (free >= side * side) {
+            free = occupancy.previousClearBit(free - 1);
+        } while (free >= 0 && reserved.contains(free));
+        if (free < 0) {
             return null;
         }
         reserved.add(free);
@@ -345,16 +358,202 @@ public final class ShipTransfer {
         return new int[]{dx, dz};
     }
 
+    /**
+     * Las secciones de cada chunk del plot se guardan con un índice que cuenta desde el fondo de la dimensión, pero las
+     * alturas de los bloques son absolutas. Entre dimensiones de distinta altura (la Luna empieza en Y −1.408 y el espacio
+     * en −64) hay que recalcular los índices; si la nave no cabe en la altura del destino se baja o se sube entera, en
+     * múltiplos de 16, y se devuelve ese desplazamiento para mover también lo que guarda la altura absoluta.
+     */
+    private static int remapSections(CompoundTag plot, ServerLevel source, ServerLevel target) {
+        int srcMin = source.getMinSection();
+        int tgtMin = target.getMinSection();
+        int tgtMax = target.getMaxSection() - 1;
+        CompoundTag chunks = plot.getCompound("chunks");
+        int lowest = Integer.MAX_VALUE;
+        int highest = Integer.MIN_VALUE;
+        for (String key : chunks.getAllKeys()) {
+            for (String idx : chunks.getCompound(key).getCompound("sections").getAllKeys()) {
+                int sy = Integer.parseInt(idx) + srcMin;
+                lowest = Math.min(lowest, sy);
+                highest = Math.max(highest, sy);
+            }
+        }
+        if (lowest == Integer.MAX_VALUE) {
+            return 0;
+        }
+        int dySections = 0;
+        if (lowest < tgtMin || highest > tgtMax) {
+            dySections = (tgtMin + tgtMax) / 2 - (lowest + highest) / 2;
+        }
+        if (srcMin == tgtMin && dySections == 0) {
+            return 0;
+        }
+        int dy = dySections * 16;
+        for (String key : chunks.getAllKeys()) {
+            CompoundTag chunk = chunks.getCompound(key);
+            CompoundTag sections = chunk.getCompound("sections");
+            CompoundTag moved = new CompoundTag();
+            for (String idx : sections.getAllKeys()) {
+                int newIndex = Integer.parseInt(idx) + srcMin + dySections - tgtMin;
+                if (newIndex >= 0 && newIndex <= tgtMax - tgtMin) {
+                    moved.put(String.valueOf(newIndex), sections.getCompound(idx));
+                }
+            }
+            chunk.put("sections", moved);
+            if (dy != 0) {
+                for (String list : new String[]{"block_entities", "block_ticks", "fluid_ticks"}) {
+                    ListTag entries = chunk.getList(list, Tag.TAG_COMPOUND);
+                    for (int i = 0; i < entries.size(); i++) {
+                        CompoundTag e = entries.getCompound(i);
+                        if (e.contains("y")) {
+                            e.putInt("y", e.getInt("y") + dy);
+                        }
+                    }
+                }
+                chunk.remove("heightmaps");
+            }
+        }
+        if (dy != 0) {
+            CreateUniversal.LOGGER.info("La nave no cabe en la altura de {}: se mueve {} bloques en vertical dentro de su plot",
+                    target.dimension().location(), dy);
+        }
+        return dy;
+    }
+
+    /** Zona interna (plot) que ocupaba una nave antes de moverla, y cuánto se ha desplazado. */
+    private record PlotArea(int minX, int minZ, int size, int[] shift) {
+        boolean contains(int x, int z) {
+            return x >= minX && x < minX + size && z >= minZ && z < minZ + size;
+        }
+
+        boolean moved() {
+            return shift[0] != 0 || shift[1] != 0 || shift[2] != 0;
+        }
+    }
+
+    /**
+     * Bloques que enlazan naves entre sí (rodamientos y pistones de físicas, cuerdas, remaches de Simulated Coasters...)
+     * guardan posiciones absolutas dentro de la zona interna de su nave o de la nave a la que se unen. Si esa nave cambia
+     * de plot, esas posiciones apuntarían a la nada y el bloque rompería o soltaría la unión. Se recorren los datos de
+     * todos los bloques con datos de las naves que viajan y se desplaza cualquier posición que caiga dentro del plot
+     * antiguo de una de ellas: como número largo (BlockPos), como tres enteros o como un compuesto con X, Y, Z.
+     */
+    private static void shiftPlotReferences(List<SubLevelData> datas, List<PlotArea> areas) {
+        if (areas.stream().noneMatch(PlotArea::moved)) {
+            return;
+        }
+        int count = 0;
+        for (SubLevelData data : datas) {
+            CompoundTag chunks = data.fullTag().getCompound("plot").getCompound("chunks");
+            for (String key : chunks.getAllKeys()) {
+                ListTag entries = chunks.getCompound(key).getList("block_entities", Tag.TAG_COMPOUND);
+                for (int i = 0; i < entries.size(); i++) {
+                    count += shiftReferencesIn(entries.getCompound(i), areas, true);
+                }
+            }
+        }
+        if (count > 0) {
+            CreateUniversal.LOGGER.info("{} referencias a posiciones dentro de las naves movidas con su plot", count);
+        }
+    }
+
+    /** @param root true en el compuesto raíz de un bloque o entidad: sus propias x, y, z (o Pos) ya se han movido */
+    private static int shiftReferencesIn(CompoundTag tag, List<PlotArea> areas, boolean root) {
+        int changed = 0;
+        for (String key : new ArrayList<>(tag.getAllKeys())) {
+            if (root && (key.equals("x") || key.equals("y") || key.equals("z") || key.equals("Pos") || key.equals("id"))) {
+                continue;
+            }
+            Tag value = tag.get(key);
+            if (value instanceof net.minecraft.nbt.LongTag l) {
+                net.minecraft.core.BlockPos pos = net.minecraft.core.BlockPos.of(l.getAsLong());
+                PlotArea a = find(areas, pos.getX(), pos.getY(), pos.getZ());
+                if (a != null) {
+                    tag.putLong(key, pos.offset(a.shift()[0], a.shift()[1], a.shift()[2]).asLong());
+                    changed++;
+                }
+            } else if (value instanceof net.minecraft.nbt.IntArrayTag arr && arr.size() == 3) {
+                int[] v = arr.getAsIntArray();
+                PlotArea a = find(areas, v[0], v[1], v[2]);
+                if (a != null) {
+                    tag.putIntArray(key, new int[] {v[0] + a.shift()[0], v[1] + a.shift()[1], v[2] + a.shift()[2]});
+                    changed++;
+                }
+            } else if (value instanceof CompoundTag c) {
+                changed += shiftXyz(c, areas, "X", "Y", "Z") + shiftXyz(c, areas, "x", "y", "z");
+                changed += shiftReferencesIn(c, areas, false);
+            } else if (value instanceof ListTag list) {
+                changed += shiftList(list, areas);
+            }
+        }
+        return changed;
+    }
+
+    private static int shiftList(ListTag list, List<PlotArea> areas) {
+        int changed = 0;
+        for (int i = 0; i < list.size(); i++) {
+            Tag e = list.get(i);
+            if (e instanceof CompoundTag c) {
+                changed += shiftXyz(c, areas, "X", "Y", "Z") + shiftXyz(c, areas, "x", "y", "z");
+                changed += shiftReferencesIn(c, areas, false);
+            } else if (e instanceof net.minecraft.nbt.LongTag l) {
+                net.minecraft.core.BlockPos pos = net.minecraft.core.BlockPos.of(l.getAsLong());
+                PlotArea a = find(areas, pos.getX(), pos.getY(), pos.getZ());
+                if (a != null) {
+                    list.set(i, net.minecraft.nbt.LongTag.valueOf(pos.offset(a.shift()[0], a.shift()[1], a.shift()[2]).asLong()));
+                    changed++;
+                }
+            } else if (e instanceof net.minecraft.nbt.IntArrayTag arr && arr.size() == 3) {
+                int[] v = arr.getAsIntArray();
+                PlotArea a = find(areas, v[0], v[1], v[2]);
+                if (a != null) {
+                    list.set(i, new net.minecraft.nbt.IntArrayTag(new int[] {v[0] + a.shift()[0], v[1] + a.shift()[1], v[2] + a.shift()[2]}));
+                    changed++;
+                }
+            } else if (e instanceof ListTag inner) {
+                changed += shiftList(inner, areas);
+            }
+        }
+        return changed;
+    }
+
+    private static int shiftXyz(CompoundTag c, List<PlotArea> areas, String kx, String ky, String kz) {
+        if (!c.contains(kx, Tag.TAG_INT) || !c.contains(ky, Tag.TAG_INT) || !c.contains(kz, Tag.TAG_INT)) {
+            return 0;
+        }
+        PlotArea a = find(areas, c.getInt(kx), c.getInt(ky), c.getInt(kz));
+        if (a == null) {
+            return 0;
+        }
+        c.putInt(kx, c.getInt(kx) + a.shift()[0]);
+        c.putInt(ky, c.getInt(ky) + a.shift()[1]);
+        c.putInt(kz, c.getInt(kz) + a.shift()[2]);
+        return 1;
+    }
+
+    /** Plot movido que contiene la posición; las zonas internas están a millones de bloques, así que no hay falsos aciertos. */
+    private static PlotArea find(List<PlotArea> areas, int x, int y, int z) {
+        if (y < -2048 || y > 2048) {
+            return null;
+        }
+        for (PlotArea a : areas) {
+            if (a.moved() && a.contains(x, z)) {
+                return a;
+            }
+        }
+        return null;
+    }
+
     private static void shiftEntityPos(CompoundTag entity, int[] shift) {
-        if (shift == null || (shift[0] == 0 && shift[1] == 0)) {
+        if (shift == null || (shift[0] == 0 && shift[1] == 0 && shift[2] == 0)) {
             return;
         }
         ListTag pos = entity.getList("Pos", Tag.TAG_DOUBLE);
         if (pos.size() == 3) {
             ListTag moved = new ListTag();
             moved.add(DoubleTag.valueOf(pos.getDouble(0) + shift[0]));
-            moved.add(DoubleTag.valueOf(pos.getDouble(1)));
-            moved.add(DoubleTag.valueOf(pos.getDouble(2) + shift[1]));
+            moved.add(DoubleTag.valueOf(pos.getDouble(1) + shift[1]));
+            moved.add(DoubleTag.valueOf(pos.getDouble(2) + shift[2]));
             entity.put("Pos", moved);
         }
         ListTag passengers = entity.getList("Passengers", Tag.TAG_COMPOUND);
@@ -364,7 +563,7 @@ public final class ShipTransfer {
     }
 
     private static Vec3 shifted(Vec3 plotPos, int[] shift) {
-        return shift == null ? plotPos : plotPos.add(shift[0], 0.0, shift[1]);
+        return shift == null ? plotPos : plotPos.add(shift[0], shift[1], shift[2]);
     }
 
     /** Se llama cada tick del servidor: vuelve a sentar a los jugadores cuando el cliente ya conoce el asiento. */

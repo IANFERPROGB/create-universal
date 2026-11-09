@@ -40,6 +40,8 @@ public final class SpaceCommands {
                     .then(Commands.literal("look").then(Commands.argument("body", StringArgumentType.word())
                             .suggests((c, b) -> SharedSuggestionProvider.suggest(SolarSystem.bodies().stream().map(SolarSystem.Body::id), b))
                             .executes(SpaceCommands::look)))
+                    .then(Commands.literal("sendship").then(Commands.argument("dimension", net.minecraft.commands.arguments.DimensionArgument.dimension())
+                            .executes(SpaceCommands::sendShip)))
                     .then(Commands.literal("land").then(Commands.argument("body", StringArgumentType.word())
                             .suggests((c, b) -> SharedSuggestionProvider.suggest(
                                     dev.createuniversal.space.surface.PlanetSurface.ALL.stream().map(p -> p.bodyId()), b))
@@ -146,6 +148,38 @@ public final class SpaceCommands {
         c.getSource().sendSuccess(() -> Component.translatable("create_universal.command.land", Component.translatable("create_universal.body." + id),
                 String.format(Locale.ROOT, "%.2f", Math.toDegrees(lat)), String.format(Locale.ROOT, "%.2f", Math.toDegrees(lon))), false);
         return 1;
+    }
+
+    /** Prueba: manda la nave más cercana (a menos de 32 bloques) a otra dimensión, como si subiera o bajara. */
+    private static int sendShip(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+        ServerPlayer player = c.getSource().getPlayerOrException();
+        ServerLevel target = net.minecraft.commands.arguments.DimensionArgument.getDimension(c, "dimension");
+        ServerLevel level = player.serverLevel();
+        dev.ryanhcode.sable.api.sublevel.ServerSubLevelContainer container = dev.ryanhcode.sable.api.sublevel.SubLevelContainer.getContainer(level);
+        dev.ryanhcode.sable.sublevel.ServerSubLevel best = null;
+        double bestDist = 32.0;
+        if (container != null) {
+            for (dev.ryanhcode.sable.sublevel.ServerSubLevel ship : container.getAllSubLevels()) {
+                var b = ship.boundingBox();
+                Vec3 center = new Vec3((b.minX() + b.maxX()) * 0.5, (b.minY() + b.maxY()) * 0.5, (b.minZ() + b.maxZ()) * 0.5);
+                double d = center.distanceTo(player.position());
+                if (!ship.isRemoved() && d < bestDist) {
+                    best = ship;
+                    bestDist = d;
+                }
+            }
+        }
+        if (best == null) {
+            c.getSource().sendFailure(Component.literal("No hay ninguna nave a menos de 32 bloques"));
+            return 0;
+        }
+        double time = SpaceLayout.time(target);
+        Vec3 pos = target.dimension() == CUDimensions.SPACE ? SpaceLayout.arrivalPoint(time).add(0, 30, 0)
+                : new Vec3(player.getX(), Math.min(target.getMaxBuildHeight() - 40, player.getY() + 20), player.getZ());
+        boolean ok = ShipTransfer.transfer(best, target, pos, new net.minecraft.nbt.CompoundTag());
+        dev.ryanhcode.sable.sublevel.ServerSubLevel moved = best;
+        c.getSource().sendSuccess(() -> Component.literal("Nave " + moved.getUniqueId() + (ok ? " movida a " : " NO movida a ") + target.dimension().location()), false);
+        return ok ? 1 : 0;
     }
 
     private static float yaw(Vec3 v) {

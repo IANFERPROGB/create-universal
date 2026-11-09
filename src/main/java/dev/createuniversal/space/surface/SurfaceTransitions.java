@@ -216,7 +216,8 @@ public final class SurfaceTransitions {
         }
         Set<UUID> taken = new HashSet<>();
         for (ServerSubLevel ship : new ArrayList<>(container.getAllSubLevels())) {
-            if (ship.isRemoved() || taken.contains(ship.getUniqueId()) || !test.test(ship)) {
+            if (ship.isRemoved() || taken.contains(ship.getUniqueId()) || !dev.createuniversal.space.ShipTracker.settled(ship, level)
+                    || !test.test(ship)) {
                 continue;
             }
             for (var linked : SubLevelHelper.getConnectedChain(ship)) {

@@ -100,7 +100,7 @@ public final class SpaceTransitions {
         }
         Set<UUID> taken = new HashSet<>();
         for (ServerSubLevel ship : new ArrayList<>(container.getAllSubLevels())) {
-            if (ship.isRemoved() || taken.contains(ship.getUniqueId()) || !test.test(ship)) {
+            if (ship.isRemoved() || taken.contains(ship.getUniqueId()) || !ShipTracker.settled(ship, level) || !test.test(ship)) {
                 continue;
             }
             for (var linked : dev.ryanhcode.sable.api.SubLevelHelper.getConnectedChain(ship)) {
@@ -145,6 +145,7 @@ public final class SpaceTransitions {
         }
         ServerLevel level = player.serverLevel();
         updateGravity(player, level);
+        rescueFromEmptyPlot(player, level);
 
         if (player.isPassenger() || isAboardShip(player, level)) {
             return;
@@ -192,6 +193,37 @@ public final class SpaceTransitions {
         player.changeDimension(new DimensionTransition(overworld, target, Vec3.ZERO, player.getYRot(), player.getXRot(), DimensionTransition.DO_NOTHING));
         net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
                 new dev.createuniversal.network.TransitionEffectPayload(dev.createuniversal.network.TransitionEffectPayload.REENTRY));
+    }
+
+    /**
+     * Si la nave de un jugador desaparece, el jugador puede quedarse en la zona interna donde Sable guarda los bloques de
+     * las naves (a unos 20 millones de bloques), sentado en un asiento que ya no existe. Se le saca al sitio normal.
+     */
+    private static void rescueFromEmptyPlot(ServerPlayer player, ServerLevel level) {
+        if (player.tickCount % 20 != 0) {
+            return;
+        }
+        ServerSubLevelContainer container = SubLevelContainer.getContainer(level);
+        net.minecraft.core.BlockPos pos = player.blockPosition();
+        if (container == null || !container.inBounds(pos) || container.getPlot(new net.minecraft.world.level.ChunkPos(pos)) != null) {
+            return;
+        }
+        player.stopRiding();
+        Vec3 target;
+        if (level.dimension() == CUDimensions.SPACE) {
+            target = SpaceLayout.arrivalPoint(SpaceLayout.time(level));
+        } else {
+            dev.createuniversal.space.surface.PlanetSurface surface = dev.createuniversal.space.surface.PlanetSurface.byDimension(level.dimension());
+            if (surface != null) {
+                target = new Vec3(0.5, dev.createuniversal.space.surface.PlanetTerrain.get(surface).surfaceY(0, 0) + 3, 0.5);
+            } else {
+                net.minecraft.core.BlockPos spawn = level.getSharedSpawnPos();
+                target = new Vec3(spawn.getX() + 0.5, level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING, spawn.getX(), spawn.getZ()) + 1, spawn.getZ() + 0.5);
+            }
+        }
+        CreateUniversal.LOGGER.warn("{} estaba en la zona interna de Sable sin nave ({}): se le lleva a {}", player.getScoreboardName(), player.position(), target);
+        player.teleportTo(level, target.x, target.y, target.z, player.getYRot(), player.getXRot());
+        player.setDeltaMovement(Vec3.ZERO);
     }
 
     /** Sin gravedad para el jugador en el espacio (D4). */

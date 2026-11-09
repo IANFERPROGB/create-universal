@@ -25,6 +25,31 @@ public final class ShipTracker {
 
     private ShipTracker() {}
 
+    /** Momento (tick de juego) en que se vio cada nave por primera vez: las recién creadas no se trasladan aún. */
+    private static final java.util.Map<UUID, Long> FIRST_SEEN = new java.util.HashMap<>();
+    /** Ticks que tiene que existir una nave antes de poder cambiar de dimensión (la Toolgun aún la está colocando). */
+    private static final long SETTLE_TICKS = 60;
+
+    /** ¿Lleva la nave el tiempo suficiente en el mundo para trasladarla? */
+    public static boolean settled(SubLevel ship, ServerLevel level) {
+        long now = level.getGameTime();
+        long first = FIRST_SEEN.computeIfAbsent(ship.getUniqueId(), id -> now);
+        if (FIRST_SEEN.size() > 4096) {
+            FIRST_SEEN.clear();
+        }
+        return now - first >= SETTLE_TICKS;
+    }
+
+    /** ¿Se ha movido esta nave hace poco? (para el aviso de quién la borra) */
+    public static boolean isWatched(UUID ship) {
+        for (Watched w : WATCHED) {
+            if (w.ship().equals(ship)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static void watch(SubLevel ship, ServerLevel level) {
         WATCHED.add(new Watched(ship.getUniqueId(), level, 0, center(ship)));
     }
