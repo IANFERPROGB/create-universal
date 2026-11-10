@@ -50,6 +50,7 @@ public final class SpaceTransitions {
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Post event) {
         MinecraftServer server = event.getServer();
+        FastTravelChunks.tick(server);
         ServerLevel overworld = server.overworld();
         ServerLevel space = server.getLevel(CUDimensions.SPACE);
         if (space == null) {
