@@ -32,7 +32,10 @@ public final class SpaceClock {
         current = mc.level.getDayTime();
 
         LocalPlayer player = mc.player;
-        if (player != null && mc.level.dimension() == CUDimensions.SPACE && !player.isPassenger() && !mc.isPaused()) {
+        // De pie sobre una nave (en el espacio no hay otro suelo) ya va con ella: sumarle también la aceleración del astro
+        // lo hacía resbalar sobre la cubierta y la cámara temblaba en las naves rápidas.
+        if (player != null && mc.level.dimension() == CUDimensions.SPACE && !player.isPassenger() && !player.onGround()
+                && !mc.isPaused()) {
             Vec3 a = SolarSystem.frameAcceleration(player.position(), current);
             if (a.lengthSqr() > 0.0) {
                 player.setDeltaMovement(player.getDeltaMovement().add(a.scale(1.0 / 400.0))); // b/s² → b/tick²

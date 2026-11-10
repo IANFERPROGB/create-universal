@@ -174,6 +174,25 @@ public final class PlanetRenderer {
      * @param seconds    segundos de juego, para las animaciones
      * @param farDepth   dibujar en el plano lejano con prueba de profundidad (después de Iris)
      */
+    /** ¿Tiene ya el cliente el cuerpo de bloques de Fobos o Deimos (una pieza de Sable que contiene su centro)? */
+    private static boolean solidBodyAt(Vec3 center, double radius) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null) {
+            return false;
+        }
+        var container = dev.ryanhcode.sable.api.sublevel.SubLevelContainer.getContainer(mc.level);
+        if (container == null) {
+            return false;
+        }
+        for (var s : container.getAllSubLevels()) {
+            var b = s.boundingBox();
+            if (b.contains(center.x, center.y, center.z) && b.maxX() - b.minX() < radius * 4.0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static void render(Matrix4f view, Matrix4f projection, Vec3 cam, double time, float seconds, boolean farDepth) {
         if (shader == null) {
             return;
@@ -202,7 +221,7 @@ public final class PlanetRenderer {
             }
             // De cerca, Fobos y Deimos son cuerpos de bloques (Moonlets): no se pinta la esfera dentro de ellos.
             if (groundUp == null && dist < dev.createuniversal.space.Moonlets.HIDE_SPHERE_WITHIN
-                    && (body.id().equals("phobos") || body.id().equals("deimos"))) {
+                    && (body.id().equals("phobos") || body.id().equals("deimos")) && solidBodyAt(pos, body.radius())) {
                 continue;
             }
             double angular = Math.asin(Math.min(1.0, body.radius() / dist));

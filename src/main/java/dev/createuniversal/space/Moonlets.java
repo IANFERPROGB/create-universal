@@ -99,9 +99,7 @@ public final class Moonlets {
             Vec3 pos = SolarSystem.position(body, time);
             double nearest = Double.POSITIVE_INFINITY;
             for (ServerPlayer p : space.players()) {
-                if (!p.isSpectator()) {
-                    nearest = Math.min(nearest, p.position().distanceTo(pos));
-                }
+                nearest = Math.min(nearest, p.position().distanceTo(pos));
             }
             ServerSubLevel moon = ACTIVE.get(shape.id());
             if (moon != null && moon.isRemoved()) {
