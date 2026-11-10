@@ -51,8 +51,12 @@ public final class OrbitalStabilizers {
         if (!(sub instanceof ServerSubLevel ship) || ship.isRemoved()) {
             return;
         }
+        List<ServerSubLevel> group = ShipGroup.of(ship);
+        if (ShipDestruction.isDebris(group)) {
+            return;
+        }
         long now = level.getGameTime();
-        for (ServerSubLevel piece : ShipGroup.of(ship)) {
+        for (ServerSubLevel piece : group) {
             Pin pin = PINS.get(piece.getUniqueId());
             if (pin == null || pin.level != level) {
                 PINS.put(piece.getUniqueId(), new Pin(level, piece, now));

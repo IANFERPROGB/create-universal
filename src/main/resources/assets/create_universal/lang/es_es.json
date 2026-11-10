@@ -142,5 +142,13 @@
   "create_universal.orbital_stabilizer.status.no_signal": "Listo: dale señal de redstone para fijar la nave",
   "create_universal.orbital_stabilizer.status.active": "Nave fijada en su sitio",
   "create_universal.message.orbit_enter": "En órbita: %s (%s bloques/s)",
-  "create_universal.message.orbit_leave": "Fuera de órbita"
+  "create_universal.message.orbit_leave": "Fuera de órbita",
+  "death.attack.create_universal.impact": "%1$s murió cuando su nave chocó con un astro",
+  "death.attack.create_universal.sun": "%1$s ardió en el Sol",
+  "create_universal.message.ship_burned": "¡La nave ha tocado el Sol y se ha desintegrado!",
+  "create_universal.message.ship_hit": "¡%s ha arrollado la nave fijada!",
+  "create_universal.message.body_approaching": "⚠ %s viene hacia la nave fijada: choque en %s s. ¡Apaga el Estabilizador orbital!",
+  "create_universal.message.sun_close": "⚠ ¡Te estás quemando! Aléjate del Sol",
+  "create_universal.message.sun_warning": "⚠ Demasiado cerca del Sol",
+  "create_universal.hud.debris": "Restos: %s m (%s min)"
 }

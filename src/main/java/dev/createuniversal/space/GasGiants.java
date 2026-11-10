@@ -31,8 +31,8 @@ import java.util.UUID;
 
 /**
  * Los gigantes gaseosos no tienen suelo (idea 16, versión sencilla; la destrucción completa con restos es la alpha.9):
- * al acercarse a sus nubes sale un aviso, y lo que se mete en ellas lo aplasta la presión. La nave desaparece con una
- * explosión y quien vaya dentro muere (en creativo solo se pierde la nave).
+ * al acercarse a sus nubes sale un aviso, y lo que se mete en ellas lo aplasta la presión: la nave revienta como en los
+ * choques ({@link ShipDestruction}) y quien vaya dentro muere, salvo con el traje completo.
  */
 public final class GasGiants {
     public static final ResourceKey<DamageType> PRESSURE = ResourceKey.create(Registries.DAMAGE_TYPE, CreateUniversal.id("pressure"));
@@ -95,49 +95,11 @@ public final class GasGiants {
     }
 
     private static void crush(ServerLevel level, List<ServerSubLevel> group, Component name) {
-        ServerSubLevelContainer container = SubLevelContainer.getContainer(level);
-        if (container == null) {
+        if (ShipDestruction.isDebris(group)) {
+            group.forEach(piece -> ShipDestruction.burnUp(level, piece));
             return;
         }
-        // Todo lo que va a bordo: lo de la zona interna de cada pieza (asientos, objetos) y lo que está en su volumen.
-        Set<Entity> aboard = new LinkedHashSet<>();
-        for (ServerSubLevel ship : group) {
-            var plot = ship.getPlot();
-            AABB plotAabb = new AABB(plot.getChunkMin().getMinBlockX(), level.getMinBuildHeight(), plot.getChunkMin().getMinBlockZ(),
-                    plot.getChunkMax().getMaxBlockX() + 1, level.getMaxBuildHeight(), plot.getChunkMax().getMaxBlockZ() + 1);
-            for (Entity e : level.getEntities((Entity) null, plotAabb, e -> plot.contains(e.position()))) {
-                aboard.add(e);
-                aboard.addAll(e.getPassengers());
-            }
-            BoundingBox3dc b = ship.boundingBox();
-            aboard.addAll(level.getEntities((Entity) null, new AABB(b.minX(), b.minY(), b.minZ(), b.maxX(), b.maxY(), b.maxZ()).inflate(2.0),
-                    e -> true));
-        }
-        Vec3 c = centerOf(group.get(0));
-        level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, c.x, c.y, c.z, 3, 4.0, 4.0, 4.0, 0.0);
-        level.playSound(null, c.x, c.y, c.z, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.BLOCKS, 8.0F, 0.6F);
-
-        int players = 0;
-        for (Entity e : aboard) {
-            if (e instanceof ServerPlayer p) {
-                players++;
-                p.stopRiding();
-                p.displayClientMessage(Component.translatable("create_universal.message.gas_giant_crushed", name)
-                        .withStyle(ChatFormatting.RED), false);
-                p.hurt(pressure(level), Float.MAX_VALUE);
-            } else if (e instanceof LivingEntity living && !plotContains(group, e)) {
-                living.hurt(pressure(level), Float.MAX_VALUE);
-            } else {
-                e.discard();
-            }
-        }
-        for (ServerSubLevel ship : group) {
-            if (!ship.isRemoved()) {
-                container.removeSubLevel(ship, SubLevelRemovalReason.REMOVED);
-            }
-        }
-        CreateUniversal.LOGGER.info("Nave {} ({} piezas, {} jugadores) aplastada por la presión de {}", group.get(0).getUniqueId(),
-                group.size(), players, name.getString());
+        ShipDestruction.destroy(level, group, PRESSURE, Component.translatable("create_universal.message.gas_giant_crushed", name));
     }
 
     private static boolean plotContains(List<ServerSubLevel> group, Entity e) {

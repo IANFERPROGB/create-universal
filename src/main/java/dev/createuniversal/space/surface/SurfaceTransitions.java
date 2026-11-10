@@ -72,13 +72,15 @@ public final class SurfaceTransitions {
             Vec3 center = SolarSystem.position(body, time);
             double entry = body.radius() + surface.entryAltitude();
             for (ServerSubLevel ship : roots(space, s -> centerOf(s).distanceTo(center) < entry
-                    && !dev.createuniversal.space.OrbitalStabilizers.isPinned(dev.createuniversal.space.ShipGroup.of(s)))) {
+                    && !dev.createuniversal.space.OrbitalStabilizers.isPinned(dev.createuniversal.space.ShipGroup.of(s))
+                    && !dev.createuniversal.space.ShipDestruction.isDebris(dev.createuniversal.space.ShipGroup.of(s)))) {
                 Vec3 target = landingPoint(surface, centerOf(ship), time);
                 safeTransfer(ship, ground, target);
             }
             for (ServerSubLevel ship : roots(ground, s -> centerOf(s).y >= surface.exitY()
                     && !dev.createuniversal.space.LandingLock.mustLand(dev.createuniversal.space.ShipGroup.of(s))
-                    && !dev.createuniversal.space.OrbitalStabilizers.isPinned(dev.createuniversal.space.ShipGroup.of(s)))) {
+                    && !dev.createuniversal.space.OrbitalStabilizers.isPinned(dev.createuniversal.space.ShipGroup.of(s))
+                    && !dev.createuniversal.space.ShipDestruction.isDebris(dev.createuniversal.space.ShipGroup.of(s)))) {
                 Vec3 c = centerOf(ship);
                 safeTransfer(ship, space, orbitPoint(surface, c.x, c.z, time));
             }

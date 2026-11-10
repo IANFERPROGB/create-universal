@@ -32,6 +32,9 @@ public final class CreateUniversalClient {
         modBus.addListener((net.neoforged.neoforge.client.event.RegisterGuiLayersEvent e) ->
                 e.registerAbove(net.neoforged.neoforge.client.gui.VanillaGuiLayers.AIR_LEVEL, CreateUniversal.id("suit_air"),
                         dev.createuniversal.client.effects.SuitAirOverlay::render));
+        modBus.addListener((net.neoforged.neoforge.client.event.RegisterGuiLayersEvent e) ->
+                e.registerBelow(net.neoforged.neoforge.client.gui.VanillaGuiLayers.CHAT, CreateUniversal.id("debris_markers"),
+                        dev.createuniversal.client.effects.DebrisMarkers::render));
         if (net.neoforged.fml.ModList.get().isLoaded("distanthorizons")) {
             try {
                 dev.createuniversal.client.compat.DistantHorizonsCompat.register();

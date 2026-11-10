@@ -168,7 +168,8 @@ public final class SatelliteOrbits {
 
     private static boolean excluded(List<ServerSubLevel> group) {
         for (ServerSubLevel s : group) {
-            if (OrbitalStabilizers.isPinned(s) || ShipAnchor.isHeld(s) || Moonlets.isMoonlet(s) || MoonletGrip.isStuck(s)) {
+            if (OrbitalStabilizers.isPinned(s) || ShipAnchor.isHeld(s) || Moonlets.isMoonlet(s) || MoonletGrip.isStuck(s)
+                    || ShipDestruction.isDebris(s)) {
                 return true;
             }
         }
