@@ -2,13 +2,16 @@ modLoader="javafml"
 loaderVersion="${loader_version_range}"
 license="${mod_license}"
 issueTrackerURL=""
+# Gravity Control (va dentro de nuestro jar) se engancha dentro del cálculo de choques de las entidades, que Lithium
+# reescribe entero: sin esto el juego no arranca. Se apaga solo esa optimización de Lithium.
+"lithium:options" = { "mixin.entity.collisions.movement" = false }
 
 [[mods]]
 modId="${mod_id}"
 version="${mod_version}"
 displayName="${mod_name}"
 authors="superian"
-credits="Hecho con Create, Sable, Create Aeronautics y Create Deep Seas."
+credits="Hecho con Create, Sable, Create Aeronautics y Create Deep Seas. Incluye Gravity Control (Gravity Changer, de Tfarcenim, qouteall, Fusion Flux y Gaider10; licencia MIT)."
 description='''
 El espacio para Create Aeronautics: sube a 15.000 bloques con cualquier nave y sal al sistema solar.
 Space for Create Aeronautics: climb to 15,000 blocks with any ship and leave for the solar system.
