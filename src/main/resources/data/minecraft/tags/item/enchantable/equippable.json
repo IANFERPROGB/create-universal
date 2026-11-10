@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "create_universal:space_helmet",
+    "create_universal:space_chestplate",
+    "create_universal:space_leggings",
+    "create_universal:space_boots"
+  ]
+}

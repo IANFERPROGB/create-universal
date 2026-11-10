@@ -90,5 +90,16 @@
   "create_universal.message.gas_giant_warning": "⚠ %s: bajo las nubes la presión aplasta cualquier nave. ¡Da la vuelta!",
   "create_universal.message.gas_giant_crushed": "La presión de %s ha aplastado la nave",
   "death.attack.create_universal.pressure": "%1$s murió aplastado por la presión de un gigante gaseoso",
-  "block.create_universal.carbonaceous_regolith": "Regolito carbonáceo"
+  "block.create_universal.carbonaceous_regolith": "Regolito carbonáceo",
+  "item.create_universal.space_helmet": "Casco del traje espacial",
+  "item.create_universal.space_chestplate": "Pechera del traje espacial",
+  "item.create_universal.space_leggings": "Grebas del traje espacial",
+  "item.create_universal.space_boots": "Botas del traje espacial",
+  "item.create_universal.space_visor": "Visor espacial",
+  "item.create_universal.pressure_seals": "Juntas presurizadas",
+  "item.create_universal.incomplete_space_helmet": "Casco del traje espacial sin acabar",
+  "block.create_universal.space_suit_tank": "Pechera del traje espacial",
+  "item.create_universal.space_suit_tank": "Pechera del traje espacial",
+  "create_universal.hud.no_air": "⚠ Aquí no hay aire: hace falta el traje espacial completo",
+  "death.attack.create_universal.vacuum": "%1$s murió asfixiado sin aire"
 }

@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "GTG"
+  ],
+  "key": {
+    "G": {
+      "item": "create:golden_sheet"
+    },
+    "T": {
+      "item": "minecraft:tinted_glass"
+    }
+  },
+  "result": {
+    "id": "create_universal:space_visor",
+    "count": 1
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "create:deploying",
+  "ingredients": [
+    {
+      "item": "minecraft:netherite_boots"
+    },
+    {
+      "item": "create:netherite_diving_boots"
+    }
+  ],
+  "keep_held_item": false,
+  "results": [
+    {
+      "id": "create_universal:space_boots"
+    }
+  ]
+}

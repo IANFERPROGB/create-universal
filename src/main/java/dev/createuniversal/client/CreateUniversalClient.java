@@ -19,6 +19,9 @@ public final class CreateUniversalClient {
         NeoForge.EVENT_BUS.register(dev.createuniversal.client.effects.TransitionEffects.class);
         modBus.addListener((net.neoforged.neoforge.client.event.RegisterGuiLayersEvent e) ->
                 e.registerAboveAll(CreateUniversal.id("transition"), dev.createuniversal.client.effects.TransitionEffects::render));
+        modBus.addListener((net.neoforged.neoforge.client.event.RegisterGuiLayersEvent e) ->
+                e.registerAbove(net.neoforged.neoforge.client.gui.VanillaGuiLayers.AIR_LEVEL, CreateUniversal.id("suit_air"),
+                        dev.createuniversal.client.effects.SuitAirOverlay::render));
         if (net.neoforged.fml.ModList.get().isLoaded("distanthorizons")) {
             try {
                 dev.createuniversal.client.compat.DistantHorizonsCompat.register();

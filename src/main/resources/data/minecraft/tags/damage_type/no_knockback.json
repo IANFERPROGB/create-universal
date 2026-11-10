@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "create_universal:pressure"
+    "create_universal:pressure",
+    "create_universal:vacuum"
   ]
 }

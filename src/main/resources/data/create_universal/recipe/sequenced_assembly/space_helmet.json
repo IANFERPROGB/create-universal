@@ -1,0 +1,49 @@
+{
+  "type": "create:sequenced_assembly",
+  "ingredient": {
+    "item": "minecraft:netherite_helmet"
+  },
+  "transitional_item": {
+    "id": "create_universal:incomplete_space_helmet"
+  },
+  "sequence": [
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "create_universal:incomplete_space_helmet"
+        },
+        {
+          "item": "create:netherite_diving_helmet"
+        }
+      ],
+      "results": [
+        {
+          "id": "create_universal:incomplete_space_helmet"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "create_universal:incomplete_space_helmet"
+        },
+        {
+          "item": "create_universal:space_visor"
+        }
+      ],
+      "results": [
+        {
+          "id": "create_universal:incomplete_space_helmet"
+        }
+      ]
+    }
+  ],
+  "loops": 1,
+  "results": [
+    {
+      "id": "create_universal:space_helmet"
+    }
+  ]
+}

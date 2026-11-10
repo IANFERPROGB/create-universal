@@ -1,0 +1,17 @@
+{
+  "type": "create:deploying",
+  "ingredients": [
+    {
+      "item": "minecraft:netherite_leggings"
+    },
+    {
+      "item": "create_universal:pressure_seals"
+    }
+  ],
+  "keep_held_item": false,
+  "results": [
+    {
+      "id": "create_universal:space_leggings"
+    }
+  ]
+}

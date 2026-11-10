@@ -90,5 +90,16 @@
   "create_universal.message.gas_giant_warning": "⚠ %s: crushing pressure below the cloud tops. Turn back!",
   "create_universal.message.gas_giant_crushed": "The pressure of %s crushed the ship",
   "death.attack.create_universal.pressure": "%1$s was crushed by the pressure of a gas giant",
-  "block.create_universal.carbonaceous_regolith": "Carbonaceous Regolith"
+  "block.create_universal.carbonaceous_regolith": "Carbonaceous Regolith",
+  "item.create_universal.space_helmet": "Space Suit Helmet",
+  "item.create_universal.space_chestplate": "Space Suit Chestplate",
+  "item.create_universal.space_leggings": "Space Suit Leggings",
+  "item.create_universal.space_boots": "Space Suit Boots",
+  "item.create_universal.space_visor": "Space Visor",
+  "item.create_universal.pressure_seals": "Pressure Seals",
+  "item.create_universal.incomplete_space_helmet": "Incomplete Space Suit Helmet",
+  "block.create_universal.space_suit_tank": "Space Suit Chestplate",
+  "item.create_universal.space_suit_tank": "Space Suit Chestplate",
+  "create_universal.hud.no_air": "⚠ No breathable air: you need the full space suit",
+  "death.attack.create_universal.vacuum": "%1$s suffocated in the vacuum"
 }
