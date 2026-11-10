@@ -1,0 +1,22 @@
+{
+  "type": "create:deploying",
+  "ingredients": [
+    {
+      "item": "create_universal:space_chestplate"
+    },
+    {
+      "item": "create_universal:cooling_system"
+    }
+  ],
+  "keep_held_item": false,
+  "results": [
+    {
+      "id": "create_universal:space_chestplate",
+      "components": {
+        "create_universal:suit_upgrades": [
+          "cooling"
+        ]
+      }
+    }
+  ]
+}

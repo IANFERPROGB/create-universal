@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "create_universal:block/deepslate_chromite_ore"
+    }
+  }
+}

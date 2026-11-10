@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "create_universal:chromium_ingot",
+    "create_universal:boron_ingot",
+    "create_universal:beryllium_ingot"
+  ]
+}

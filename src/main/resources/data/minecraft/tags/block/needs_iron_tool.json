@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "create_universal:chromite_ore",
+    "create_universal:deepslate_chromite_ore",
+    "create_universal:colemanite_ore",
+    "create_universal:deepslate_colemanite_ore",
+    "create_universal:beryl_ore",
+    "create_universal:deepslate_beryl_ore"
+  ]
+}

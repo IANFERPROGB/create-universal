@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "create_universal:colemanite_ore",
+    "create_universal:deepslate_colemanite_ore"
+  ]
+}

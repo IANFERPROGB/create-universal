@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "SPS",
+    "PIP",
+    "SPS"
+  ],
+  "key": {
+    "S": {
+      "item": "create_universal:chromium_superalloy"
+    },
+    "P": {
+      "item": "create:fluid_pipe"
+    },
+    "I": {
+      "item": "minecraft:blue_ice"
+    }
+  },
+  "result": {
+    "id": "create_universal:cooling_system",
+    "count": 1
+  }
+}

@@ -18,7 +18,8 @@
               "function": "minecraft:copy_components",
               "source": "block_entity",
               "include": [
-                "create:banktank_air"
+                "create:banktank_air",
+                "create_universal:suit_upgrades"
               ]
             }
           ]

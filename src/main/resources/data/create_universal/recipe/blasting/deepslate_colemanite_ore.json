@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "ingredient": {
+    "item": "create_universal:deepslate_colemanite_ore"
+  },
+  "result": {
+    "id": "create_universal:boron_ingot"
+  },
+  "experience": 0.7,
+  "cookingtime": 100
+}

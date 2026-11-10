@@ -12,6 +12,12 @@
     "create_universal:ionian_rock",
     "create_universal:ionian_basalt",
     "create_universal:cryo_ice",
-    "create_universal:dark_cryo_ice"
+    "create_universal:dark_cryo_ice",
+    "create_universal:chromite_ore",
+    "create_universal:deepslate_chromite_ore",
+    "create_universal:colemanite_ore",
+    "create_universal:deepslate_colemanite_ore",
+    "create_universal:beryl_ore",
+    "create_universal:deepslate_beryl_ore"
   ]
 }

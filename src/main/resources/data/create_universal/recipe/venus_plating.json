@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "SNS",
+    "TRC",
+    "SNS"
+  ],
+  "key": {
+    "S": {
+      "item": "create_universal:chromium_superalloy"
+    },
+    "N": {
+      "item": "minecraft:netherite_ingot"
+    },
+    "T": {
+      "item": "create_universal:thermal_insulation"
+    },
+    "R": {
+      "item": "create_universal:radiation_shield"
+    },
+    "C": {
+      "item": "create_universal:cooling_system"
+    }
+  },
+  "result": {
+    "id": "create_universal:venus_plating",
+    "count": 1
+  }
+}

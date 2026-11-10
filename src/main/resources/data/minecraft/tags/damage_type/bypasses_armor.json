@@ -2,6 +2,8 @@
   "replace": false,
   "values": [
     "create_universal:pressure",
-    "create_universal:vacuum"
+    "create_universal:vacuum",
+    "create_universal:heat",
+    "create_universal:radiation"
   ]
 }

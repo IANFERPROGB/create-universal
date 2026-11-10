@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "create_universal:chromite_ore",
+    "create_universal:deepslate_chromite_ore"
+  ]
+}

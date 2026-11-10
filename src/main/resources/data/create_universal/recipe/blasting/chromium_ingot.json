@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "ingredient": {
+    "item": "create_universal:raw_chromite"
+  },
+  "result": {
+    "id": "create_universal:chromium_ingot"
+  },
+  "experience": 0.7,
+  "cookingtime": 100
+}

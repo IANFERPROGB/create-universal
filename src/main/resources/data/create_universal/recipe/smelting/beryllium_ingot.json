@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "ingredient": {
+    "item": "create_universal:beryl"
+  },
+  "result": {
+    "id": "create_universal:beryllium_ingot"
+  },
+  "experience": 0.7,
+  "cookingtime": 200
+}

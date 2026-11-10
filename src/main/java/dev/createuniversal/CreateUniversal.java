@@ -20,10 +20,13 @@ public final class CreateUniversal {
         modBus.addListener(CreateUniversal::registerPayloads);
         dev.createuniversal.registry.CUBlocks.register(modBus);
         dev.createuniversal.registry.CUSuit.register(modBus);
+        dev.createuniversal.registry.CUMinerals.register(modBus);
         dev.createuniversal.registry.CUWorldgen.register(modBus);
         NeoForge.EVENT_BUS.register(SpaceTransitions.class);
         NeoForge.EVENT_BUS.register(dev.createuniversal.space.Breathing.class);
         NeoForge.EVENT_BUS.register(dev.createuniversal.space.SuitJetpack.class);
+        NeoForge.EVENT_BUS.register(dev.createuniversal.space.Hazards.class);
+        NeoForge.EVENT_BUS.register(dev.createuniversal.space.SuitUpgrades.class);
         NeoForge.EVENT_BUS.register(dev.createuniversal.space.SpaceCommands.class);
         dev.createuniversal.space.ShipAnchor.register();
         NeoForge.EVENT_BUS.addListener(dev.createuniversal.space.Moonlets::onBreak);

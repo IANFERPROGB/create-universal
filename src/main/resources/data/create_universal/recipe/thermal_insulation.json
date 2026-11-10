@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "AWA",
+    "WBW",
+    "AWA"
+  ],
+  "key": {
+    "A": {
+      "item": "create_universal:aerogel"
+    },
+    "W": {
+      "tag": "minecraft:wool"
+    },
+    "B": {
+      "item": "create:brass_sheet"
+    }
+  },
+  "result": {
+    "id": "create_universal:thermal_insulation",
+    "count": 1
+  }
+}

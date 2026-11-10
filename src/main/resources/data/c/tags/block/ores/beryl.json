@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "create_universal:beryl_ore",
+    "create_universal:deepslate_beryl_ore"
+  ]
+}

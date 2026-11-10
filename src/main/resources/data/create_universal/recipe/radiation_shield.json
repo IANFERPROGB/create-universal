@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "OEO",
+    "EPE",
+    "OEO"
+  ],
+  "key": {
+    "O": {
+      "item": "create_universal:boron_ingot"
+    },
+    "E": {
+      "item": "create_universal:beryllium_ingot"
+    },
+    "P": {
+      "item": "create:iron_sheet"
+    }
+  },
+  "result": {
+    "id": "create_universal:radiation_shield",
+    "count": 1
+  }
+}
