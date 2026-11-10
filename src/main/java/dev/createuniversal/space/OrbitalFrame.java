@@ -32,7 +32,7 @@ public final class OrbitalFrame {
         double time = SpaceLayout.time(level);
         Vector3d noSpin = new Vector3d();
         for (ServerSubLevel ship : container.getAllSubLevels()) {
-            if (ship.isRemoved() || ShipAnchor.isHeld(ship) || Moonlets.isMoonlet(ship)) {
+            if (ship.isRemoved() || ShipAnchor.isHeld(ship) || Moonlets.isMoonlet(ship) || MoonletGrip.isStuck(ship)) {
                 continue;
             }
             Vec3 a = SolarSystem.frameAcceleration(centerOf(ship), time);

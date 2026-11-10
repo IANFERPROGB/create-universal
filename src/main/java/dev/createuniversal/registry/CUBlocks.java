@@ -67,7 +67,7 @@ public final class CUBlocks {
 
     // Fobos y Deimos (cuerpos sólidos en el espacio): roca carbonácea muy oscura. No se puede romper ni sale en el
     // inventario creativo; es la "piel" de las dos lunas.
-    public static final DeferredBlock<Block> CARBONACEOUS_REGOLITH = unlisted("carbonaceous_regolith",
+    public static final DeferredBlock<MoonletRockBlock> CARBONACEOUS_REGOLITH = unlisted("carbonaceous_regolith",
             BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_BLACK).strength(-1.0F, 3600000.0F).noLootTable()
                     .sound(SoundType.GRAVEL));
 
@@ -88,8 +88,8 @@ public final class CUBlocks {
                 .sound(SoundType.GLASS));
     }
 
-    private static DeferredBlock<Block> unlisted(String name, BlockBehaviour.Properties props) {
-        DeferredBlock<Block> block = BLOCKS.registerSimpleBlock(name, props);
+    private static DeferredBlock<MoonletRockBlock> unlisted(String name, BlockBehaviour.Properties props) {
+        DeferredBlock<MoonletRockBlock> block = BLOCKS.registerBlock(name, MoonletRockBlock::new, props);
         ITEMS.register(name, () -> new BlockItem(block.get(), new Item.Properties()));
         return block;
     }

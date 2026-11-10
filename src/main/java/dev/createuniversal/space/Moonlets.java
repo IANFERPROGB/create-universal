@@ -115,6 +115,7 @@ public final class Moonlets {
                     CreateUniversal.LOGGER.error("No se pudo crear {} como cuerpo sólido", shape.id(), e);
                 }
             } else if (moon != null && nearest > DESPAWN) {
+                MoonletGrip.releaseAllFrom(moon.getUniqueId(), space.getGameTime());
                 container.removeSubLevel(moon, SubLevelRemovalReason.REMOVED);
                 ACTIVE.remove(shape.id());
                 CreateUniversal.LOGGER.info("{} deja de ser un cuerpo sólido (nadie cerca)", shape.id());
@@ -260,6 +261,7 @@ public final class Moonlets {
             subTicks = Math.min(1.0, subTicks + timeStep * 20.0);
         }
         double time = tick + subTicks;
+        List<MoonletGrip.MoonState> states = new ArrayList<>();
         for (Map.Entry<String, ServerSubLevel> e : ACTIVE.entrySet()) {
             ServerSubLevel moon = e.getValue();
             SolarSystem.Body body = SolarSystem.get(e.getKey());
@@ -271,13 +273,17 @@ public final class Moonlets {
                 continue;
             }
             Vec3 pos = SolarSystem.position(body, time);
-            handle.teleport(new Vector3d(pos.x, pos.y, pos.z), orientation(body, time));
+            Quaterniond rot = orientation(body, time);
+            handle.teleport(new Vector3d(pos.x, pos.y, pos.z), rot);
             Vec3 v = SolarSystem.velocity(body, time);
             Vector3d spin = orbitNormal(body, time).mul(2.0 * Math.PI / (body.periodDays() * 24000.0 / 20.0));
             Vector3d lin = new Vector3d(v.x, v.y, v.z).sub(handle.getLinearVelocity(new Vector3d()));
-            Vector3d ang = spin.sub(handle.getAngularVelocity(new Vector3d()));
+            Vector3d ang = new Vector3d(spin).sub(handle.getAngularVelocity(new Vector3d()));
             handle.addLinearAndAngularVelocity(lin, ang);
+            states.add(new MoonletGrip.MoonState(moon.getUniqueId(), e.getKey(), new Vector3d(pos.x, pos.y, pos.z), rot,
+                    new Vector3d(v.x, v.y, v.z), spin));
         }
+        MoonletGrip.step(system, states);
     }
 
     private static Vector3d orbitNormal(SolarSystem.Body body, double time) {
@@ -370,6 +376,7 @@ public final class Moonlets {
             }
         }
         ACTIVE.clear();
+        MoonletGrip.clear();
         lastTick = Double.NaN;
     }
 }
