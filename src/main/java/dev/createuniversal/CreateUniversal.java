@@ -27,6 +27,7 @@ public final class CreateUniversal {
         NeoForge.EVENT_BUS.register(dev.createuniversal.space.Breathing.class);
         NeoForge.EVENT_BUS.register(dev.createuniversal.space.SuitJetpack.class);
         NeoForge.EVENT_BUS.register(dev.createuniversal.space.Hazards.class);
+        NeoForge.EVENT_BUS.register(dev.createuniversal.space.OxygenZones.class);
         NeoForge.EVENT_BUS.register(dev.createuniversal.space.SuitUpgrades.class);
         NeoForge.EVENT_BUS.register(dev.createuniversal.space.SpaceCommands.class);
         dev.createuniversal.space.ShipAnchor.register();

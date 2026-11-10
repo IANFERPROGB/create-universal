@@ -28,6 +28,12 @@ public final class SuitAirOverlay {
         }
         int x = graphics.guiWidth() / 2 + 90;
         int y = graphics.guiHeight() - 44;
+        double filling = dev.createuniversal.space.OxygenZones.fillingAt(player.level(), player.getEyePosition());
+        if (filling >= 0.0) {
+            Component text = Component.translatable("create_universal.hud.filling", (int) Math.floor(filling * 100.0))
+                    .withStyle(ChatFormatting.AQUA);
+            graphics.drawString(mc.font, text, graphics.guiWidth() / 2 - mc.font.width(text) / 2, graphics.guiHeight() - 82, -1);
+        }
         if (!CUSuit.wearsFullSuit(player)) {
             Component warning = Component.translatable("create_universal.hud.no_air").withStyle(ChatFormatting.RED);
             graphics.drawString(mc.font, warning, graphics.guiWidth() / 2 - mc.font.width(warning) / 2, graphics.guiHeight() - 72, -1);

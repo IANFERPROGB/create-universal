@@ -133,5 +133,6 @@
   "create_universal.hazard.venus": "⚠ Venus: crushing pressure and acid; the suit needs Venus plating",
   "death.attack.create_universal.heat": "%1$s was cooked by the heat",
   "death.attack.create_universal.radiation": "%1$s died of radiation",
-  "itemGroup.create_universal": "Create Universal"
+  "itemGroup.create_universal": "Create Universal",
+  "create_universal.hud.filling": "Filling the room with air: %s%%"
 }

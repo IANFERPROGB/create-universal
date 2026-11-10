@@ -52,6 +52,7 @@ public final class SpaceTransitions {
         MinecraftServer server = event.getServer();
         FastTravelChunks.tick(server);
         OxygenZones.tick(server.overworld());
+        Decompression.tick(server);
         ServerLevel overworld = server.overworld();
         ServerLevel space = server.getLevel(CUDimensions.SPACE);
         if (space == null) {
