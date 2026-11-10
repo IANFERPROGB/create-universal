@@ -30,6 +30,17 @@ public abstract class FogRendererAltitudeMixin {
     @Inject(method = "setupColor", at = @At("TAIL"))
     private static void create_universal$darkenFogWithAltitude(Camera camera, float partialTick, ClientLevel level,
                                                                int renderDistanceChunks, float darkenWorldAmount, CallbackInfo ci) {
+        // En el espacio y donde no hay aire, fondo negro siempre. Si el cliente aún no tiene el chunk de la cámara (yendo
+        // deprisa), Minecraft toma el bioma de llanura y su cielo azul teñía todo un instante.
+        if (level.dimension() == dev.createuniversal.space.CUDimensions.SPACE) {
+            create_universal$black();
+            return;
+        }
+        dev.createuniversal.space.surface.PlanetSurface surface = dev.createuniversal.space.surface.PlanetSurface.byDimension(level.dimension());
+        if (surface != null && surface.airless()) {
+            create_universal$black();
+            return;
+        }
         float f = AltitudeAtmosphere.fade();
         if (f <= 0.0F) {
             return;
@@ -39,6 +50,13 @@ public abstract class FogRendererAltitudeMixin {
         fogGreen *= keep;
         fogBlue *= keep;
         RenderSystem.clearColor(fogRed, fogGreen, fogBlue, 0.0F);
+    }
+
+    private static void create_universal$black() {
+        fogRed = 0.0F;
+        fogGreen = 0.0F;
+        fogBlue = 0.0F;
+        RenderSystem.clearColor(0.0F, 0.0F, 0.0F, 0.0F);
     }
 
     @Inject(method = "setupFog", at = @At("TAIL"))

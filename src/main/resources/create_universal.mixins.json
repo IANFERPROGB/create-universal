@@ -4,7 +4,7 @@
   "package": "dev.createuniversal.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": ["SubLevelPhysicsSystemMixin", "EntitySpaceGravityMixin", "LivingEntitySpaceFrictionMixin", "ItemEntitySpaceDragMixin", "EntitySpaceVoidMixin", "ServerSubLevelSpaceBoundsMixin", "PhysicsAssemblerNoSpaceDisassemblyMixin", "AssemblerStickNoSpaceDisassemblyMixin", "SimAssemblyHelperNoSpaceDisassemblyMixin", "ToolgunContainerNoSpaceMixin",
-    "ToolgunStabilizationRemovedShipMixin", "EntityPlanetFallMixin", "SubLevelRemovalDiagnosticMixin", "RivetNoTeardownAfterTransferMixin", "LevelNoWeatherMixin"],
-  "client": ["client.ClientLevelSkyMixin", "client.FogRendererAltitudeMixin", "client.GameRendererSpaceSkyMixin", "client.LevelRendererEarthSkyMixin"],
+    "ToolgunStabilizationRemovedShipMixin", "EntityPlanetFallMixin", "SubLevelRemovalDiagnosticMixin", "RivetNoTeardownAfterTransferMixin", "LevelNoWeatherMixin", "ImmPortalsSpaceLoadDistanceMixin"],
+  "client": ["client.ClientLevelSkyMixin", "client.FogRendererAltitudeMixin", "client.GameRendererSpaceSkyMixin", "client.LevelRendererEarthSkyMixin", "client.LocalPlayerSpaceChunkMixin"],
   "injectors": { "defaultRequire": 1 }
 }

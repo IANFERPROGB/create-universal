@@ -19,6 +19,13 @@ public final class CreateUniversalClient {
         NeoForge.EVENT_BUS.register(dev.createuniversal.client.effects.TransitionEffects.class);
         modBus.addListener((net.neoforged.neoforge.client.event.RegisterGuiLayersEvent e) ->
                 e.registerAboveAll(CreateUniversal.id("transition"), dev.createuniversal.client.effects.TransitionEffects::render));
+        if (net.neoforged.fml.ModList.get().isLoaded("distanthorizons")) {
+            try {
+                dev.createuniversal.client.compat.DistantHorizonsCompat.register();
+            } catch (LinkageError | RuntimeException e) {
+                CreateUniversal.LOGGER.warn("No se pudo enganchar Distant Horizons (¿versión distinta?): seguirá activo en el espacio", e);
+            }
+        }
     }
 
     private static void registerShaders(net.neoforged.neoforge.client.event.RegisterShadersEvent event) {

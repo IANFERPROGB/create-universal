@@ -40,6 +40,8 @@ public final class SpaceTransitions {
             CreateUniversal.id("space_zero_gravity"), -1.0, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
     /** Separación entre naves que llegan al mismo punto, para que no aparezcan unas dentro de otras. */
     private static final double ARRIVAL_SPACING = 96.0;
+    /** Radio de chunks del espacio (4 = 64 bloques: hasta ahí se ven jugadores y objetos sueltos). */
+    private static final int SPACE_VIEW_DISTANCE = 4;
 
     private SpaceTransitions() {}
 
@@ -55,6 +57,12 @@ public final class SpaceTransitions {
         }
         int exit = CUConfig.EXIT_ALTITUDE.get();
         double time = SpaceLayout.time(space);
+        if (server.getTickCount() % 20 == 0) {
+            // En el espacio los chunks están vacíos (las naves van en Sable, con su propia distancia de visión): basta un
+            // radio corto, y así ir muy deprisa no obliga a cargar cientos de chunks por segundo. Si el jugador cambia su
+            // distancia de renderizado, Minecraft la vuelve a poner en todas las dimensiones: aquí se corrige cada segundo.
+            space.getChunkSource().setViewDistance(Math.min(SPACE_VIEW_DISTANCE, server.getPlayerList().getViewDistance()));
+        }
 
         for (ServerSubLevel ship : shipsToMove(overworld, s -> centerOf(s).y >= exit)) {
             Vec3 from = centerOf(ship);
