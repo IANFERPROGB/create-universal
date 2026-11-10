@@ -70,8 +70,8 @@ public final class CUSuit {
             () -> new SequencedAssemblyItem(new Item.Properties().fireResistant()));
 
     // Bloque de la pechera colocada (para recargarla, como el backtank).
-    public static final DeferredBlock<BacktankBlock> TANK_BLOCK = BLOCKS.register("space_suit_tank",
-            () -> new BacktankBlock(BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_BLACK).strength(3.0F, 1200.0F)
+    public static final DeferredBlock<SpaceSuitTankBlock> TANK_BLOCK = BLOCKS.register("space_suit_tank",
+            () -> new SpaceSuitTankBlock(BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_BLACK).strength(3.0F, 1200.0F)
                     .sound(SoundType.NETHERITE_BLOCK).noOcclusion()));
 
     // Piezas del traje.

@@ -1,3 +1,22 @@
 {
-  "parent": "create:block/netherite_backtank/item"
+  "parent": "create_universal:block/space_suit_tank/block",
+  "display": {
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        1,
+        0
+      ],
+      "scale": [
+        0.625,
+        0.625,
+        0.625
+      ]
+    }
+  }
 }

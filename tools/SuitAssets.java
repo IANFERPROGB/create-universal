@@ -27,7 +27,14 @@ public class SuitAssets {
         File items = new File(res, "assets/create_universal/textures/item");
         armor.mkdirs();
         items.mkdirs();
-        ImageIO.write(layer1(), "png", new File(armor, "space_suit_layer_1.png"));
+        BufferedImage l1 = layer1();
+        ImageIO.write(l1, "png", new File(armor, "space_suit_layer_1.png"));
+        // La pechera colocada como bloque usa la misma textura (en una lámina cuadrada para el atlas de bloques).
+        BufferedImage block = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
+        block.getGraphics().drawImage(l1, 0, 0, null);
+        File blocks = new File(res, "assets/create_universal/textures/block");
+        blocks.mkdirs();
+        ImageIO.write(block, "png", new File(blocks, "space_suit_tank.png"));
         ImageIO.write(layer2(), "png", new File(armor, "space_suit_layer_2.png"));
         ImageIO.write(helmetIcon(read(vanilla, "netherite_helmet"), true), "png", new File(items, "space_helmet.png"));
         ImageIO.write(helmetIcon(read(vanilla, "netherite_helmet"), false), "png", new File(items, "incomplete_space_helmet.png"));
