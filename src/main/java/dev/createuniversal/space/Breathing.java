@@ -65,8 +65,15 @@ public final class Breathing {
         }
     }
 
-    public static boolean hasAirAt(Level level, BlockPos pos) {
-        return hasAirAt(level, Vec3.atCenterOf(pos));
+    /**
+     * ¿Tiene aire alrededor este bloque? Para máquinas y bloques sólidos (dentro de un bloque sólido nunca hay aire): basta
+     * con que una de sus caras dé a una sala con oxígeno. Si el bloque va en una nave, la posición es la de su zona interna.
+     */
+    public static boolean hasAirAround(Level level, BlockPos pos) {
+        if (!Sunlight.handles(level)) {
+            return true;
+        }
+        return OxygenZones.blockHasAir(level, pos);
     }
 
     /** Primero: aquí no se respira. Así el casco de buceo del traje (de Create) saca el aire de la pechera. */

@@ -173,6 +173,32 @@ public final class OxygenZones {
         return zone != null && zone.full();
     }
 
+    /**
+     * ¿Da alguna cara de este bloque a una sala llena de aire? La posición es la del bloque tal como está guardado: en una
+     * nave, la de su zona interna; en el suelo, la del mundo.
+     */
+    public static boolean blockHasAir(Level level, BlockPos pos) {
+        if (ZONES.isEmpty()) {
+            return false;
+        }
+        SubLevel sub = Sable.HELPER.getContaining(level, pos);
+        UUID ship = sub != null ? sub.getUniqueId() : null;
+        for (Zone zone : ZONES.values()) {
+            if (zone.dimension != level.dimension() || !java.util.Objects.equals(zone.ship, ship) || !zone.full() || !zone.near(pos)) {
+                continue;
+            }
+            if (zone.cells.contains(pos.asLong())) {
+                return true;
+            }
+            for (Direction d : Direction.values()) {
+                if (zone.cells.contains(pos.relative(d).asLong())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     /** Si estás en una sala que se está llenando, cuánto le falta (0..1); si no, -1. */
     public static double fillingAt(Level level, Vec3 worldPos) {
         Zone zone = zoneAt(level, worldPos);

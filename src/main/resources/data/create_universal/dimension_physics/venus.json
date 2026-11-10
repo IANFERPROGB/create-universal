@@ -1,17 +1,169 @@
 {
   "dimension": "create_universal:venus",
   "priority": 0,
-  "universal_drag": 0,
+  "universal_drag": 0.25,
   "base_gravity": [
     0,
     -9.944,
     0
   ],
-  "base_pressure": 8.0,
+  "base_pressure": 10.0,
   "magnetic_north": [
     0,
     0,
     0
   ],
-  "ignore_chunks": true
+  "ignore_chunks": true,
+  "pressure_function": [
+    {
+      "altitude": -1280.0,
+      "value": 3.0,
+      "slope": 0.0
+    },
+    {
+      "altitude": -1180.0,
+      "value": 3.0,
+      "slope": 0.0
+    },
+    {
+      "altitude": -1080.0,
+      "value": 3.0,
+      "slope": 0.0
+    },
+    {
+      "altitude": -980.0,
+      "value": 3.0,
+      "slope": 0.0
+    },
+    {
+      "altitude": -880.0,
+      "value": 3.0,
+      "slope": 0.0
+    },
+    {
+      "altitude": -780.0,
+      "value": 3.0,
+      "slope": 0.0
+    },
+    {
+      "altitude": -680.0,
+      "value": 3.0,
+      "slope": 0.0
+    },
+    {
+      "altitude": -580.0,
+      "value": 3.0,
+      "slope": 0.0
+    },
+    {
+      "altitude": -480.0,
+      "value": 2.788883,
+      "slope": -0.00595915
+    },
+    {
+      "altitude": -380.0,
+      "value": 2.252331,
+      "slope": -0.00481267
+    },
+    {
+      "altitude": -280.0,
+      "value": 1.819007,
+      "slope": -0.00388677
+    },
+    {
+      "altitude": -180.0,
+      "value": 1.469049,
+      "slope": -0.00313899
+    },
+    {
+      "altitude": -80.0,
+      "value": 1.18642,
+      "slope": -0.00253508
+    },
+    {
+      "altitude": 20.0,
+      "value": 0.958165,
+      "slope": -0.00204736
+    },
+    {
+      "altitude": 120.0,
+      "value": 0.773824,
+      "slope": -0.00165347
+    },
+    {
+      "altitude": 220.0,
+      "value": 0.624949,
+      "slope": -0.00133536
+    },
+    {
+      "altitude": 320.0,
+      "value": 0.504715,
+      "slope": -0.00107845
+    },
+    {
+      "altitude": 420.0,
+      "value": 0.407613,
+      "slope": -0.00087097
+    },
+    {
+      "altitude": 520.0,
+      "value": 0.329193,
+      "slope": -0.0007034
+    },
+    {
+      "altitude": 620.0,
+      "value": 0.26586,
+      "slope": -0.00056808
+    },
+    {
+      "altitude": 720.0,
+      "value": 0.214711,
+      "slope": -0.00045878
+    },
+    {
+      "altitude": 820.0,
+      "value": 0.173403,
+      "slope": -0.00037052
+    },
+    {
+      "altitude": 920.0,
+      "value": 0.140042,
+      "slope": -0.00029924
+    },
+    {
+      "altitude": 1020.0,
+      "value": 0.1131,
+      "slope": -0.00024167
+    },
+    {
+      "altitude": 1120.0,
+      "value": 0.09134,
+      "slope": -0.00019517
+    },
+    {
+      "altitude": 1220.0,
+      "value": 0.073767,
+      "slope": -0.00015762
+    },
+    {
+      "altitude": 1320.0,
+      "value": 0.059575,
+      "slope": -0.0001273
+    },
+    {
+      "altitude": 1420.0,
+      "value": 0.048114,
+      "slope": -0.00010281
+    },
+    {
+      "altitude": 1495.0,
+      "value": 0.040989,
+      "slope": -8.758e-05
+    },
+    {
+      "altitude": 1535.0,
+      "value": 0.0,
+      "slope": -0.00204945
+    }
+  ]
 }

@@ -1,7 +1,7 @@
 {
   "dimension": "create_universal:mars",
   "priority": 0,
-  "universal_drag": 0,
+  "universal_drag": 0.005,
   "base_gravity": [
     0,
     -4.18,
@@ -13,5 +13,222 @@
     0,
     0
   ],
-  "ignore_chunks": true
+  "ignore_chunks": true,
+  "pressure_function": [
+    {
+      "altitude": -2032.0,
+      "value": 3.0,
+      "slope": 0.0
+    },
+    {
+      "altitude": -1932.0,
+      "value": 3.0,
+      "slope": 0.0
+    },
+    {
+      "altitude": -1832.0,
+      "value": 3.0,
+      "slope": 0.0
+    },
+    {
+      "altitude": -1732.0,
+      "value": 3.0,
+      "slope": 0.0
+    },
+    {
+      "altitude": -1632.0,
+      "value": 3.0,
+      "slope": 0.0
+    },
+    {
+      "altitude": -1532.0,
+      "value": 3.0,
+      "slope": 0.0
+    },
+    {
+      "altitude": -1432.0,
+      "value": 3.0,
+      "slope": 0.0
+    },
+    {
+      "altitude": -1332.0,
+      "value": 3.0,
+      "slope": 0.0
+    },
+    {
+      "altitude": -1232.0,
+      "value": 3.0,
+      "slope": 0.0
+    },
+    {
+      "altitude": -1132.0,
+      "value": 3.0,
+      "slope": 0.0
+    },
+    {
+      "altitude": -1032.0,
+      "value": 3.0,
+      "slope": 0.0
+    },
+    {
+      "altitude": -932.0,
+      "value": 2.768775,
+      "slope": -0.00849317
+    },
+    {
+      "altitude": -832.0,
+      "value": 2.037363,
+      "slope": -0.00624958
+    },
+    {
+      "altitude": -732.0,
+      "value": 1.499165,
+      "slope": -0.00459866
+    },
+    {
+      "altitude": -632.0,
+      "value": 1.103139,
+      "slope": -0.00338386
+    },
+    {
+      "altitude": -532.0,
+      "value": 0.811729,
+      "slope": -0.00248997
+    },
+    {
+      "altitude": -432.0,
+      "value": 0.597299,
+      "slope": -0.00183221
+    },
+    {
+      "altitude": -332.0,
+      "value": 0.439514,
+      "slope": -0.0013482
+    },
+    {
+      "altitude": -232.0,
+      "value": 0.32341,
+      "slope": -0.00099206
+    },
+    {
+      "altitude": -132.0,
+      "value": 0.237977,
+      "slope": -0.00072999
+    },
+    {
+      "altitude": -32.0,
+      "value": 0.175112,
+      "slope": -0.00053715
+    },
+    {
+      "altitude": 68.0,
+      "value": 0.128853,
+      "slope": -0.00039526
+    },
+    {
+      "altitude": 168.0,
+      "value": 0.094815,
+      "slope": -0.00029084
+    },
+    {
+      "altitude": 268.0,
+      "value": 0.069768,
+      "slope": -0.00021401
+    },
+    {
+      "altitude": 368.0,
+      "value": 0.051338,
+      "slope": -0.00015748
+    },
+    {
+      "altitude": 468.0,
+      "value": 0.037776,
+      "slope": -0.00011588
+    },
+    {
+      "altitude": 568.0,
+      "value": 0.027797,
+      "slope": -8.527e-05
+    },
+    {
+      "altitude": 668.0,
+      "value": 0.020454,
+      "slope": -6.274e-05
+    },
+    {
+      "altitude": 768.0,
+      "value": 0.015051,
+      "slope": -4.617e-05
+    },
+    {
+      "altitude": 868.0,
+      "value": 0.011075,
+      "slope": -3.397e-05
+    },
+    {
+      "altitude": 968.0,
+      "value": 0.008149,
+      "slope": -2.5e-05
+    },
+    {
+      "altitude": 1068.0,
+      "value": 0.005997,
+      "slope": -1.839e-05
+    },
+    {
+      "altitude": 1168.0,
+      "value": 0.004413,
+      "slope": -1.354e-05
+    },
+    {
+      "altitude": 1268.0,
+      "value": 0.003247,
+      "slope": -9.96e-06
+    },
+    {
+      "altitude": 1368.0,
+      "value": 0.002389,
+      "slope": -7.33e-06
+    },
+    {
+      "altitude": 1468.0,
+      "value": 0.001758,
+      "slope": -5.39e-06
+    },
+    {
+      "altitude": 1568.0,
+      "value": 0.001294,
+      "slope": -3.97e-06
+    },
+    {
+      "altitude": 1668.0,
+      "value": 0.000952,
+      "slope": -2.92e-06
+    },
+    {
+      "altitude": 1768.0,
+      "value": 0.0007,
+      "slope": -2.15e-06
+    },
+    {
+      "altitude": 1868.0,
+      "value": 0.000515,
+      "slope": -1.58e-06
+    },
+    {
+      "altitude": 1968.0,
+      "value": 0.000379,
+      "slope": -1.16e-06
+    },
+    {
+      "altitude": 1991.0,
+      "value": 0.000353,
+      "slope": -1.08e-06
+    },
+    {
+      "altitude": 2031.0,
+      "value": 0.0,
+      "slope": -1.765e-05
+    }
+  ]
 }

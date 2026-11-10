@@ -18,7 +18,7 @@ public abstract class BacktankNoAirInVacuumMixin {
             at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/equipment/armor/BacktankUtil;maxAir(I)I"))
     private void createUniversal$onlyWhereThereIsAir(CallbackInfo ci) {
         BlockEntity self = (BlockEntity) (Object) this;
-        if (self.getLevel() != null && !Breathing.hasAirAt(self.getLevel(), self.getBlockPos())) {
+        if (self.getLevel() != null && !Breathing.hasAirAround(self.getLevel(), self.getBlockPos())) {
             ci.cancel();
         }
     }
