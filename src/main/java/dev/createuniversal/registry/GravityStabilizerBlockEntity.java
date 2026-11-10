@@ -23,15 +23,15 @@ import java.util.List;
 /**
  * Estabilizador de gravedad (D50, D51, D53): con al menos 128 RPM (32 SU por RPM, 4.096 SU a 128 RPM) y dentro de un área
  * cerrada, da gravedad hacia la cara donde está pegado a todos los jugadores y mobs de esa área, con la fuerza que se
- * elija (5 % a 150 % de la de la Tierra). En una nave la gravedad gira con la nave; en el suelo solo puede tirar hacia abajo
- * (los bloques del mundo solo chocan "de pie"). Si el área se abre, se apaga y lo avisa.
+ * elija (5 % a 150 % de la de la Tierra). En una nave la gravedad gira con la nave (a la cara del mundo más cercana: la
+ * dirección la cambia Gravity Control, que solo tiene 6). Si el área se abre, se apaga y lo avisa.
  */
 public class GravityStabilizerBlockEntity extends KineticBlockEntity {
     public static final float MIN_RPM = 128.0F;
     /** Cada cuánto se vuelve a comprobar que el área sigue cerrada. */
     private static final int RESCAN_TICKS = 20;
 
-    public enum Status { TOO_SLOW, GROUND_NOT_FLOOR, OPEN, ACTIVE }
+    public enum Status { TOO_SLOW, OPEN, ACTIVE }
 
     private ScrollValueBehaviour strength;
     /** Último estado calculado en el servidor (y enviado al cliente para las gafas). */
@@ -70,11 +70,8 @@ public class GravityStabilizerBlockEntity extends KineticBlockEntity {
             return;
         }
         Status before = status;
-        boolean onShip = Sable.HELPER.getContaining(level, worldPosition) != null;
         if (Math.abs(getSpeed()) < MIN_RPM || isOverStressed()) {
             status = Status.TOO_SLOW;
-        } else if (!onShip && down() != Direction.DOWN) {
-            status = Status.GROUND_NOT_FLOOR;
         } else if (--scanCooldown <= 0) {
             scanCooldown = RESCAN_TICKS;
             status = GravityFields.update(server, worldPosition, down(), strength()) ? Status.ACTIVE : Status.OPEN;

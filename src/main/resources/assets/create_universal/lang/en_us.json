@@ -155,7 +155,6 @@
   "create_universal.gravity_stabilizer.strength": "Gravity strength",
   "create_universal.gravity_stabilizer.strength_value": "Strength: %s %% of Earth",
   "create_universal.gravity_stabilizer.status.too_slow": "Needs at least %s RPM",
-  "create_universal.gravity_stabilizer.status.ground_not_floor": "On the ground it only works placed on the floor (on a ship, on any face)",
   "create_universal.gravity_stabilizer.status.open": "Only works in enclosed areas",
   "create_universal.gravity_stabilizer.status.active": "Gravity active towards this block"
 }

@@ -27,7 +27,10 @@ sourceSets.main.resources {
 }
 
 repositories {
-    // Add here additional repositories if required by some of the dependencies below.
+    // Mods que van dentro del jar de Create Universal (jar-in-jar), copiados a mano: ver libs/embedded.
+    maven {
+        url = file('libs/embedded')
+    }
 }
 
 base {
@@ -119,6 +122,15 @@ dependencies {
     // Mods del modpack (Create, Sable, Aeronautics, Deep Seas...) copiados a ./libs desde la instancia.
     // Solo para compilar: en el juego real los pone el propio modpack.
     compileOnly fileTree(dir: 'libs', include: '*.jar')
+
+    // Gravity Control (Gravity Changer de Tfarcenim, licencia MIT), dentro de nuestro jar: el Estabilizador de gravedad
+    // lo usa para cambiar la dirección de la gravedad de jugadores y mobs (D91). Necesita Cloth Config, que está en el pack.
+    jarJar(implementation('tfarcenim:gravitychanger')) {
+        version {
+            strictly '[2,)'
+            prefer '2'
+        }
+    }
 
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime

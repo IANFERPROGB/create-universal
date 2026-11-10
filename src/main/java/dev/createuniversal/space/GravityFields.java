@@ -26,9 +26,10 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Áreas de los Estabilizadores de gravedad encendidos y a quién afectan (D51, D53). Cada tick se mira qué seres vivos
- * tienen los ojos dentro de cada área; si están en varias, manda el estabilizador más cercano. Lo que cambia se envía a
- * los clientes que ven a esa entidad (y a ella misma), que es donde se mueve el jugador y se dibujan los mobs.
+ * Áreas de los Estabilizadores de gravedad encendidos y a quién afectan (D51, D53, D91). Cada tick se mira qué seres
+ * vivos tienen los ojos dentro de cada área; si están en varias, manda el estabilizador más cercano. La fuerza se envía a
+ * los clientes que ven a esa entidad (y a ella misma); la dirección se la da Gravity Control (va dentro de nuestro jar),
+ * que solo tiene las 6 caras: se elige la más cercana al "abajo" del estabilizador girado con la nave, en tiempo real.
  */
 public final class GravityFields {
     /** Ticks que se mantiene la gravedad tras salir del área (para que no parpadee en una puerta). */
@@ -116,7 +117,7 @@ public final class GravityFields {
             if (level == null) {
                 continue;
             }
-            SubLevel ship = f.ship != null ? Gravity.ship(level, f.ship) : null;
+            SubLevel ship = f.ship != null ? OxygenZones.ship(level, f.ship) : null;
             if (f.ship != null && ship == null) {
                 continue;
             }
@@ -151,21 +152,74 @@ public final class GravityFields {
             Gravity.SERVER.remove(e.getKey());
             if (entity != null) {
                 send(entity, null);
+                setDirection(entity, Direction.DOWN);
             }
         }
         for (Map.Entry<UUID, Assigned> e : next.entrySet()) {
             Assigned old = ASSIGNED.get(e.getKey());
             Gravity.State state = e.getValue().state();
             Gravity.SERVER.put(e.getKey(), state);
-            if (old == null || !Objects.equals(old.state(), state)) {
-                Entity entity = entities.containsKey(e.getKey()) ? entities.get(e.getKey()) : find(server, e.getKey());
-                if (entity != null) {
-                    send(entity, state);
-                }
+            Entity entity = entities.containsKey(e.getKey()) ? entities.get(e.getKey()) : find(server, e.getKey());
+            if (entity == null) {
+                continue;
             }
+            if (old == null || !Objects.equals(old.state(), state)) {
+                send(entity, state);
+            }
+            // En tiempo real: la cara del mundo más cercana al "abajo" del estabilizador (girado con la nave).
+            setDirection(entity, worldDirection(entity, state));
         }
         ASSIGNED.clear();
         ASSIGNED.putAll(next);
+    }
+
+    /** Marca en la entidad que su gravedad la hemos girado nosotros (para devolverla al cargar el mundo si hace falta). */
+    private static final String TURNED = dev.createuniversal.CreateUniversal.MOD_ID + ":gravity_turned";
+    /** Para cambiar de cara hace falta que la nueva esté bastante más cerca que la actual (si no, a 45° parpadearía). */
+    private static final double HYSTERESIS = 0.15;
+
+    private static Direction worldDirection(Entity entity, Gravity.State state) {
+        if (state.ship() == null) {
+            return state.down();
+        }
+        SubLevel ship = OxygenZones.ship(entity.level(), state.ship());
+        if (ship == null) {
+            return Direction.DOWN;
+        }
+        Vector3d d = new Vector3d(state.down().getStepX(), state.down().getStepY(), state.down().getStepZ());
+        ship.logicalPose().orientation().transform(d);
+        Direction nearest = Direction.getNearest(d.x, d.y, d.z);
+        Direction current = gravitychanger.api.GravityChangerAPI.getBaseGravityDirection(entity);
+        double currentDot = d.x * current.getStepX() + d.y * current.getStepY() + d.z * current.getStepZ();
+        double nearestDot = d.x * nearest.getStepX() + d.y * nearest.getStepY() + d.z * nearest.getStepZ();
+        return nearestDot - currentDot > HYSTERESIS ? nearest : current;
+    }
+
+    private static void setDirection(Entity entity, Direction direction) {
+        if (!gravitychanger.api.GravityChangerAPI.canChangeGravity(entity)) {
+            return;
+        }
+        if (gravitychanger.api.GravityChangerAPI.getBaseGravityDirection(entity) != direction) {
+            gravitychanger.api.GravityChangerAPI.setBaseGravityDirection(entity, direction);
+        }
+        if (direction == Direction.DOWN) {
+            entity.getPersistentData().remove(TURNED);
+        } else {
+            entity.getPersistentData().putBoolean(TURNED, true);
+        }
+    }
+
+    /**
+     * Al cargar una entidad (o entrar un jugador) con la gravedad girada por un estabilizador, vuelve a ser normal: si sigue
+     * en el área, el siguiente tick la vuelve a girar. Así nadie se queda de lado tras salir del juego en una sala.
+     */
+    @SubscribeEvent
+    public static void onJoin(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event) {
+        Entity entity = event.getEntity();
+        if (!event.getLevel().isClientSide() && entity.getPersistentData().getBoolean(TURNED)
+                && !Gravity.SERVER.containsKey(entity.getUUID())) {
+            setDirection(entity, Direction.DOWN);
+        }
     }
 
     private static Entity find(MinecraftServer server, UUID id) {
