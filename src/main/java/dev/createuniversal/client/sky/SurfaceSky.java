@@ -51,10 +51,11 @@ public final class SurfaceSky {
                 (float) e.z, (float) u.z, (float) s.z);
         Matrix4f view = new Matrix4f(frustumMatrix).mul(new Matrix4f().set(toLocal));
 
-        boolean airless = surface.pressure() <= 0.0;
+        boolean airless = surface.airless();
         float day = daylight(surface, time, camPos.x, camPos.z);
-        // Sin aire las estrellas se ven también de día (algo menos, deslumbra el suelo); con aire, solo de noche.
-        float stars = airless ? 1.0F - 0.35F * day : 1.0F - day;
+        // Sin aire las estrellas se ven también de día (algo menos, deslumbra el suelo); con aire, solo de noche, y bajo
+        // las nubes de Venus o la bruma de Titán casi nada.
+        float stars = airless ? 1.0F - 0.35F * day : (1.0F - day) * (float) (1.0 - surface.haze());
         float seconds = (float) ((level.getGameTime() + partialTick) / 20.0 % 100000.0);
 
         PlanetRenderer.commonUniforms(seconds, farDepth);

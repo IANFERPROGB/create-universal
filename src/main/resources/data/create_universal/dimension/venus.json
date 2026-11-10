@@ -1,0 +1,11 @@
+{
+  "type": "create_universal:venus",
+  "generator": {
+    "type": "create_universal:planet",
+    "planet": "venus",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "create_universal:venus"
+    }
+  }
+}

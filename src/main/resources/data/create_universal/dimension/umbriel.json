@@ -1,0 +1,11 @@
+{
+  "type": "create_universal:umbriel",
+  "generator": {
+    "type": "create_universal:planet",
+    "planet": "umbriel",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "create_universal:umbriel"
+    }
+  }
+}

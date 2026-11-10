@@ -219,7 +219,8 @@ public final class SurfaceTransitions {
         }
         Set<UUID> taken = new HashSet<>();
         for (ServerSubLevel ship : new ArrayList<>(container.getAllSubLevels())) {
-            if (ship.isRemoved() || taken.contains(ship.getUniqueId()) || !test.test(ship)) {
+            if (ship.isRemoved() || taken.contains(ship.getUniqueId()) || dev.createuniversal.space.Moonlets.isMoonlet(ship)
+                    || !test.test(ship)) {
                 continue;
             }
             List<ServerSubLevel> group = dev.createuniversal.space.ShipGroup.of(ship);

@@ -1,0 +1,11 @@
+{
+  "type": "create_universal:iapetus",
+  "generator": {
+    "type": "create_universal:planet",
+    "planet": "iapetus",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "create_universal:iapetus"
+    }
+  }
+}

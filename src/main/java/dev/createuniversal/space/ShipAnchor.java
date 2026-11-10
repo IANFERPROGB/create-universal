@@ -98,6 +98,8 @@ public final class ShipAnchor {
         SableEventPlatform.INSTANCE.onPhysicsTick(ShipAnchor::prePhysicsTick);
         SableEventPlatform.INSTANCE.onPhysicsTick(SpaceGravityCompensation::prePhysicsTick);
         SableEventPlatform.INSTANCE.onPhysicsTick(OrbitalFrame::prePhysicsTick);
+        // La última: fija la posición y la velocidad de Fobos y Deimos, pase lo que pase antes.
+        SableEventPlatform.INSTANCE.onPhysicsTick(Moonlets::prePhysicsTick);
     }
 
     /** ¿Está la nave congelada en la espera de llegada? */

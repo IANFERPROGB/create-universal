@@ -15,6 +15,9 @@ import java.util.zip.GZIPInputStream;
  * la Luna y ~7,4 km en Marte) para las formas grandes, y encima detalle generado a escala casi real: cráteres de cinco
  * tamaños, de 8 a 2.000 bloques, y ondulaciones del suelo. Todo determinista: el mismo sitio sale siempre igual, sin
  * guardar nada.
+ *
+ * Los astros sin mapa de alturas en el mod (alpha.6) toman las formas grandes y el detalle de {@link ProceduralRelief},
+ * y sus zonas claras y oscuras de un mapa precalculado ({@code /terrain/<astro>.alb}, de {@code tools/AlbedoMaps.java}).
  */
 public final class PlanetTerrain {
     private static final Map<String, PlanetTerrain> CACHE = new HashMap<>();
@@ -29,14 +32,22 @@ public final class PlanetTerrain {
     private final short[] heights;
     private final byte[] albedo;
     private final long seed;
+    /** Relieve generado (alpha.6); null en la Luna y Marte. Entonces {@link #albedo} guarda ya la oscuridad (0..255). */
+    private final ProceduralRelief relief;
+    /** Lo más hondo y lo más alto que puede quedar el suelo, para no salirse de la dimensión. */
+    private final double floorY;
+    private final double ceilingY;
 
-    private PlanetTerrain(PlanetSurface surface, int width, int height, short[] heights, byte[] albedo) {
+    private PlanetTerrain(PlanetSurface surface, int width, int height, short[] heights, byte[] albedo, boolean generated) {
         this.surface = surface;
         this.width = width;
         this.height = height;
         this.heights = heights;
         this.albedo = albedo;
         this.seed = surface.bodyId().hashCode() * 0x9E3779B97F4A7C15L;
+        this.relief = generated ? new ProceduralRelief(surface.bodyId(), surface.radiusMeters(), surface.craterDensity(), this::darknessSmooth) : null;
+        this.floorY = surface.minY() + 48.0;
+        this.ceilingY = surface.minY() + surface.height() - 120.0;
     }
 
     public static synchronized PlanetTerrain get(PlanetSurface surface) {
@@ -44,6 +55,9 @@ public final class PlanetTerrain {
     }
 
     private static PlanetTerrain load(PlanetSurface surface) {
+        if (ProceduralRelief.has(surface.bodyId())) {
+            return loadGenerated(surface);
+        }
         String path = "/terrain/" + surface.bodyId() + ".bin";
         try (InputStream raw = PlanetTerrain.class.getResourceAsStream(path)) {
             if (raw == null) {
@@ -61,10 +75,31 @@ public final class PlanetTerrain {
             byte[] albedo = new byte[w * h];
             in.readFully(albedo);
             CreateUniversal.LOGGER.info("Relieve de {} cargado: {}×{}", surface.bodyId(), w, h);
-            return new PlanetTerrain(surface, w, h, heights, albedo);
+            return new PlanetTerrain(surface, w, h, heights, albedo, false);
         } catch (IOException e) {
             CreateUniversal.LOGGER.error("No se pudo cargar el relieve de {}: será llano", surface.bodyId(), e);
-            return new PlanetTerrain(surface, 2, 1, new short[2], new byte[] {(byte) 128, (byte) 128});
+            return new PlanetTerrain(surface, 2, 1, new short[2], new byte[] {(byte) 128, (byte) 128}, false);
+        }
+    }
+
+    private static PlanetTerrain loadGenerated(PlanetSurface surface) {
+        String path = "/terrain/" + surface.bodyId() + ".alb";
+        try (InputStream raw = PlanetTerrain.class.getResourceAsStream(path)) {
+            if (raw == null) {
+                throw new IOException("falta " + path);
+            }
+            DataInputStream in = new DataInputStream(new BufferedInputStream(new GZIPInputStream(raw, 1 << 16)));
+            byte[] magic = new byte[4];
+            in.readFully(magic);
+            int w = in.readInt();
+            int h = in.readInt();
+            byte[] dark = new byte[w * h];
+            in.readFully(dark);
+            CreateUniversal.LOGGER.info("Relieve generado de {} listo (zonas {}×{})", surface.bodyId(), w, h);
+            return new PlanetTerrain(surface, w, h, null, dark, true);
+        } catch (IOException e) {
+            CreateUniversal.LOGGER.error("No se pudo cargar el mapa de zonas de {}: todo claro", surface.bodyId(), e);
+            return new PlanetTerrain(surface, 2, 1, null, new byte[2], true);
         }
     }
 
@@ -74,6 +109,14 @@ public final class PlanetTerrain {
     public double surfaceY(double x, double z) {
         double lon = surface.longitude(x);
         double lat = surface.latitude(z);
+        if (relief != null) {
+            double y = surface.scaleHeight(relief.meters(lon, lat)) + relief.detail(x, z, lon, lat);
+            // Lo que se hunde más de 800 bloques se aprieta a la mitad y nada se sale de la dimensión.
+            if (y < -800.0) {
+                y = -800.0 + (y + 800.0) * 0.5;
+            }
+            return Math.max(floorY, Math.min(ceilingY, y));
+        }
         double big = surface.scaleHeight(bicubic(lon, lat));
         double mare = darkness(lon, lat);
         return big + craters(x, z, mare) + roughness(x, z);
@@ -81,12 +124,38 @@ public final class PlanetTerrain {
 
     /** 0 = zona clara (tierras altas de la Luna, polvo de Marte), 1 = zona oscura (mares lunares, roca marciana). */
     public double darkness(double lon, double lat) {
+        if (relief != null) {
+            return darknessSmooth(lon, lat);
+        }
         double u = (lon / (Math.PI * 2.0) + 0.5) * width - 0.5;
         double v = (0.5 - lat / Math.PI) * height - 0.5;
         int x0 = (int) Math.floor(u);
         int y0 = Math.max(0, Math.min(height - 1, (int) Math.round(v)));
         double a = (albedo[y0 * width + Math.floorMod(x0, width)] & 255) / 255.0;
         return Math.max(0.0, Math.min(1.0, (0.55 - a) / 0.3));
+    }
+
+    /** Como {@link #darkness} pero interpolado, sin escalones entre muestras (para elegir bloques y para el relieve). */
+    public double darknessSmooth(double lon, double lat) {
+        double u = (lon / (Math.PI * 2.0) + 0.5) * width - 0.5;
+        double v = (0.5 - lat / Math.PI) * height - 0.5;
+        int x0 = (int) Math.floor(u);
+        int y0 = (int) Math.floor(v);
+        double fx = u - x0;
+        double fy = v - y0;
+        double a = dark(x0, y0);
+        double b = dark(x0 + 1, y0);
+        double c = dark(x0, y0 + 1);
+        double d = dark(x0 + 1, y0 + 1);
+        return (a + (b - a) * fx) * (1.0 - fy) + (c + (d - c) * fx) * fy;
+    }
+
+    private double dark(int x, int y) {
+        int a = albedo[Math.max(0, Math.min(height - 1, y)) * width + Math.floorMod(x, width)] & 255;
+        if (relief != null) {
+            return a / 255.0;
+        }
+        return Math.max(0.0, Math.min(1.0, (0.55 - a / 255.0) / 0.3));
     }
 
     // ---------------------------------------------------------------- relieve real

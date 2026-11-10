@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "": [
+      { "model": "create_universal:block/cryo_ice" },
+      { "model": "create_universal:block/cryo_ice", "y": 90 },
+      { "model": "create_universal:block/cryo_ice", "y": 180 },
+      { "model": "create_universal:block/cryo_ice", "y": 270 }
+    ]
+  }
+}

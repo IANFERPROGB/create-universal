@@ -48,7 +48,7 @@ public final class SkyShipBroadcaster {
         Map<UUID, Vec3> now = new HashMap<>();
         if (container != null) {
             for (ServerSubLevel ship : container.getAllSubLevels()) {
-                if (ship.isRemoved() || ships.size() >= MAX_SHIPS) {
+                if (ship.isRemoved() || ships.size() >= MAX_SHIPS || Moonlets.isMoonlet(ship)) {
                     continue;
                 }
                 BoundingBox3dc b = ship.boundingBox();

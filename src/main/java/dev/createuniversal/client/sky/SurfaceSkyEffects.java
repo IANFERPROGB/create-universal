@@ -12,7 +12,7 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 
-/** Efectos de las dimensiones de la Luna y de Marte: su cielo ({@link SurfaceSky}), sin nubes ni lluvia, y su niebla. */
+/** Efectos de las dimensiones de los astros: su cielo ({@link SurfaceSky}), sin nubes ni lluvia, y su niebla. */
 public final class SurfaceSkyEffects extends DimensionSpecialEffects {
     private final PlanetSurface surface;
 
@@ -22,18 +22,19 @@ public final class SurfaceSkyEffects extends DimensionSpecialEffects {
     }
 
     /**
-     * Color de la niebla del horizonte: negro en la Luna (no hay aire); en Marte, el caramelo del cielo de día, que se
-     * apaga de noche.
+     * Color de la niebla del horizonte: negro donde no hay aire; con aire, el color del cielo de día del astro (el
+     * caramelo de Marte, el amarillo sucio de Venus, el naranja de Titán), que se apaga de noche.
      */
     @Override
     public Vec3 getBrightnessDependentFogColor(Vec3 fogColor, float brightness) {
-        if (surface.pressure() <= 0.0) {
+        if (surface.airless()) {
             return Vec3.ZERO;
         }
+        int c = surface.fogColor();
         Minecraft mc = Minecraft.getInstance();
         Vec3 cam = mc.gameRenderer.getMainCamera().getPosition();
         float day = SurfaceSky.daylight(surface, SpaceClock.renderTime(1.0F), cam.x, cam.z);
-        return new Vec3(0.72, 0.52, 0.36).scale(0.04 + 0.96 * day);
+        return new Vec3((c >> 16 & 255) / 255.0, (c >> 8 & 255) / 255.0, (c & 255) / 255.0).scale(0.04 + 0.96 * day);
     }
 
     @Override

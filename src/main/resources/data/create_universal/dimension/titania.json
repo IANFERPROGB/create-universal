@@ -1,0 +1,11 @@
+{
+  "type": "create_universal:titania",
+  "generator": {
+    "type": "create_universal:planet",
+    "planet": "titania",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "create_universal:titania"
+    }
+  }
+}

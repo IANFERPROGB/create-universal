@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "": [
+      { "model": "create_universal:block/tholin_sand" },
+      { "model": "create_universal:block/tholin_sand", "y": 90 },
+      { "model": "create_universal:block/tholin_sand", "y": 180 },
+      { "model": "create_universal:block/tholin_sand", "y": 270 }
+    ]
+  }
+}

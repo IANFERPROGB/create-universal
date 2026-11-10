@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "": [
+      { "model": "create_universal:block/ionian_rock" },
+      { "model": "create_universal:block/ionian_rock", "y": 90 },
+      { "model": "create_universal:block/ionian_rock", "y": 180 },
+      { "model": "create_universal:block/ionian_rock", "y": 270 }
+    ]
+  }
+}

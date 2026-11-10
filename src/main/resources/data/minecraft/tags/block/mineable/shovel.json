@@ -4,6 +4,19 @@
     "create_universal:lunar_regolith",
     "create_universal:lunar_mare_regolith",
     "create_universal:martian_dust",
-    "create_universal:martian_regolith"
+    "create_universal:martian_regolith",
+    "create_universal:mercurian_regolith",
+    "create_universal:mercurian_dark_regolith",
+    "create_universal:venusian_dust",
+    "create_universal:venusian_regolith",
+    "create_universal:sulfur_frost",
+    "create_universal:ionian_sulfur_dust",
+    "create_universal:ice_regolith",
+    "create_universal:dark_ice_regolith",
+    "create_universal:salt_ice_regolith",
+    "create_universal:tholin_dust",
+    "create_universal:tholin_sand",
+    "create_universal:nitrogen_frost",
+    "create_universal:carbonaceous_regolith"
   ]
 }

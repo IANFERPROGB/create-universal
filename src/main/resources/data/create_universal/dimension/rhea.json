@@ -1,0 +1,11 @@
+{
+  "type": "create_universal:rhea",
+  "generator": {
+    "type": "create_universal:planet",
+    "planet": "rhea",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "create_universal:rhea"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "type": "create_universal:enceladus",
+  "generator": {
+    "type": "create_universal:planet",
+    "planet": "enceladus",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "create_universal:enceladus"
+    }
+  }
+}

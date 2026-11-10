@@ -1,0 +1,11 @@
+{
+  "type": "create_universal:mercury",
+  "generator": {
+    "type": "create_universal:planet",
+    "planet": "mercury",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "create_universal:mercury"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "": [
+      { "model": "create_universal:block/venusian_basalt" },
+      { "model": "create_universal:block/venusian_basalt", "y": 90 },
+      { "model": "create_universal:block/venusian_basalt", "y": 180 },
+      { "model": "create_universal:block/venusian_basalt", "y": 270 }
+    ]
+  }
+}

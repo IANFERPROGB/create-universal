@@ -4,6 +4,14 @@
     "create_universal:lunar_rock",
     "create_universal:lunar_basalt",
     "create_universal:martian_rock",
-    "create_universal:martian_basalt"
+    "create_universal:martian_basalt",
+    "create_universal:mercurian_rock",
+    "create_universal:mercurian_basalt",
+    "create_universal:venusian_rock",
+    "create_universal:venusian_basalt",
+    "create_universal:ionian_rock",
+    "create_universal:ionian_basalt",
+    "create_universal:cryo_ice",
+    "create_universal:dark_cryo_ice"
   ]
 }

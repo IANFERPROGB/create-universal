@@ -1,0 +1,11 @@
+{
+  "type": "create_universal:mimas",
+  "generator": {
+    "type": "create_universal:planet",
+    "planet": "mimas",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "create_universal:mimas"
+    }
+  }
+}

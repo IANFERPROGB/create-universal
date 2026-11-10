@@ -1,0 +1,11 @@
+{
+  "type": "create_universal:triton",
+  "generator": {
+    "type": "create_universal:planet",
+    "planet": "triton",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "create_universal:triton"
+    }
+  }
+}

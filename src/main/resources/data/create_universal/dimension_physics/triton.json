@@ -1,0 +1,17 @@
+{
+  "dimension": "create_universal:triton",
+  "priority": 0,
+  "universal_drag": 0,
+  "base_gravity": [
+    0,
+    -0.8734,
+    0
+  ],
+  "base_pressure": 0.0,
+  "magnetic_north": [
+    0,
+    0,
+    0
+  ],
+  "ignore_chunks": true
+}

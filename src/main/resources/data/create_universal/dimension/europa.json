@@ -1,0 +1,11 @@
+{
+  "type": "create_universal:europa",
+  "generator": {
+    "type": "create_universal:planet",
+    "planet": "europa",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "create_universal:europa"
+    }
+  }
+}

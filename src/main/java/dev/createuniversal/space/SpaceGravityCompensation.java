@@ -52,7 +52,7 @@ public final class SpaceGravityCompensation {
         }
         Vector3d noSpin = new Vector3d();
         for (ServerSubLevel ship : container.getAllSubLevels()) {
-            if (ship.isRemoved() || ShipAnchor.isHeld(ship)) {
+            if (ship.isRemoved() || ShipAnchor.isHeld(ship) || Moonlets.isMoonlet(ship)) {
                 continue;
             }
             RigidBodyHandle handle = system.getPhysicsHandle(ship);

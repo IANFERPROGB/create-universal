@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "": [
+      { "model": "create_universal:block/nitrogen_frost" },
+      { "model": "create_universal:block/nitrogen_frost", "y": 90 },
+      { "model": "create_universal:block/nitrogen_frost", "y": 180 },
+      { "model": "create_universal:block/nitrogen_frost", "y": 270 }
+    ]
+  }
+}

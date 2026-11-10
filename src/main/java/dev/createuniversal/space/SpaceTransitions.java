@@ -71,6 +71,8 @@ public final class SpaceTransitions {
             safeTransfer(ship, overworld, new Vec3(x, exit - 150.0, z), ours);
         }
         dev.createuniversal.space.surface.SurfaceTransitions.tickShips(server, space);
+        Moonlets.tick(space);
+        GasGiants.tick(space, time);
         dev.createuniversal.space.surface.SurfaceTransitions.tickWrap(server);
         SkyShipBroadcaster.tick(server);
         ShipTransfer.tickRemounts();
@@ -101,7 +103,7 @@ public final class SpaceTransitions {
         }
         Set<UUID> taken = new HashSet<>();
         for (ServerSubLevel ship : new ArrayList<>(container.getAllSubLevels())) {
-            if (ship.isRemoved() || taken.contains(ship.getUniqueId()) || !test.test(ship)) {
+            if (ship.isRemoved() || taken.contains(ship.getUniqueId()) || Moonlets.isMoonlet(ship) || !test.test(ship)) {
                 continue;
             }
             // Basta con que una pieza cruce para mover toda la nave; ninguna pieza se mueve dos veces.

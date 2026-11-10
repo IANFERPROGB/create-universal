@@ -1,0 +1,11 @@
+{
+  "type": "create_universal:io",
+  "generator": {
+    "type": "create_universal:planet",
+    "planet": "io",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "create_universal:io"
+    }
+  }
+}

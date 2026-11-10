@@ -21,6 +21,28 @@ public final class BlockAssets {
             {"martian_regolith", 0x8a4e33, 0.10, 0},
             {"martian_rock", 0x99583b, 0.12, 1},
             {"martian_basalt", 0x553a2e, 0.10, 2},
+            // alpha.6. Clase 3 = hielo (liso, con vetas claras y alguna grieta).
+            {"mercurian_regolith", 0x8c8782, 0.10, 0},
+            {"mercurian_dark_regolith", 0x5d5a57, 0.10, 0},
+            {"mercurian_rock", 0x7d7873, 0.12, 1},
+            {"mercurian_basalt", 0x4a4745, 0.10, 2},
+            {"venusian_dust", 0x9c7b52, 0.08, 0},
+            {"venusian_regolith", 0x6e5a44, 0.10, 0},
+            {"venusian_rock", 0x7a6a58, 0.12, 1},
+            {"venusian_basalt", 0x45403b, 0.10, 2},
+            {"sulfur_frost", 0xd9c95a, 0.08, 0},
+            {"ionian_sulfur_dust", 0xc27a2e, 0.10, 0},
+            {"ionian_rock", 0x9e8f58, 0.12, 1},
+            {"ionian_basalt", 0x3a3632, 0.10, 2},
+            {"ice_regolith", 0xd5dde2, 0.06, 0},
+            {"dark_ice_regolith", 0x6f6a64, 0.10, 0},
+            {"cryo_ice", 0xb9c9d6, 0.06, 3},
+            {"dark_cryo_ice", 0x5c5f66, 0.08, 3},
+            {"salt_ice_regolith", 0xa9785a, 0.08, 0},
+            {"tholin_dust", 0xb88442, 0.08, 0},
+            {"tholin_sand", 0x4f3a26, 0.10, 0},
+            {"nitrogen_frost", 0xe3d6d3, 0.05, 0},
+            {"carbonaceous_regolith", 0x3b3532, 0.12, 0},
     };
 
     public static void main(String[] args) throws Exception {
@@ -86,6 +108,22 @@ public final class BlockAssets {
                     x += r.nextInt(3) - 1;
                     y += r.nextBoolean() ? 1 : 0;
                 }
+            }
+        } else if (kind == 3) {
+            // Hielo: vetas claras en diagonal y una grieta fina.
+            for (int c = 0; c < 3; c++) {
+                int x = r.nextInt(16), y = r.nextInt(16);
+                for (int i = 0; i < 12; i++) {
+                    s[(y + 16) % 16][(x + 16) % 16] += 0.07;
+                    x++;
+                    y += r.nextInt(3) == 0 ? 0 : 1;
+                }
+            }
+            int x = r.nextInt(16), y = r.nextInt(16);
+            for (int i = 0; i < 7; i++) {
+                s[(y + 16) % 16][(x + 16) % 16] -= 0.12;
+                x += r.nextInt(3) - 1;
+                y++;
             }
         } else {
             // Vesículas del basalto.

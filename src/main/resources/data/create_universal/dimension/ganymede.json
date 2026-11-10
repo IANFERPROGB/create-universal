@@ -1,0 +1,11 @@
+{
+  "type": "create_universal:ganymede",
+  "generator": {
+    "type": "create_universal:planet",
+    "planet": "ganymede",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "create_universal:ganymede"
+    }
+  }
+}

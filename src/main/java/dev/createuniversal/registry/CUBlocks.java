@@ -16,7 +16,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Bloques de las superficies (alpha.5): el suelo de la Luna y de Marte. */
+/** Bloques de las superficies: el suelo de la Luna y de Marte (alpha.5) y del resto de astros (alpha.6). */
 public final class CUBlocks {
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(CreateUniversal.MOD_ID);
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(CreateUniversal.MOD_ID);
@@ -34,6 +34,43 @@ public final class CUBlocks {
     public static final DeferredBlock<Block> MARTIAN_ROCK = rock("martian_rock", MapColor.TERRACOTTA_RED);
     public static final DeferredBlock<Block> MARTIAN_BASALT = rock("martian_basalt", MapColor.TERRACOTTA_BLACK);
 
+    // Mercurio: como la Luna pero más oscuro y gris; basalto de las llanuras volcánicas.
+    public static final DeferredBlock<Block> MERCURIAN_REGOLITH = soil("mercurian_regolith", MapColor.COLOR_LIGHT_GRAY);
+    public static final DeferredBlock<Block> MERCURIAN_DARK_REGOLITH = soil("mercurian_dark_regolith", MapColor.COLOR_GRAY);
+    public static final DeferredBlock<Block> MERCURIAN_ROCK = rock("mercurian_rock", MapColor.STONE);
+    public static final DeferredBlock<Block> MERCURIAN_BASALT = rock("mercurian_basalt", MapColor.DEEPSLATE);
+
+    // Venus: polvo pardo-amarillento bajo la luz de las nubes, regolito y roca volcánica.
+    public static final DeferredBlock<Block> VENUSIAN_DUST = soil("venusian_dust", MapColor.TERRACOTTA_YELLOW);
+    public static final DeferredBlock<Block> VENUSIAN_REGOLITH = soil("venusian_regolith", MapColor.TERRACOTTA_BROWN);
+    public static final DeferredBlock<Block> VENUSIAN_ROCK = rock("venusian_rock", MapColor.TERRACOTTA_LIGHT_GRAY);
+    public static final DeferredBlock<Block> VENUSIAN_BASALT = rock("venusian_basalt", MapColor.TERRACOTTA_BLACK);
+
+    // Ío: escarcha de azufre, polvo de azufre anaranjado, roca de silicatos y lava negra.
+    public static final DeferredBlock<Block> SULFUR_FROST = soil("sulfur_frost", MapColor.COLOR_YELLOW);
+    public static final DeferredBlock<Block> IONIAN_SULFUR_DUST = soil("ionian_sulfur_dust", MapColor.COLOR_ORANGE);
+    public static final DeferredBlock<Block> IONIAN_ROCK = rock("ionian_rock", MapColor.TERRACOTTA_YELLOW);
+    public static final DeferredBlock<Block> IONIAN_BASALT = rock("ionian_basalt", MapColor.COLOR_BLACK);
+
+    // Lunas heladas: escarcha clara, regolito oscuro (polvo y roca sobre el hielo) y el hielo duro de debajo.
+    public static final DeferredBlock<Block> ICE_REGOLITH = soil("ice_regolith", MapColor.SNOW);
+    public static final DeferredBlock<Block> DARK_ICE_REGOLITH = soil("dark_ice_regolith", MapColor.COLOR_GRAY);
+    public static final DeferredBlock<Block> CRYO_ICE = ice("cryo_ice", MapColor.ICE);
+    public static final DeferredBlock<Block> DARK_CRYO_ICE = ice("dark_cryo_ice", MapColor.DEEPSLATE);
+    // Europa: las sales rojizas de sus grietas.
+    public static final DeferredBlock<Block> SALT_ICE_REGOLITH = soil("salt_ice_regolith", MapColor.TERRACOTTA_ORANGE);
+    // Titán: polvo y arena de tolinas (lo que cae de su bruma).
+    public static final DeferredBlock<Block> THOLIN_DUST = soil("tholin_dust", MapColor.COLOR_ORANGE);
+    public static final DeferredBlock<Block> THOLIN_SAND = soil("tholin_sand", MapColor.TERRACOTTA_BROWN);
+    // Tritón: escarcha de nitrógeno rosada.
+    public static final DeferredBlock<Block> NITROGEN_FROST = soil("nitrogen_frost", MapColor.TERRACOTTA_WHITE);
+
+    // Fobos y Deimos (cuerpos sólidos en el espacio): roca carbonácea muy oscura. No se puede romper ni sale en el
+    // inventario creativo; es la "piel" de las dos lunas.
+    public static final DeferredBlock<Block> CARBONACEOUS_REGOLITH = unlisted("carbonaceous_regolith",
+            BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_BLACK).strength(-1.0F, 3600000.0F).noLootTable()
+                    .sound(SoundType.GRAVEL));
+
     private CUBlocks() {}
 
     private static DeferredBlock<Block> soil(String name, MapColor color) {
@@ -43,6 +80,18 @@ public final class CUBlocks {
     private static DeferredBlock<Block> rock(String name, MapColor color) {
         return register(name, BlockBehaviour.Properties.of().mapColor(color).strength(1.5F, 6.0F).requiresCorrectToolForDrops()
                 .sound(SoundType.STONE));
+    }
+
+    /** Hielo a −180 °C: duro como la roca, se pica con pico. */
+    private static DeferredBlock<Block> ice(String name, MapColor color) {
+        return register(name, BlockBehaviour.Properties.of().mapColor(color).strength(1.2F, 4.0F).requiresCorrectToolForDrops()
+                .sound(SoundType.GLASS));
+    }
+
+    private static DeferredBlock<Block> unlisted(String name, BlockBehaviour.Properties props) {
+        DeferredBlock<Block> block = BLOCKS.registerSimpleBlock(name, props);
+        ITEMS.register(name, () -> new BlockItem(block.get(), new Item.Properties()));
+        return block;
     }
 
     private static DeferredBlock<Block> register(String name, BlockBehaviour.Properties props) {

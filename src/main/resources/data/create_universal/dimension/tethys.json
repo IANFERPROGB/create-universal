@@ -1,0 +1,11 @@
+{
+  "type": "create_universal:tethys",
+  "generator": {
+    "type": "create_universal:planet",
+    "planet": "tethys",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "create_universal:tethys"
+    }
+  }
+}

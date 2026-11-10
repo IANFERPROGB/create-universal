@@ -1,0 +1,17 @@
+{
+  "dimension": "create_universal:venus",
+  "priority": 0,
+  "universal_drag": 0,
+  "base_gravity": [
+    0,
+    -9.944,
+    0
+  ],
+  "base_pressure": 8.0,
+  "magnetic_north": [
+    0,
+    0,
+    0
+  ],
+  "ignore_chunks": true
+}

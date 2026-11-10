@@ -1,0 +1,11 @@
+{
+  "type": "create_universal:titan",
+  "generator": {
+    "type": "create_universal:planet",
+    "planet": "titan",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "create_universal:titan"
+    }
+  }
+}

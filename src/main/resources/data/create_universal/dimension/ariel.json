@@ -1,0 +1,11 @@
+{
+  "type": "create_universal:ariel",
+  "generator": {
+    "type": "create_universal:planet",
+    "planet": "ariel",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "create_universal:ariel"
+    }
+  }
+}

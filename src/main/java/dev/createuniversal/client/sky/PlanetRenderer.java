@@ -200,6 +200,11 @@ public final class PlanetRenderer {
             if (dist <= body.radius() * 1.0005) {
                 continue;
             }
+            // De cerca, Fobos y Deimos son cuerpos de bloques (Moonlets): no se pinta la esfera dentro de ellos.
+            if (groundUp == null && dist < dev.createuniversal.space.Moonlets.HIDE_SPHERE_WITHIN
+                    && (body.id().equals("phobos") || body.id().equals("deimos"))) {
+                continue;
+            }
             double angular = Math.asin(Math.min(1.0, body.radius() / dist));
             double pixels = Math.tan(angular) / tanHalfFov * halfHeight;
             items.add(new Item(body, pos, rel, dist, pixels));
