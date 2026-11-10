@@ -12,7 +12,6 @@ import net.neoforged.neoforge.common.NeoForge;
 @Mod(value = CreateUniversal.MOD_ID, dist = Dist.CLIENT)
 public final class CreateUniversalClient {
     public CreateUniversalClient(IEventBus modBus) {
-        CUPartialModels.init();
         modBus.addListener(CreateUniversalClient::registerDimensionEffects);
         modBus.addListener(CreateUniversalClient::registerShaders);
         NeoForge.EVENT_BUS.register(dev.createuniversal.client.sky.SpaceClock.class);

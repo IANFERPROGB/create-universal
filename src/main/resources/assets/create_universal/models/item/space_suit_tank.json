@@ -1,5 +1,5 @@
 {
-  "parent": "create_universal:block/space_suit_tank/block",
+  "parent": "create_universal:block/space_suit_tank/chest",
   "display": {
     "gui": {
       "rotation": [

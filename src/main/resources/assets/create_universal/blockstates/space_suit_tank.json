@@ -1,34 +1,78 @@
 {
-  "variants": {
-    "facing=north,waterlogged=false": {
-      "model": "create_universal:block/space_suit_tank/block"
+  "multipart": [
+    {
+      "when": {
+        "facing": "north"
+      },
+      "apply": {
+        "model": "create:block/netherite_backtank/block"
+      }
     },
-    "facing=north,waterlogged=true": {
-      "model": "create_universal:block/space_suit_tank/block"
+    {
+      "when": {
+        "facing": "north",
+        "placed": "true"
+      },
+      "apply": {
+        "model": "create_universal:block/space_suit_tank/chest"
+      }
     },
-    "facing=east,waterlogged=false": {
-      "model": "create_universal:block/space_suit_tank/block",
-      "y": 90
+    {
+      "when": {
+        "facing": "east"
+      },
+      "apply": {
+        "model": "create:block/netherite_backtank/block",
+        "y": 90
+      }
     },
-    "facing=east,waterlogged=true": {
-      "model": "create_universal:block/space_suit_tank/block",
-      "y": 90
+    {
+      "when": {
+        "facing": "east",
+        "placed": "true"
+      },
+      "apply": {
+        "model": "create_universal:block/space_suit_tank/chest",
+        "y": 90
+      }
     },
-    "facing=south,waterlogged=false": {
-      "model": "create_universal:block/space_suit_tank/block",
-      "y": 180
+    {
+      "when": {
+        "facing": "south"
+      },
+      "apply": {
+        "model": "create:block/netherite_backtank/block",
+        "y": 180
+      }
     },
-    "facing=south,waterlogged=true": {
-      "model": "create_universal:block/space_suit_tank/block",
-      "y": 180
+    {
+      "when": {
+        "facing": "south",
+        "placed": "true"
+      },
+      "apply": {
+        "model": "create_universal:block/space_suit_tank/chest",
+        "y": 180
+      }
     },
-    "facing=west,waterlogged=false": {
-      "model": "create_universal:block/space_suit_tank/block",
-      "y": 270
+    {
+      "when": {
+        "facing": "west"
+      },
+      "apply": {
+        "model": "create:block/netherite_backtank/block",
+        "y": 270
+      }
     },
-    "facing=west,waterlogged=true": {
-      "model": "create_universal:block/space_suit_tank/block",
-      "y": 270
+    {
+      "when": {
+        "facing": "west",
+        "placed": "true"
+      },
+      "apply": {
+        "model": "create_universal:block/space_suit_tank/chest",
+        "y": 270
+      }
     }
-  }
+  ]
 }
