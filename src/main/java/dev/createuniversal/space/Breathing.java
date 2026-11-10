@@ -22,7 +22,8 @@ import net.neoforged.neoforge.event.entity.living.LivingDrownEvent;
  * (Marte, Venus y Titán tienen atmósfera, pero no de oxígeno). Se respira:
  *
  * <ul>
- *   <li>dentro de un compartimento sellado de una nave con difusor de oxígeno de Create Deep Seas, o</li>
+ *   <li>en una sala cerrada con un oxigenador de Create Deep Seas funcionando, en una nave o en el suelo
+ *       ({@link OxygenZones}; también vale lo que Deep Seas marque como compartimento sellado), o</li>
  *   <li>con el traje espacial completo y oxígeno en la pechera. El casco del traje es un casco de buceo de Create, así
  *       que es Create quien saca el aire de la pechera (1 por segundo), avisa cuando queda poco y lo cuenta.</li>
  * </ul>
@@ -52,6 +53,9 @@ public final class Breathing {
     /** Aire respirable en ese punto: en la Tierra siempre; fuera, solo en un compartimento sellado con oxígeno. */
     public static boolean hasAirAt(Level level, Vec3 pos) {
         if (!Sunlight.handles(level)) {
+            return true;
+        }
+        if (OxygenZones.contains(level, pos)) {
             return true;
         }
         try {
