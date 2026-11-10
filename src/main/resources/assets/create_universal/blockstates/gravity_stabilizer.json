@@ -1,0 +1,30 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "create_universal:block/gravity_stabilizer"
+    },
+    "facing=up": {
+      "model": "create_universal:block/gravity_stabilizer",
+      "x": 180
+    },
+    "facing=north": {
+      "model": "create_universal:block/gravity_stabilizer",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south": {
+      "model": "create_universal:block/gravity_stabilizer",
+      "x": 90
+    },
+    "facing=east": {
+      "model": "create_universal:block/gravity_stabilizer",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west": {
+      "model": "create_universal:block/gravity_stabilizer",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

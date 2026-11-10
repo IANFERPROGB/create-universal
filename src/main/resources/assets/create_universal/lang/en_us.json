@@ -150,5 +150,12 @@
   "create_universal.message.body_approaching": "⚠ %s is heading for the held ship: impact in %s s. Turn off the Orbital Stabilizer!",
   "create_universal.message.sun_close": "⚠ You are burning! Get away from the Sun",
   "create_universal.message.sun_warning": "⚠ Too close to the Sun",
-  "create_universal.hud.debris": "Debris: %s m (%s min)"
+  "create_universal.hud.debris": "Debris: %s m (%s min)",
+  "block.create_universal.gravity_stabilizer": "Gravity Stabilizer",
+  "create_universal.gravity_stabilizer.strength": "Gravity strength",
+  "create_universal.gravity_stabilizer.strength_value": "Strength: %s %% of Earth",
+  "create_universal.gravity_stabilizer.status.too_slow": "Needs at least %s RPM",
+  "create_universal.gravity_stabilizer.status.ground_not_floor": "On the ground it only works placed on the floor (on a ship, on any face)",
+  "create_universal.gravity_stabilizer.status.open": "Only works in enclosed areas",
+  "create_universal.gravity_stabilizer.status.active": "Gravity active towards this block"
 }

@@ -34,6 +34,7 @@ public final class CreateUniversal {
         NeoForge.EVENT_BUS.register(dev.createuniversal.space.SpaceGate.class);
         NeoForge.EVENT_BUS.register(dev.createuniversal.space.ShipDestruction.class);
         NeoForge.EVENT_BUS.register(dev.createuniversal.space.DebrisSites.class);
+        NeoForge.EVENT_BUS.register(dev.createuniversal.space.GravityFields.class);
         dev.createuniversal.space.ShipAnchor.register();
         NeoForge.EVENT_BUS.addListener(dev.createuniversal.space.Moonlets::onBreak);
         NeoForge.EVENT_BUS.addListener(dev.createuniversal.space.Moonlets::onPlace);
@@ -48,6 +49,8 @@ public final class CreateUniversal {
                 dev.createuniversal.network.SkyShipsPayload.STREAM_CODEC, dev.createuniversal.network.SkyShipsPayload::handle);
         event.registrar("1").playToClient(dev.createuniversal.network.DebrisMarkersPayload.TYPE,
                 dev.createuniversal.network.DebrisMarkersPayload.STREAM_CODEC, dev.createuniversal.network.DebrisMarkersPayload::handle);
+        event.registrar("1").playToClient(dev.createuniversal.network.GravityStatePayload.TYPE,
+                dev.createuniversal.network.GravityStatePayload.STREAM_CODEC, dev.createuniversal.network.GravityStatePayload::handle);
     }
 
     public static ResourceLocation id(String path) {

@@ -15,7 +15,7 @@ import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
-/** Bloques de nave (alpha.9): Estabilizador orbital y, más adelante, Estabilizador de gravedad. */
+/** Bloques de nave (alpha.9): Estabilizador orbital y Estabilizador de gravedad. */
 public final class CUMachines {
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(CreateUniversal.MOD_ID);
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(CreateUniversal.MOD_ID);
@@ -35,14 +35,30 @@ public final class CUMachines {
             BLOCK_ENTITIES.register("orbital_stabilizer",
                     () -> BlockEntityType.Builder.of(OrbitalStabilizerBlockEntity::new, ORBITAL_STABILIZER.get()).build(null));
 
+    public static final DeferredBlock<GravityStabilizerBlock> GRAVITY_STABILIZER = BLOCKS.register("gravity_stabilizer",
+            () -> new GravityStabilizerBlock(BlockBehaviour.Properties.of().mapColor(MapColor.TERRACOTTA_PURPLE)
+                    .strength(3.0F, 6.0F).sound(SoundType.NETHERITE_BLOCK).requiresCorrectToolForDrops().noOcclusion()));
+
+    static {
+        ITEMS.register("gravity_stabilizer", () -> new BlockItem(GRAVITY_STABILIZER.get(), new Item.Properties()));
+    }
+
+    @SuppressWarnings("DataFlowIssue")
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<GravityStabilizerBlockEntity>> GRAVITY_STABILIZER_BE =
+            BLOCK_ENTITIES.register("gravity_stabilizer",
+                    () -> BlockEntityType.Builder.of(GravityStabilizerBlockEntity::new, GRAVITY_STABILIZER.get()).build(null));
+
     private CUMachines() {}
 
     public static void register(IEventBus modBus) {
         BLOCKS.register(modBus);
         ITEMS.register(modBus);
         BLOCK_ENTITIES.register(modBus);
-        modBus.addListener((FMLCommonSetupEvent e) -> e.enqueueWork(() ->
-                // 16 SU por RPM: 2.048 SU a 128 RPM (D42).
-                BlockStressValues.IMPACTS.register(ORBITAL_STABILIZER.get(), () -> 16.0)));
+        modBus.addListener((FMLCommonSetupEvent e) -> e.enqueueWork(() -> {
+            // 16 SU por RPM: 2.048 SU a 128 RPM (D42).
+            BlockStressValues.IMPACTS.register(ORBITAL_STABILIZER.get(), () -> 16.0);
+            // El doble: 4.096 SU a 128 RPM (D51).
+            BlockStressValues.IMPACTS.register(GRAVITY_STABILIZER.get(), () -> 32.0);
+        }));
     }
 }

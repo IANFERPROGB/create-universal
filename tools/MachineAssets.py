@@ -77,10 +77,72 @@ def shaft_block(res, name, side_texture):
                    'conditions': [{'condition': 'minecraft:survives_explosion'}]}]})
 
 
+def gravity_side(base):
+    """Lado: flechas violetas hacia el eje (abajo en el modelo base)."""
+    img = panel(base, 50)
+    for y in range(4, 12):
+        for x in (6, 7, 8, 9):
+            img.putpixel((x, y), (120, 70, 190, 255))
+    for i, y in enumerate(range(9, 13)):
+        for x in range(3 + i, 13 - i):
+            img.putpixel((x, y), (190, 130, 255, 255) if i < 2 else (150, 95, 225, 255))
+    return img
+
+
+def gravity_front(base):
+    """Delante: anillos de un pozo de gravedad."""
+    img = panel(base, 51)
+    cx = cy = 7.5
+    for y in range(2, 14):
+        for x in range(2, 14):
+            d = math.hypot(x - cx, y - cy)
+            if 4.2 <= d <= 5.0:
+                img.putpixel((x, y), (120, 70, 190, 255))
+            elif 2.2 <= d <= 3.0:
+                img.putpixel((x, y), (175, 115, 245, 255))
+            elif d < 1.2:
+                img.putpixel((x, y), (235, 210, 255, 255))
+    return img
+
+
+def gravity_block(res, name, side, front):
+    """Bloque pegado a una cara: el eje sale por la cara de abajo del modelo base; FACING = hacia el eje."""
+    assets = os.path.join(res, 'assets', 'create_universal')
+    side.save(os.path.join(assets, 'textures', 'block', name + '_side.png'))
+    front.save(os.path.join(assets, 'textures', 'block', name + '_front.png'))
+    tex = {'side': 'create_universal:block/' + name + '_side', 'front': 'create_universal:block/' + name + '_front',
+           'opening': 'create:block/brass_gearbox', 'casing': 'create:block/brass_casing',
+           'particle': 'create:block/brass_casing'}
+    side_faces = {d: {'uv': [0, 0, 16, 15], 'texture': '#side'} for d in ('north', 'south', 'east', 'west')}
+    rim = lambda frm, to: {'from': frm, 'to': to, 'faces': {d: {'texture': '#casing'} for d in
+                                                         ('north', 'south', 'east', 'west', 'down', 'up')}}
+    model = {'parent': 'block/block', 'textures': tex, 'elements': [
+        {'from': [0, 1, 0], 'to': [16, 16, 16], 'faces': dict(side_faces, **{
+            'up': {'uv': [0, 0, 16, 16], 'texture': '#front'},
+            'down': {'uv': [0, 0, 16, 16], 'texture': '#opening'}})},
+        rim([0, 0, 0], [1, 1, 16]), rim([15, 0, 0], [16, 1, 16]),
+        rim([1, 0, 0], [15, 1, 1]), rim([1, 0, 15], [15, 1, 16])]}
+    write(os.path.join(assets, 'models', 'block', name + '.json'), model)
+    write(os.path.join(assets, 'models', 'item', name + '.json'), {'parent': 'create_universal:block/' + name})
+    m = 'create_universal:block/' + name
+    write(os.path.join(assets, 'blockstates', name + '.json'), {'variants': {
+        'facing=down': {'model': m},
+        'facing=up': {'model': m, 'x': 180},
+        'facing=north': {'model': m, 'x': 90, 'y': 180},
+        'facing=south': {'model': m, 'x': 90},
+        'facing=east': {'model': m, 'x': 90, 'y': 270},
+        'facing=west': {'model': m, 'x': 90, 'y': 90}}})
+    write(os.path.join(res, 'data', 'create_universal', 'loot_table', 'blocks', name + '.json'), {
+        'type': 'minecraft:block',
+        'pools': [{'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': 'create_universal:' + name}],
+                   'conditions': [{'condition': 'minecraft:survives_explosion'}]}]})
+
+
 def main():
     jar, res = sys.argv[1], sys.argv[2]
     base = casing_frame(jar)
     shaft_block(res, 'orbital_stabilizer', orbital_side(base))
+    gravity_block(res, 'gravity_stabilizer', gravity_side(base), gravity_front(base))
     print('Hecho.')
 
 

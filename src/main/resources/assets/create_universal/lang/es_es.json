@@ -150,5 +150,12 @@
   "create_universal.message.body_approaching": "⚠ %s viene hacia la nave fijada: choque en %s s. ¡Apaga el Estabilizador orbital!",
   "create_universal.message.sun_close": "⚠ ¡Te estás quemando! Aléjate del Sol",
   "create_universal.message.sun_warning": "⚠ Demasiado cerca del Sol",
-  "create_universal.hud.debris": "Restos: %s m (%s min)"
+  "create_universal.hud.debris": "Restos: %s m (%s min)",
+  "block.create_universal.gravity_stabilizer": "Estabilizador de gravedad",
+  "create_universal.gravity_stabilizer.strength": "Fuerza de la gravedad",
+  "create_universal.gravity_stabilizer.strength_value": "Fuerza: %s %% de la de la Tierra",
+  "create_universal.gravity_stabilizer.status.too_slow": "Necesita al menos %s RPM",
+  "create_universal.gravity_stabilizer.status.ground_not_floor": "En el suelo solo funciona colocado en el suelo (en una nave, en cualquier cara)",
+  "create_universal.gravity_stabilizer.status.open": "Solo funciona en áreas cerradas",
+  "create_universal.gravity_stabilizer.status.active": "Gravedad activa hacia este bloque"
 }

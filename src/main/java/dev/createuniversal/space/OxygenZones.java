@@ -109,7 +109,7 @@ public final class OxygenZones {
     }
 
     /** Resultado de rellenar: la sala, o por dónde se escapa el aire (en coordenadas de la sala), o "no se sabe". */
-    private record Scan(Zone zone, BlockPos opening, boolean unknown) {}
+    record Scan(Zone zone, BlockPos opening, boolean unknown) {}
 
     private static final Map<String, Zone> ZONES = new ConcurrentHashMap<>();
     private static final Map<String, Long> LAST_SEEN = new ConcurrentHashMap<>();
@@ -288,6 +288,11 @@ public final class OxygenZones {
             markNear(event.getLevel(), pos);
         }
         markNear(event.getLevel(), BlockPos.containing(event.getExplosion().center()));
+    }
+
+    /** El área cerrada alrededor de un bloque (para el Estabilizador de gravedad), con la misma regla que las salas. */
+    static Scan room(Level level, BlockPos source) {
+        return scan(level, source, level.getGameTime(), null);
     }
 
     // ---------------------------------------------------------------- rellenar
