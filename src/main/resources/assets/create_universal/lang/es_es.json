@@ -132,5 +132,6 @@
   "create_universal.hazard.heat": "⚠ Calor extremo: el traje necesita refrigeración",
   "create_universal.hazard.venus": "⚠ Venus: presión aplastante y ácido; el traje necesita el blindaje de Venus",
   "death.attack.create_universal.heat": "%1$s murió por el calor",
-  "death.attack.create_universal.radiation": "%1$s murió por la radiación"
+  "death.attack.create_universal.radiation": "%1$s murió por la radiación",
+  "itemGroup.create_universal": "Create Universal"
 }
