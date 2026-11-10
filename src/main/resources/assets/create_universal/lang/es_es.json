@@ -89,6 +89,7 @@
   "block.create_universal.nitrogen_frost": "Escarcha de nitrógeno",
   "create_universal.message.gas_giant_warning": "⚠ %s: bajo las nubes la presión aplasta cualquier nave. ¡Da la vuelta!",
   "create_universal.message.gas_giant_crushed": "La presión de %s ha aplastado la nave",
+  "create_universal.message.no_portals_in_space": "Las interferencias del espacio impiden abrir portales aquí",
   "death.attack.create_universal.pressure": "%1$s murió aplastado por la presión de un gigante gaseoso",
   "block.create_universal.carbonaceous_regolith": "Regolito carbonáceo",
   "item.create_universal.space_helmet": "Casco del traje espacial",

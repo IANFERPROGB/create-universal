@@ -1,5 +1,7 @@
 package dev.createuniversal.space.surface;
 
+import dev.createuniversal.space.SpaceGate;
+
 import dev.createuniversal.CreateUniversal;
 import dev.createuniversal.network.TransitionEffectPayload;
 import dev.createuniversal.space.CUDimensions;
@@ -100,7 +102,7 @@ public final class SurfaceTransitions {
                 double[] w = wrap(surface, player.getX(), player.getZ());
                 if (w != null) {
                     float yaw = player.getYRot() + (float) w[2];
-                    player.teleportTo(level, w[0], player.getY(), w[1], yaw, player.getXRot());
+                    SpaceGate.travel(() -> player.teleportTo(level, w[0], player.getY(), w[1], yaw, player.getXRot()));
                 }
             }
             for (ServerSubLevel ship : roots(level, s -> {
@@ -171,7 +173,7 @@ public final class SurfaceTransitions {
         Vec3 motion = player.getDeltaMovement().add(frameShift.scale(1.0 / 20.0));
         CreateUniversal.LOGGER.info("{} pasa de {} a {} en {}", player.getScoreboardName(), player.level().dimension().location(),
                 target.dimension().location(), pos);
-        player.changeDimension(new DimensionTransition(target, pos, motion, player.getYRot(), player.getXRot(), DimensionTransition.DO_NOTHING));
+        SpaceGate.travel(() -> player.changeDimension(new DimensionTransition(target, pos, motion, player.getYRot(), player.getXRot(), DimensionTransition.DO_NOTHING)));
         player.setDeltaMovement(motion);
         player.connection.send(new ClientboundSetEntityMotionPacket(player));
         PacketDistributor.sendToPlayer(player, new TransitionEffectPayload(effect));

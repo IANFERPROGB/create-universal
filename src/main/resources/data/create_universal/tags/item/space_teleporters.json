@@ -1,0 +1,12 @@
+{
+  "values": [
+    {"id": "#waystones:scrolls", "required": false},
+    {"id": "#waystones:warp_stones", "required": false},
+    {"id": "#waystones:warp_shards", "required": false},
+    {"id": "createteleporters:tp_link", "required": false},
+    {"id": "createteleporters:adv_tplink", "required": false},
+    {"id": "createteleporters:pocket_dimension_remote", "required": false},
+    {"id": "createteleporters:redstone_pearl", "required": false},
+    {"id": "mekanism:portable_teleporter", "required": false}
+  ]
+}

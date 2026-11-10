@@ -30,6 +30,7 @@ public final class CreateUniversal {
         NeoForge.EVENT_BUS.register(dev.createuniversal.space.OxygenZones.class);
         NeoForge.EVENT_BUS.register(dev.createuniversal.space.SuitUpgrades.class);
         NeoForge.EVENT_BUS.register(dev.createuniversal.space.SpaceCommands.class);
+        NeoForge.EVENT_BUS.register(dev.createuniversal.space.SpaceGate.class);
         dev.createuniversal.space.ShipAnchor.register();
         NeoForge.EVENT_BUS.addListener(dev.createuniversal.space.Moonlets::onBreak);
         NeoForge.EVENT_BUS.addListener(dev.createuniversal.space.Moonlets::onPlace);

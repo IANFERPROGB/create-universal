@@ -1,0 +1,20 @@
+{
+  "values": [
+    {"id": "#waystones:waystones", "required": false},
+    {"id": "#waystones:sharestones", "required": false},
+    {"id": "#waystones:portstones", "required": false},
+    {"id": "waystones:warp_plate", "required": false},
+    {"id": "createteleporters:teleporter", "required": false},
+    {"id": "createteleporters:block_teleporter", "required": false},
+    {"id": "createteleporters:custom_portal", "required": false},
+    {"id": "createteleporters:custom_portal_base", "required": false},
+    {"id": "createteleporters:custom_portal_on", "required": false},
+    {"id": "createteleporters:entity_teleporter_quarter", "required": false},
+    {"id": "createteleporters:entity_teleporter_slab", "required": false},
+    {"id": "createteleporters:item_tp", "required": false},
+    {"id": "createteleporters:quantum_portal_block", "required": false},
+    {"id": "createteleporters:pocket_d_block", "required": false},
+    {"id": "mekanism:teleporter", "required": false},
+    {"id": "mekanism:teleporter_frame", "required": false}
+  ]
+}

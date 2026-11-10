@@ -279,7 +279,8 @@ public final class ShipTransfer {
                     }
                 }
                 // Llega parado: la nave también está congelada y los dos recuperan la velocidad a la vez al soltarla.
-                p.changeDimension(new DimensionTransition(target, pos, Vec3.ZERO, p.getYRot(), p.getXRot(), DimensionTransition.DO_NOTHING));
+                DimensionTransition move = new DimensionTransition(target, pos, Vec3.ZERO, p.getYRot(), p.getXRot(), DimensionTransition.DO_NOTHING);
+                SpaceGate.travel(() -> p.changeDimension(move));
                 if (descent) {
                     LandingLock.markPlayer(p);
                 }
@@ -312,7 +313,7 @@ public final class ShipTransfer {
             } catch (RuntimeException ex) {
                 // Nunca dejar a un jugador atrás por un fallo: como último recurso va al punto de llegada de la nave.
                 CreateUniversal.LOGGER.error("Fallo al mover a {} con la nave; se le lleva al punto de llegada", p.getScoreboardName(), ex);
-                p.changeDimension(new DimensionTransition(target, newRootPosition, Vec3.ZERO, p.getYRot(), p.getXRot(), DimensionTransition.DO_NOTHING));
+                SpaceGate.travel(() -> p.changeDimension(new DimensionTransition(target, newRootPosition, Vec3.ZERO, p.getYRot(), p.getXRot(), DimensionTransition.DO_NOTHING)));
             }
         }
 

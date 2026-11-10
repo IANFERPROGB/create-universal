@@ -85,7 +85,7 @@ public final class SpaceCommands {
         if (player.isPassenger()) {
             player.stopRiding();
         }
-        player.changeDimension(new DimensionTransition(space, target, motion, yaw, pitch, DimensionTransition.DO_NOTHING));
+        SpaceGate.travel(() -> player.changeDimension(new DimensionTransition(space, target, motion, yaw, pitch, DimensionTransition.DO_NOTHING)));
         player.setDeltaMovement(motion);
         player.connection.send(new ClientboundSetEntityMotionPacket(player));
         c.getSource().sendSuccess(() -> Component.translatable("create_universal.command.goto",
@@ -143,8 +143,8 @@ public final class SpaceCommands {
         if (player.isPassenger()) {
             player.stopRiding();
         }
-        player.changeDimension(new DimensionTransition(level, new Vec3(x + 0.5, y, z + 0.5), Vec3.ZERO, player.getYRot(), player.getXRot(),
-                DimensionTransition.DO_NOTHING));
+        SpaceGate.travel(() -> player.changeDimension(new DimensionTransition(level, new Vec3(x + 0.5, y, z + 0.5), Vec3.ZERO, player.getYRot(), player.getXRot(),
+                DimensionTransition.DO_NOTHING)));
         c.getSource().sendSuccess(() -> Component.translatable("create_universal.command.land", Component.translatable("create_universal.body." + id),
                 String.format(Locale.ROOT, "%.2f", Math.toDegrees(lat)), String.format(Locale.ROOT, "%.2f", Math.toDegrees(lon))), false);
         return 1;

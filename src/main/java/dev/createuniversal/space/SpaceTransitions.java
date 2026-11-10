@@ -193,7 +193,7 @@ public final class SpaceTransitions {
         // Conserva su impulso y suma el de la Tierra, que se mueve por su órbita: así no se queda atrás al llegar.
         Vec3 motion = player.getDeltaMovement().add(SpaceLayout.earthVelocity(time).scale(1.0 / 20.0));
         CreateUniversal.LOGGER.info("{} sale al espacio desde {} -> {}", player.getScoreboardName(), player.position(), target);
-        player.changeDimension(new DimensionTransition(space, target, motion, player.getYRot(), player.getXRot(), DimensionTransition.DO_NOTHING));
+        SpaceGate.travel(() -> player.changeDimension(new DimensionTransition(space, target, motion, player.getYRot(), player.getXRot(), DimensionTransition.DO_NOTHING)));
         player.setDeltaMovement(motion);
         player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket(player));
         net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
@@ -207,7 +207,7 @@ public final class SpaceTransitions {
         double z = data.contains("earthZ") ? data.getDouble("earthZ") : overworld.getSharedSpawnPos().getZ() + 0.5;
         Vec3 target = new Vec3(x, CUConfig.EXIT_ALTITUDE.get() - 100.0, z);
         CreateUniversal.LOGGER.info("{} vuelve a la Tierra -> {}", player.getScoreboardName(), target);
-        player.changeDimension(new DimensionTransition(overworld, target, Vec3.ZERO, player.getYRot(), player.getXRot(), DimensionTransition.DO_NOTHING));
+        SpaceGate.travel(() -> player.changeDimension(new DimensionTransition(overworld, target, Vec3.ZERO, player.getYRot(), player.getXRot(), DimensionTransition.DO_NOTHING)));
         LandingLock.markPlayer(player);
         net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
                 new dev.createuniversal.network.TransitionEffectPayload(dev.createuniversal.network.TransitionEffectPayload.REENTRY));
@@ -240,7 +240,7 @@ public final class SpaceTransitions {
             }
         }
         CreateUniversal.LOGGER.warn("{} estaba en la zona interna de Sable sin nave ({}): se le lleva a {}", player.getScoreboardName(), player.position(), target);
-        player.teleportTo(level, target.x, target.y, target.z, player.getYRot(), player.getXRot());
+        SpaceGate.travel(() -> player.teleportTo(level, target.x, target.y, target.z, player.getYRot(), player.getXRot()));
         player.setDeltaMovement(Vec3.ZERO);
     }
 
