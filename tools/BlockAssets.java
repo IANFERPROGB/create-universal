@@ -69,9 +69,9 @@ public final class BlockAssets {
             StringBuilder list = kind == 0 ? shovel : pickaxe;
             list.append(list.isEmpty() ? "" : ",\n").append("    \"create_universal:").append(name).append("\"");
         }
-        // Menas (CUMinerals, alpha.7.1): no las genera esta herramienta, pero van en la misma etiqueta.
+        // Menas (CUMinerals, alpha.7.1) y bloques de nave (alpha.9): no los genera esta herramienta, pero van en la misma etiqueta.
         for (String ore : new String[] {"chromite_ore", "deepslate_chromite_ore", "colemanite_ore", "deepslate_colemanite_ore",
-                "beryl_ore", "deepslate_beryl_ore"}) {
+                "beryl_ore", "deepslate_beryl_ore", "orbital_stabilizer"}) {
             pickaxe.append(",\n    \"create_universal:").append(ore).append("\"");
         }
         File tags = new File(res, "data/minecraft/tags/block/mineable");

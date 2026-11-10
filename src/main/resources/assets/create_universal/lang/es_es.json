@@ -135,5 +135,12 @@
   "death.attack.create_universal.heat": "%1$s murió por el calor",
   "death.attack.create_universal.radiation": "%1$s murió por la radiación",
   "itemGroup.create_universal": "Create Universal",
-  "create_universal.hud.filling": "Llenando la sala de aire: %s %%"
+  "create_universal.hud.filling": "Llenando la sala de aire: %s %%",
+  "block.create_universal.orbital_stabilizer": "Estabilizador orbital",
+  "create_universal.orbital_stabilizer.status.not_on_ship": "Solo funciona dentro de una nave",
+  "create_universal.orbital_stabilizer.status.too_slow": "Necesita al menos %s RPM",
+  "create_universal.orbital_stabilizer.status.no_signal": "Listo: dale señal de redstone para fijar la nave",
+  "create_universal.orbital_stabilizer.status.active": "Nave fijada en su sitio",
+  "create_universal.message.orbit_enter": "En órbita: %s (%s bloques/s)",
+  "create_universal.message.orbit_leave": "Fuera de órbita"
 }

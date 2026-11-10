@@ -135,5 +135,12 @@
   "death.attack.create_universal.heat": "%1$s was cooked by the heat",
   "death.attack.create_universal.radiation": "%1$s died of radiation",
   "itemGroup.create_universal": "Create Universal",
-  "create_universal.hud.filling": "Filling the room with air: %s%%"
+  "create_universal.hud.filling": "Filling the room with air: %s%%",
+  "block.create_universal.orbital_stabilizer": "Orbital Stabilizer",
+  "create_universal.orbital_stabilizer.status.not_on_ship": "Only works inside a ship",
+  "create_universal.orbital_stabilizer.status.too_slow": "Needs at least %s RPM",
+  "create_universal.orbital_stabilizer.status.no_signal": "Ready: give it a redstone signal to hold the ship",
+  "create_universal.orbital_stabilizer.status.active": "Ship held in place",
+  "create_universal.message.orbit_enter": "In orbit: %s (%s blocks/s)",
+  "create_universal.message.orbit_leave": "Out of orbit"
 }

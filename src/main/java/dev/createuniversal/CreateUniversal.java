@@ -21,6 +21,7 @@ public final class CreateUniversal {
         dev.createuniversal.registry.CUBlocks.register(modBus);
         dev.createuniversal.registry.CUSuit.register(modBus);
         dev.createuniversal.registry.CUMinerals.register(modBus);
+        dev.createuniversal.registry.CUMachines.register(modBus);
         dev.createuniversal.registry.CUTab.register(modBus);
         dev.createuniversal.registry.CUWorldgen.register(modBus);
         NeoForge.EVENT_BUS.register(SpaceTransitions.class);

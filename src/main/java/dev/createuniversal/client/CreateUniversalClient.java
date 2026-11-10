@@ -14,6 +14,16 @@ public final class CreateUniversalClient {
     public CreateUniversalClient(IEventBus modBus) {
         modBus.addListener(CreateUniversalClient::registerDimensionEffects);
         modBus.addListener(CreateUniversalClient::registerShaders);
+        modBus.addListener((net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers e) ->
+                e.registerBlockEntityRenderer(dev.createuniversal.registry.CUMachines.ORBITAL_STABILIZER_BE.get(),
+                        com.simibubi.create.content.kinetics.base.ShaftRenderer::new));
+        // Con Flywheel activo (lo normal) Create dibuja los ejes con su "visual", no con el renderizador de arriba.
+        modBus.addListener((net.neoforged.fml.event.lifecycle.FMLClientSetupEvent e) -> e.enqueueWork(() ->
+                dev.engine_room.flywheel.lib.visualization.SimpleBlockEntityVisualizer
+                        .builder(dev.createuniversal.registry.CUMachines.ORBITAL_STABILIZER_BE.get())
+                        .factory(com.simibubi.create.content.kinetics.base.SingleAxisRotatingVisual::shaft)
+                        .skipVanillaRender(be -> true)
+                        .apply()));
         NeoForge.EVENT_BUS.register(dev.createuniversal.client.sky.SpaceClock.class);
         NeoForge.EVENT_BUS.register(AtmosphericsCompat.class);
         NeoForge.EVENT_BUS.register(dev.createuniversal.client.effects.TransitionEffects.class);

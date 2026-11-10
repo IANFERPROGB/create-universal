@@ -18,6 +18,7 @@
     "create_universal:colemanite_ore",
     "create_universal:deepslate_colemanite_ore",
     "create_universal:beryl_ore",
-    "create_universal:deepslate_beryl_ore"
+    "create_universal:deepslate_beryl_ore",
+    "create_universal:orbital_stabilizer"
   ]
 }

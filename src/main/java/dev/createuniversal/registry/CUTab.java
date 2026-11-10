@@ -28,7 +28,8 @@ public final class CUTab {
             .icon(() -> new ItemStack(CUSuit.HELMET.get()))
             .withTabsBefore(CreativeModeTabs.SPAWN_EGGS)
             .displayItems((params, output) -> {
-                // Primero el traje y sus mejoras, luego minerales y materiales, y al final los bloques de los astros.
+                // Primero los bloques de nave, luego el traje y sus mejoras, luego minerales y materiales, y al final los bloques de los astros.
+                add(output, CUMachines.ITEMS);
                 add(output, CUSuit.ITEMS);
                 add(output, CUMinerals.ITEMS);
                 add(output, CUBlocks.ITEMS);

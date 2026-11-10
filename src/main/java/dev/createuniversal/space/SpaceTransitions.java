@@ -67,7 +67,7 @@ public final class SpaceTransitions {
             space.getChunkSource().setViewDistance(Math.min(SPACE_VIEW_DISTANCE, server.getPlayerList().getViewDistance()));
         }
 
-        for (ServerSubLevel ship : shipsToMove(overworld, s -> centerOf(s).y >= exit)) {
+        for (ServerSubLevel ship : shipsToMove(overworld, s -> centerOf(s).y >= exit && !OrbitalStabilizers.isPinned(ShipGroup.of(s)))) {
             Vec3 from = centerOf(ship);
             CompoundTag data = new CompoundTag();
             data.putDouble("earthX", from.x);
@@ -75,7 +75,7 @@ public final class SpaceTransitions {
             Vec3 target = freeArrivalPoint(space, SpaceLayout.arrivalPoint(time));
             safeTransfer(ship, space, target, data);
         }
-        for (ServerSubLevel ship : shipsToMove(space, s -> SpaceLayout.insideEarthAtmosphere(centerOf(s), time))) {
+        for (ServerSubLevel ship : shipsToMove(space, s -> SpaceLayout.insideEarthAtmosphere(centerOf(s), time) && !OrbitalStabilizers.isPinned(ShipGroup.of(s)))) {
             CompoundTag ours = ship.getUserDataTag() != null ? ship.getUserDataTag().getCompound(CreateUniversal.MOD_ID) : new CompoundTag();
             double x = ours.contains("earthX") ? ours.getDouble("earthX") : overworld.getSharedSpawnPos().getX() + 0.5;
             double z = ours.contains("earthZ") ? ours.getDouble("earthZ") : overworld.getSharedSpawnPos().getZ() + 0.5;
@@ -84,11 +84,13 @@ public final class SpaceTransitions {
         dev.createuniversal.space.surface.SurfaceTransitions.tickShips(server, space);
         Moonlets.tick(space);
         GasGiants.tick(space, time);
+        SatelliteOrbits.tick(space);
         dev.createuniversal.space.surface.SurfaceTransitions.tickWrap(server);
         SkyShipBroadcaster.tick(server);
         ShipTransfer.tickRemounts();
         ShipTracker.tick();
         ShipAnchor.tick();
+        OrbitalStabilizers.tick();
         LandingLock.tick(server);
     }
 
