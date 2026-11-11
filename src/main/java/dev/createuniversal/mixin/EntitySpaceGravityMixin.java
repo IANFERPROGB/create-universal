@@ -30,12 +30,12 @@ public abstract class EntitySpaceGravityMixin {
         if (level == null) {
             return;
         }
-        // Dentro del área de un Estabilizador de gravedad manda él (alpha.9.3): su fuerza, también en el espacio. La
-        // dirección la gira Gravity Control.
+        // Dentro del área de un Estabilizador de gravedad manda él: en una nave la gravedad la pone GravityTravelMixin en
+        // la dirección de la nave (aquí 0); en el suelo, su fuerza (la dirección la gira Gravity Control).
         if ((Object) this instanceof net.minecraft.world.entity.LivingEntity) {
             dev.createuniversal.space.Gravity.State state = dev.createuniversal.space.Gravity.state((Entity) (Object) this);
             if (state != null) {
-                cir.setReturnValue(dev.createuniversal.space.Gravity.EARTH * state.strength());
+                cir.setReturnValue(state.ship() != null ? 0.0 : dev.createuniversal.space.Gravity.EARTH * state.strength());
                 return;
             }
         }

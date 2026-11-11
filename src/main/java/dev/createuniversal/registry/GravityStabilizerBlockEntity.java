@@ -72,9 +72,6 @@ public class GravityStabilizerBlockEntity extends KineticBlockEntity {
         Status before = status;
         if (Math.abs(getSpeed()) < MIN_RPM || isOverStressed()) {
             status = Status.TOO_SLOW;
-        } else if (down() != Direction.DOWN && Sable.HELPER.getContaining(level, worldPosition) != null) {
-            // En las naves, solo en el suelo (D91): la gravedad girada choca con los choques de Sable.
-            status = Status.SHIP_NOT_FLOOR;
         } else if (--scanCooldown <= 0) {
             scanCooldown = RESCAN_TICKS;
             status = GravityFields.update(server, worldPosition, down(), strength()) ? Status.ACTIVE : Status.OPEN;

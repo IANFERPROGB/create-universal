@@ -1,7 +1,10 @@
 package dev.createuniversal.space;
 
+import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
+import org.joml.Quaterniond;
+import org.joml.Vector3d;
 
 import java.util.Map;
 import java.util.UUID;
@@ -9,8 +12,17 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Gravedad de una entidad dentro del área de un Estabilizador de gravedad (D50, D51, D91), en el servidor y en el cliente
- * (que es quien mueve al jugador). La dirección la lleva Gravity Control (dentro de nuestro jar, ver {@link GravityFields});
- * aquí se guarda la fuerza, que se aplica en {@code EntitySpaceGravityMixin} (también en el espacio, donde no hay gravedad).
+ * (que es quien mueve al jugador):
+ *
+ * <ul>
+ *   <li><b>En una nave</b> (alpha.9.4): "abajo" es la cara de la nave donde está el bloque y gira con ella, en cualquier
+ *       ángulo, aunque la nave esté del revés. Se le da a Sable como orientación propia de la entidad
+ *       ({@code SableGravityOrientationMixin}) y Sable gira con ella la cámara, el cuerpo, andar, saltar y el choque con
+ *       la nave. La gravedad y el rozamiento en esa dirección los pone {@code GravityTravelMixin}. Dos fallos de Sable en
+ *       ese camino (que disparaban al jugador) los corrigen {@code SableFeetPosMixin} y {@code SableTrackingPosMixin}.</li>
+ *   <li><b>En el suelo</b>: la dirección la lleva Gravity Control (6 caras, ver {@link GravityFields}) y aquí solo la
+ *       fuerza, que se aplica en {@code EntitySpaceGravityMixin}.</li>
+ * </ul>
  */
 public final class Gravity {
     /** Gravedad de la Tierra para los seres vivos en Minecraft (bloques/tick²). */
@@ -48,5 +60,30 @@ public final class Gravity {
 
     public static void clearClient() {
         CLIENT.clear();
+    }
+
+    /** Orientación propia (gira el "arriba" del mundo al de la nave), o null si no hay o es en el suelo. */
+    public static Quaterniond orientation(Entity entity, float partialTicks) {
+        State s = state(entity);
+        if (s == null || s.ship() == null) {
+            return null;
+        }
+        SubLevel ship = OxygenZones.ship(entity.level(), s.ship());
+        if (ship == null) {
+            return null;
+        }
+        // En el cliente, entre ticks, la pose dibujada (suave); si no, la del último tick.
+        Quaterniond shipRot = entity.level().isClientSide && partialTicks < 1.0F
+                ? dev.createuniversal.client.ClientShipPose.renderOrientation(ship)
+                : new Quaterniond(ship.logicalPose().orientation());
+        Direction up = s.down().getOpposite();
+        Quaterniond local = new Quaterniond().rotationTo(0.0, 1.0, 0.0, up.getStepX(), up.getStepY(), up.getStepZ());
+        return shipRot.mul(local);
+    }
+
+    /** "Arriba" de la entidad en coordenadas del mundo, o null si no hay gravedad propia girada. */
+    public static Vector3d up(Entity entity) {
+        Quaterniond q = orientation(entity, 1.0F);
+        return q != null ? q.transform(new Vector3d(0.0, 1.0, 0.0)) : null;
     }
 }

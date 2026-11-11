@@ -28,6 +28,10 @@ public final class CreateUniversalClient {
                 dev.createuniversal.space.GravityDebug.clientTick(player);
             }
         });
+        if (net.neoforged.fml.ModList.get().isLoaded("aero_cam_sync")) {
+            NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.client.event.ClientTickEvent.Post e) ->
+                    dev.createuniversal.client.compat.AeroCamSyncCompat.tick());
+        }
         // Con Flywheel activo (lo normal) Create dibuja los ejes con su "visual", no con el renderizador de arriba.
         modBus.addListener((net.neoforged.fml.event.lifecycle.FMLClientSetupEvent e) -> e.enqueueWork(() ->
                 dev.engine_room.flywheel.lib.visualization.SimpleBlockEntityVisualizer

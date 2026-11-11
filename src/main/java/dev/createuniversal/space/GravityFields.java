@@ -178,8 +178,8 @@ public final class GravityFields {
     private static final String TURNED = dev.createuniversal.CreateUniversal.MOD_ID + ":gravity_turned";
 
     private static Direction worldDirection(Entity entity, Gravity.State state) {
-        // En las naves, siempre hacia abajo del mundo: los choques de Sable con las naves solo entienden ese "abajo"
-        // (con la gravedad girada sale uno disparado, también con Gravity Control solo). En el suelo, la cara elegida.
+        // En las naves Gravity Control no gira nada (sus choques no se entienden con los de Sable): la gravedad de la nave,
+        // en cualquier ángulo, va por la orientación propia de Sable (ver Gravity). En el suelo, la cara elegida.
         return state.ship() == null ? state.down() : Direction.DOWN;
     }
 
