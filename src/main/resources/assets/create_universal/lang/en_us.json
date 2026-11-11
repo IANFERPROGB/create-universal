@@ -141,7 +141,7 @@
   "create_universal.orbital_stabilizer.status.too_slow": "Needs at least %s RPM",
   "create_universal.orbital_stabilizer.status.no_signal": "Ready: give it a redstone signal to hold the ship",
   "create_universal.orbital_stabilizer.status.active": "Ship held in place",
-  "create_universal.message.orbit_enter": "In orbit: %s (%s blocks/s)",
+  "create_universal.message.orbit_enter": "In orbit around %s (%s blocks/s). Use thrusters to leave",
   "create_universal.message.orbit_leave": "Out of orbit",
   "death.attack.create_universal.impact": "%1$s died when their ship hit a celestial body",
   "death.attack.create_universal.sun": "%1$s burned up in the Sun",

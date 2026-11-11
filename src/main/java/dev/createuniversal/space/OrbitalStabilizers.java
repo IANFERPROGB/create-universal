@@ -81,9 +81,41 @@ public final class OrbitalStabilizers {
 
     /** Cada tick del servidor: suelta las naves cuyo estabilizador ya no lo pide. */
     public static void tick() {
-        if (!PINS.isEmpty()) {
-            PINS.values().removeIf(pin -> pin.level.getGameTime() - pin.lastRequest > RELEASE_AFTER);
+        if (PINS.isEmpty()) {
+            return;
         }
+        var it = PINS.entrySet().iterator();
+        while (it.hasNext()) {
+            var e = it.next();
+            Pin pin = e.getValue();
+            if (pin.level.getGameTime() - pin.lastRequest > RELEASE_AFTER) {
+                it.remove();
+                matchFrame(pin.level, e.getKey());
+            }
+        }
+    }
+
+    /**
+     * Al soltarla, la nave recupera la velocidad del astro en cuya zona está (alpha.9.5): fijada se queda quieta en el
+     * espacio, pero los astros se mueven (la Tierra a ~16 bloques/s), y sin esto se quedaba atrás para siempre.
+     */
+    private static void matchFrame(ServerLevel level, UUID id) {
+        if (level.dimension() != CUDimensions.SPACE) {
+            return;
+        }
+        ServerSubLevelContainer container = SubLevelContainer.getContainer(level);
+        SubLevel s = container != null ? container.getSubLevel(id) : null;
+        if (!(s instanceof ServerSubLevel ship) || ship.isRemoved()) {
+            return;
+        }
+        double time = SpaceLayout.time(level);
+        SolarSystem.Body body = SolarSystem.frameBody(OrbitalFrame.centerOf(ship), time);
+        RigidBodyHandle handle = container.physicsSystem().getPhysicsHandle(ship);
+        if (body == null || handle == null || !handle.isValid()) {
+            return;
+        }
+        net.minecraft.world.phys.Vec3 v = SolarSystem.velocity(body, time);
+        handle.addLinearAndAngularVelocity(new Vector3d(v.x, v.y, v.z), new Vector3d());
     }
 
     /** Paso de física de Sable: recoloca y para las naves fijadas. */

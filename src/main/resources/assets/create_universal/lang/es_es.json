@@ -141,7 +141,7 @@
   "create_universal.orbital_stabilizer.status.too_slow": "Necesita al menos %s RPM",
   "create_universal.orbital_stabilizer.status.no_signal": "Listo: dale señal de redstone para fijar la nave",
   "create_universal.orbital_stabilizer.status.active": "Nave fijada en su sitio",
-  "create_universal.message.orbit_enter": "En órbita: %s (%s bloques/s)",
+  "create_universal.message.orbit_enter": "En órbita de %s (%s bloques/s). Usa los propulsores para salir",
   "create_universal.message.orbit_leave": "Fuera de órbita",
   "death.attack.create_universal.impact": "%1$s murió cuando su nave chocó con un astro",
   "death.attack.create_universal.sun": "%1$s ardió en el Sol",
