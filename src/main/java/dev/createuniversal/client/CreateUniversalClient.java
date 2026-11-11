@@ -47,6 +47,7 @@ public final class CreateUniversalClient {
                         .skipVanillaRender(be -> true)
                         .apply()));
         NeoForge.EVENT_BUS.register(dev.createuniversal.client.sky.SpaceClock.class);
+        NeoForge.EVENT_BUS.register(dev.createuniversal.client.sky.RockRenderer.class);
         NeoForge.EVENT_BUS.register(AtmosphericsCompat.class);
         NeoForge.EVENT_BUS.register(dev.createuniversal.client.effects.TransitionEffects.class);
         modBus.addListener((net.neoforged.neoforge.client.event.RegisterGuiLayersEvent e) ->

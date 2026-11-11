@@ -94,6 +94,9 @@ public final class LoginHold {
         CompoundTag tag = new CompoundTag();
         Entity vehicle = player.getVehicle();
         SubLevel seatShip = vehicle != null ? Sable.HELPER.getContaining(level, vehicle.blockPosition()) : null;
+        if (seatShip instanceof ServerSubLevel seatSub && Moonlets.isMoonlet(seatSub)) {
+            seatShip = null;
+        }
         if (seatShip != null) {
             tag.putUUID("ship", seatShip.getUniqueId());
             tag.putLong("seat", vehicle.blockPosition().asLong());
@@ -116,7 +119,7 @@ public final class LoginHold {
     /** La nave que pisa o en cuyo volumen está el jugador. */
     private static SubLevel shipAround(ServerLevel level, ServerPlayer player) {
         SubLevel tracking = Sable.HELPER.getTrackingSubLevel(player);
-        if (tracking != null) {
+        if (tracking instanceof ServerSubLevel s && !Moonlets.isMoonlet(s)) {
             return tracking;
         }
         ServerSubLevelContainer container = SubLevelContainer.getContainer(level);
@@ -125,7 +128,7 @@ public final class LoginHold {
         }
         for (ServerSubLevel ship : container.getAllSubLevels()) {
             BoundingBox3dc b = ship.boundingBox();
-            if (!ship.isRemoved() && new AABB(b.minX(), b.minY(), b.minZ(), b.maxX(), b.maxY(), b.maxZ()).inflate(1.0).contains(player.position())) {
+            if (!ship.isRemoved() && !Moonlets.isMoonlet(ship) && new AABB(b.minX(), b.minY(), b.minZ(), b.maxX(), b.maxY(), b.maxZ()).inflate(1.0).contains(player.position())) {
                 return ship;
             }
         }

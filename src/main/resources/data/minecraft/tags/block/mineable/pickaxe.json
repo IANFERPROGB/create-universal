@@ -13,6 +13,8 @@
     "create_universal:ionian_basalt",
     "create_universal:cryo_ice",
     "create_universal:dark_cryo_ice",
+    "create_universal:asteroid_rock",
+    "create_universal:ring_ice",
     "create_universal:chromite_ore",
     "create_universal:deepslate_chromite_ore",
     "create_universal:colemanite_ore",

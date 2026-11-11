@@ -40,6 +40,9 @@ public final class SpaceCommands {
                     .then(Commands.literal("look").then(Commands.argument("body", StringArgumentType.word())
                             .suggests((c, b) -> SharedSuggestionProvider.suggest(SolarSystem.bodies().stream().map(SolarSystem.Body::id), b))
                             .executes(SpaceCommands::look)))
+                    .then(Commands.literal("rocks").then(Commands.argument("field", StringArgumentType.word())
+                            .suggests((c, b) -> SharedSuggestionProvider.suggest(SpaceRocks.fields().stream().map(SpaceRocks.Field::id), b))
+                            .executes(SpaceCommands::rocks)))
                     .then(Commands.literal("sendship").then(Commands.argument("dimension", net.minecraft.commands.arguments.DimensionArgument.dimension())
                             .executes(SpaceCommands::sendShip)))
                     .then(Commands.literal("land").then(Commands.argument("body", StringArgumentType.word())
@@ -90,6 +93,47 @@ public final class SpaceCommands {
         player.connection.send(new ClientboundSetEntityMotionPacket(player));
         c.getSource().sendSuccess(() -> Component.translatable("create_universal.command.goto",
                 Component.translatable("create_universal.body." + body.id()), Math.round(distance - body.radius())), false);
+        return 1;
+    }
+
+    /**
+     * {@code /cu rocks <campo>}: para probar la alpha.10. Te deja 20 bloques por encima de la roca más grande que haya
+     * cerca del centro del campo (en tu lado del Sol o de Saturno), yendo ya a su velocidad.
+     */
+    private static int rocks(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+        ServerPlayer player = c.getSource().getPlayerOrException();
+        String id = StringArgumentType.getString(c, "field");
+        SpaceRocks.Field field = SpaceRocks.fields().stream().filter(f -> f.id().equals(id)).findFirst().orElse(null);
+        ServerLevel space = player.server.getLevel(CUDimensions.SPACE);
+        if (field == null || space == null) {
+            c.getSource().sendFailure(Component.literal("Campo desconocido: " + id));
+            return 0;
+        }
+        double time = SpaceLayout.time(space);
+        Vec3 probe = SpaceRocks.probePoint(field, time);
+        SpaceRocks.Rock[] best = {null};
+        SpaceRocks.near(probe, 600.0, time, rock -> {
+            if (best[0] == null || rock.a() * rock.b() * rock.c() > best[0].a() * best[0].b() * best[0].c()) {
+                best[0] = rock;
+            }
+        });
+        if (best[0] == null) {
+            c.getSource().sendFailure(Component.literal("No hay rocas por ahí (¿densidad 0?)"));
+            return 0;
+        }
+        SpaceRocks.Rock rock = best[0];
+        Vec3 pos = SpaceRocks.position(rock, time);
+        Vec3 target = pos.add(0.0, Math.max(rock.a(), Math.max(rock.b(), rock.c())) + 20.0, 0.0);
+        Vec3 motion = SpaceRocks.velocityOf(rock, time).scale(1.0 / 20.0);
+        if (player.isPassenger()) {
+            player.stopRiding();
+        }
+        SpaceGate.travel(() -> player.changeDimension(new DimensionTransition(space, target, motion, player.getYRot(), 90.0F,
+                DimensionTransition.DO_NOTHING)));
+        player.setDeltaMovement(motion);
+        player.connection.send(new ClientboundSetEntityMotionPacket(player));
+        c.getSource().sendSuccess(() -> Component.literal("Encima de una roca de " + field.id() + " (radio " + Math.round(rock.a())
+                + "), a " + Math.round(motion.length() * 20.0) + " b/s"), false);
         return 1;
     }
 

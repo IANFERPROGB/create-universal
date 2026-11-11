@@ -160,5 +160,7 @@
   "create_universal.gravity_stabilizer.status.ship_not_floor": "On a ship it only works placed on the floor",
   "create_universal.message.loading_ship": "Loading your ship…",
   "create_universal.message.ship_loaded": "Back on your ship",
-  "create_universal.message.ship_not_found": "Your ship did not show up: it may have been destroyed or be in another dimension"
+  "create_universal.message.ship_not_found": "Your ship did not show up: it may have been destroyed or be in another dimension",
+  "block.create_universal.asteroid_rock": "Asteroid Rock",
+  "block.create_universal.ring_ice": "Ring Ice"
 }

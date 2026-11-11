@@ -43,6 +43,9 @@ public final class BlockAssets {
             {"tholin_sand", 0x4f3a26, 0.10, 0},
             {"nitrogen_frost", 0xe3d6d3, 0.05, 0},
             {"carbonaceous_regolith", 0x3b3532, 0.12, 0},
+            // alpha.10: rocas del cinturón de asteroides y hielo de los anillos de Saturno.
+            {"asteroid_rock", 0x6e6359, 0.14, 1},
+            {"ring_ice", 0xd8dcdf, 0.06, 3},
     };
 
     public static void main(String[] args) throws Exception {

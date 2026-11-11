@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "": [
+      { "model": "create_universal:block/ring_ice" },
+      { "model": "create_universal:block/ring_ice", "y": 90 },
+      { "model": "create_universal:block/ring_ice", "y": 180 },
+      { "model": "create_universal:block/ring_ice", "y": 270 }
+    ]
+  }
+}

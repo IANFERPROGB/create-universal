@@ -85,6 +85,7 @@ public final class SpaceTransitions {
         }
         dev.createuniversal.space.surface.SurfaceTransitions.tickShips(server, space);
         Moonlets.tick(space);
+        SpaceRocks.tick(space);
         GasGiants.tick(space, time);
         ShipVelocityMemory.tick(space);
         SatelliteOrbits.tick(space);

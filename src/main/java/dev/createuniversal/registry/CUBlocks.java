@@ -71,6 +71,15 @@ public final class CUBlocks {
             BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_BLACK).strength(-1.0F, 3600000.0F).noLootTable()
                     .sound(SoundType.GRAVEL));
 
+    // Rocas espaciales (alpha.10): la piel de las rocas del cinturón de asteroides y de los anillos de Saturno. Como la de
+    // Fobos y Deimos: no se rompe (se pica para sacar fragmentos) y no sale en el inventario creativo.
+    public static final DeferredBlock<MoonletRockBlock> ASTEROID_ROCK = unlisted("asteroid_rock",
+            BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_BROWN).strength(-1.0F, 3600000.0F).noLootTable()
+                    .sound(SoundType.STONE));
+    public static final DeferredBlock<MoonletRockBlock> RING_ICE = unlisted("ring_ice",
+            BlockBehaviour.Properties.of().mapColor(MapColor.ICE).strength(-1.0F, 3600000.0F).noLootTable()
+                    .sound(SoundType.GLASS));
+
     private CUBlocks() {}
 
     private static DeferredBlock<Block> soil(String name, MapColor color) {

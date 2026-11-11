@@ -77,9 +77,10 @@ public final class Moonlets {
 
     private Moonlets() {}
 
+    /** ¿Es Fobos, Deimos o una roca del espacio (cuerpos que no son naves)? */
     public static boolean isMoonlet(ServerSubLevel ship) {
         CompoundTag tag = ship.getUserDataTag();
-        return tag != null && tag.getCompound(CreateUniversal.MOD_ID).contains(KEY);
+        return tag != null && (tag.getCompound(CreateUniversal.MOD_ID).contains(KEY) || tag.getCompound(CreateUniversal.MOD_ID).contains(SpaceRocks.KEY));
     }
 
     // ---------------------------------------------------------------- cada tick del servidor
@@ -129,7 +130,7 @@ public final class Moonlets {
     /** Recoge las lunas que ya existen (al volver a cargar el mundo) y quita las que sobren. */
     private static void adopt(ServerSubLevelContainer container) {
         for (ServerSubLevel ship : new ArrayList<>(container.getAllSubLevels())) {
-            if (ship.isRemoved() || !isMoonlet(ship)) {
+            if (ship.isRemoved() || !isMoonlet(ship) || SpaceRocks.isRock(ship)) {
                 continue;
             }
             String id = ship.getUserDataTag().getCompound(CreateUniversal.MOD_ID).getString(KEY);
@@ -248,7 +249,12 @@ public final class Moonlets {
 
     public static void prePhysicsTick(SubLevelPhysicsSystem system, double timeStep) {
         ServerLevel level = system.getLevel();
-        if (level.dimension() != CUDimensions.SPACE || ACTIVE.isEmpty()) {
+        if (level.dimension() != CUDimensions.SPACE) {
+            return;
+        }
+        List<MoonletGrip.MoonState> rockStates = SpaceRocks.physicsStep(system, timeStep);
+        if (ACTIVE.isEmpty()) {
+            MoonletGrip.step(system, rockStates);
             return;
         }
         double tick = SpaceLayout.time(level);
@@ -281,6 +287,7 @@ public final class Moonlets {
             states.add(new MoonletGrip.MoonState(moon.getUniqueId(), e.getKey(), new Vector3d(pos.x, pos.y, pos.z), rot,
                     new Vector3d(v.x, v.y, v.z), spin));
         }
+        states.addAll(rockStates);
         MoonletGrip.step(system, states);
     }
 
@@ -341,13 +348,8 @@ public final class Moonlets {
         if (level.isClientSide() || level.dimension() != CUDimensions.SPACE) {
             return false;
         }
-        Vec3 c = Vec3.atCenterOf(pos);
-        for (ServerSubLevel moon : ACTIVE.values()) {
-            if (!moon.isRemoved() && moon.getPlot().contains(c)) {
-                return true;
-            }
-        }
-        return false;
+        // Fobos, Deimos y las rocas del espacio: la pieza de Sable que contiene ese bloque.
+        return dev.ryanhcode.sable.Sable.HELPER.getContaining(level, pos) instanceof ServerSubLevel s && isMoonlet(s);
     }
 
     public static void onBreak(BlockEvent.BreakEvent event) {
@@ -374,6 +376,7 @@ public final class Moonlets {
             }
         }
         ACTIVE.clear();
+        SpaceRocks.removeAll(space);
         MoonletGrip.clear();
         lastTick = Double.NaN;
     }
