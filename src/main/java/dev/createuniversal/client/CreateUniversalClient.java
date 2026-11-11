@@ -22,6 +22,12 @@ public final class CreateUniversalClient {
                         GravityStabilizerRenderer::new));
         NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent.LoggingOut e) ->
                 dev.createuniversal.space.Gravity.clearClient());
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.client.event.ClientTickEvent.Post e) -> {
+            var player = net.minecraft.client.Minecraft.getInstance().player;
+            if (player != null) {
+                dev.createuniversal.space.GravityDebug.clientTick(player);
+            }
+        });
         // Con Flywheel activo (lo normal) Create dibuja los ejes con su "visual", no con el renderizador de arriba.
         modBus.addListener((net.neoforged.fml.event.lifecycle.FMLClientSetupEvent e) -> e.enqueueWork(() ->
                 dev.engine_room.flywheel.lib.visualization.SimpleBlockEntityVisualizer

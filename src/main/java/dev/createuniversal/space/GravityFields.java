@@ -171,28 +171,16 @@ public final class GravityFields {
         }
         ASSIGNED.clear();
         ASSIGNED.putAll(next);
+        GravityDebug.serverTick(server);
     }
 
     /** Marca en la entidad que su gravedad la hemos girado nosotros (para devolverla al cargar el mundo si hace falta). */
     private static final String TURNED = dev.createuniversal.CreateUniversal.MOD_ID + ":gravity_turned";
-    /** Para cambiar de cara hace falta que la nueva esté bastante más cerca que la actual (si no, a 45° parpadearía). */
-    private static final double HYSTERESIS = 0.15;
 
     private static Direction worldDirection(Entity entity, Gravity.State state) {
-        if (state.ship() == null) {
-            return state.down();
-        }
-        SubLevel ship = OxygenZones.ship(entity.level(), state.ship());
-        if (ship == null) {
-            return Direction.DOWN;
-        }
-        Vector3d d = new Vector3d(state.down().getStepX(), state.down().getStepY(), state.down().getStepZ());
-        ship.logicalPose().orientation().transform(d);
-        Direction nearest = Direction.getNearest(d.x, d.y, d.z);
-        Direction current = gravitychanger.api.GravityChangerAPI.getBaseGravityDirection(entity);
-        double currentDot = d.x * current.getStepX() + d.y * current.getStepY() + d.z * current.getStepZ();
-        double nearestDot = d.x * nearest.getStepX() + d.y * nearest.getStepY() + d.z * nearest.getStepZ();
-        return nearestDot - currentDot > HYSTERESIS ? nearest : current;
+        // En las naves, siempre hacia abajo del mundo: los choques de Sable con las naves solo entienden ese "abajo"
+        // (con la gravedad girada sale uno disparado, también con Gravity Control solo). En el suelo, la cara elegida.
+        return state.ship() == null ? state.down() : Direction.DOWN;
     }
 
     private static void setDirection(Entity entity, Direction direction) {

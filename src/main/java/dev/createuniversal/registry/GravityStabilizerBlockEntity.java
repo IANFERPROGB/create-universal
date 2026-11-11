@@ -31,7 +31,7 @@ public class GravityStabilizerBlockEntity extends KineticBlockEntity {
     /** Cada cuánto se vuelve a comprobar que el área sigue cerrada. */
     private static final int RESCAN_TICKS = 20;
 
-    public enum Status { TOO_SLOW, OPEN, ACTIVE }
+    public enum Status { TOO_SLOW, SHIP_NOT_FLOOR, OPEN, ACTIVE }
 
     private ScrollValueBehaviour strength;
     /** Último estado calculado en el servidor (y enviado al cliente para las gafas). */
@@ -72,6 +72,9 @@ public class GravityStabilizerBlockEntity extends KineticBlockEntity {
         Status before = status;
         if (Math.abs(getSpeed()) < MIN_RPM || isOverStressed()) {
             status = Status.TOO_SLOW;
+        } else if (down() != Direction.DOWN && Sable.HELPER.getContaining(level, worldPosition) != null) {
+            // En las naves, solo en el suelo (D91): la gravedad girada choca con los choques de Sable.
+            status = Status.SHIP_NOT_FLOOR;
         } else if (--scanCooldown <= 0) {
             scanCooldown = RESCAN_TICKS;
             status = GravityFields.update(server, worldPosition, down(), strength()) ? Status.ACTIVE : Status.OPEN;
