@@ -40,6 +40,8 @@ public final class CreateUniversal {
         NeoForge.EVENT_BUS.addListener(dev.createuniversal.space.Moonlets::onBreak);
         NeoForge.EVENT_BUS.addListener(dev.createuniversal.space.Moonlets::onPlace);
         NeoForge.EVENT_BUS.addListener(dev.createuniversal.space.Moonlets::onServerStopping);
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.server.ServerStoppingEvent e) ->
+                dev.createuniversal.space.ShipVelocityMemory.clear());
         LOGGER.info("Create Universal cargando");
     }
 

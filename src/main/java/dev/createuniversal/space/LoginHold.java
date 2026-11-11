@@ -49,6 +49,8 @@ public final class LoginHold {
     private static final String TAG = CreateUniversal.MOD_ID + ":aboard";
     private static final long SETTLE_MS = 750;
     private static final long TIMEOUT_MS = 20_000;
+    /** De pie, tras colocarle: tiempo que se le mantiene en su punto de la nave hasta que Sable lo coge con el suelo. */
+    private static final long FOLLOW_MS = 1500;
 
     private static final class Hold {
         final UUID ship;
@@ -57,6 +59,8 @@ public final class LoginHold {
         final Vec3 position;
         final long startMs = System.currentTimeMillis();
         long readySinceMs = -1;
+        /** De pie: cuándo se le colocó; durante {@link #FOLLOW_MS} se le sigue llevando con la nave. */
+        long placedMs = -1;
 
         Hold(UUID ship, Vec3 local, BlockPos seat, Vec3 position) {
             this.ship = ship;
@@ -204,6 +208,15 @@ public final class LoginHold {
             ServerSubLevelContainer container = SubLevelContainer.getContainer(level);
             SubLevel s = container != null ? container.getSubLevel(hold.ship) : null;
             ServerSubLevel ship = s instanceof ServerSubLevel sl && !sl.isRemoved() ? sl : null;
+            if (hold.placedMs >= 0) {
+                // Ya colocado de pie: se le lleva con la nave un momento más.
+                if (ship == null || now - hold.placedMs > FOLLOW_MS || player.isPassenger()) {
+                    it.remove();
+                } else {
+                    follow(player, level, ship, hold.local);
+                }
+                continue;
+            }
             // Quieto en su sitio real (así se cargan los chunks de alrededor y con ellos la nave).
             if (!player.isPassenger()) {
                 player.connection.teleport(hold.position.x, hold.position.y, hold.position.z, player.getYRot(), player.getXRot());
@@ -216,7 +229,11 @@ public final class LoginHold {
                 }
                 if (now - hold.readySinceMs >= SETTLE_MS) {
                     place(player, level, ship, hold);
-                    it.remove();
+                    if (hold.local != null && !player.isPassenger()) {
+                        hold.placedMs = now;
+                    } else {
+                        it.remove();
+                    }
                 }
             } else if (now - hold.startMs > TIMEOUT_MS) {
                 player.displayClientMessage(Component.translatable("create_universal.message.ship_not_found").withStyle(ChatFormatting.GOLD), false);
@@ -225,6 +242,17 @@ public final class LoginHold {
                 it.remove();
             }
         }
+    }
+
+    /** En su punto de la nave (donde esté ahora la nave) y con la velocidad de la nave en ese punto. */
+    private static void follow(ServerPlayer player, ServerLevel level, ServerSubLevel ship, Vec3 local) {
+        Vec3 pos = ship.logicalPose().transformPosition(local);
+        player.connection.teleport(pos.x, pos.y, pos.z, player.getYRot(), player.getXRot());
+        var velocity = Sable.HELPER.getVelocity(level, ship, new org.joml.Vector3d(local.x, local.y, local.z),
+                new org.joml.Vector3d()).mul(0.05);
+        player.setDeltaMovement(velocity.x, velocity.y, velocity.z);
+        player.resetFallDistance();
+        player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket(player));
     }
 
     private static void place(ServerPlayer player, ServerLevel level, ServerSubLevel ship, Hold hold) {
@@ -242,13 +270,7 @@ public final class LoginHold {
                 com.simibubi.create.content.contraptions.actors.seat.SeatBlock.sitDown(level, hold.seat, player);
             }
         } else if (hold.local != null) {
-            Vec3 pos = ship.logicalPose().transformPosition(hold.local);
-            player.connection.teleport(pos.x, pos.y, pos.z, player.getYRot(), player.getXRot());
-            // Va con la nave: misma velocidad que ella en ese punto.
-            var velocity = Sable.HELPER.getVelocity(level, ship, new org.joml.Vector3d(hold.local.x, hold.local.y, hold.local.z),
-                    new org.joml.Vector3d()).mul(0.05);
-            player.setDeltaMovement(velocity.x, velocity.y, velocity.z);
-            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket(player));
+            follow(player, level, ship, hold.local);
         }
         player.displayClientMessage(Component.translatable("create_universal.message.ship_loaded").withStyle(ChatFormatting.AQUA), true);
         CreateUniversal.LOGGER.info("{} vuelve a su sitio en la nave {}{}", player.getScoreboardName(), ship.getUniqueId(),
