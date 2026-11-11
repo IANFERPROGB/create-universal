@@ -157,5 +157,8 @@
   "create_universal.gravity_stabilizer.status.too_slow": "Necesita al menos %s RPM",
   "create_universal.gravity_stabilizer.status.open": "Solo funciona en áreas cerradas",
   "create_universal.gravity_stabilizer.status.active": "Gravedad activa hacia este bloque",
-  "create_universal.gravity_stabilizer.status.ship_not_floor": "En una nave solo funciona colocado en el suelo"
+  "create_universal.gravity_stabilizer.status.ship_not_floor": "En una nave solo funciona colocado en el suelo",
+  "create_universal.message.loading_ship": "Cargando tu nave…",
+  "create_universal.message.ship_loaded": "De vuelta en tu nave",
+  "create_universal.message.ship_not_found": "Tu nave no ha aparecido: puede que se destruyera o que esté en otra dimensión"
 }

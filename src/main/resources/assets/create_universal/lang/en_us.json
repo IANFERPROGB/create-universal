@@ -157,5 +157,8 @@
   "create_universal.gravity_stabilizer.status.too_slow": "Needs at least %s RPM",
   "create_universal.gravity_stabilizer.status.open": "Only works in enclosed areas",
   "create_universal.gravity_stabilizer.status.active": "Gravity active towards this block",
-  "create_universal.gravity_stabilizer.status.ship_not_floor": "On a ship it only works placed on the floor"
+  "create_universal.gravity_stabilizer.status.ship_not_floor": "On a ship it only works placed on the floor",
+  "create_universal.message.loading_ship": "Loading your ship…",
+  "create_universal.message.ship_loaded": "Back on your ship",
+  "create_universal.message.ship_not_found": "Your ship did not show up: it may have been destroyed or be in another dimension"
 }

@@ -223,7 +223,8 @@ public final class SpaceTransitions {
      * las naves (a unos 20 millones de bloques), sentado en un asiento que ya no existe. Se le saca al sitio normal.
      */
     private static void rescueFromEmptyPlot(ServerPlayer player, ServerLevel level) {
-        if (player.tickCount % 20 != 0) {
+        // Recién entrado, su nave puede estar cargando todavía (LoginHold): no se le saca.
+        if (player.tickCount % 20 != 0 || player.tickCount < 400 || LoginHold.isHeld(player)) {
             return;
         }
         ServerSubLevelContainer container = SubLevelContainer.getContainer(level);
