@@ -28,6 +28,12 @@ public final class CreateUniversalClient {
                 dev.createuniversal.space.GravityDebug.clientTick(player);
             }
         });
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.tick.PlayerTickEvent.Post e) -> {
+            if (e.getEntity() == net.minecraft.client.Minecraft.getInstance().player
+                    && e.getEntity() instanceof net.minecraft.client.player.LocalPlayer local) {
+                ShipGravityAnchor.afterTick(local);
+            }
+        });
         if (net.neoforged.fml.ModList.get().isLoaded("aero_cam_sync")) {
             NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.client.event.ClientTickEvent.Post e) ->
                     dev.createuniversal.client.compat.AeroCamSyncCompat.tick());

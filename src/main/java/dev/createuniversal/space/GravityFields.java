@@ -123,7 +123,7 @@ public final class GravityFields {
             }
             AABB box = worldBox(f, ship);
             Vec3 sourceWorld = toWorld(ship, Vec3.atCenterOf(f.source));
-            for (LivingEntity living : level.getEntitiesOfClass(LivingEntity.class, box, le -> le.isAlive() && !le.isSpectator() && !le.isPassenger())) {
+            for (LivingEntity living : level.getEntitiesOfClass(LivingEntity.class, box, le -> le.isAlive() && !le.isSpectator())) {
                 BlockPos cell = OxygenZones.toZone(level, f.ship, living.getEyePosition());
                 if (cell == null || !f.cells.contains(cell.asLong())) {
                     continue;
