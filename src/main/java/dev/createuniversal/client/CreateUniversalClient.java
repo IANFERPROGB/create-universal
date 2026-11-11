@@ -22,12 +22,6 @@ public final class CreateUniversalClient {
                         GravityStabilizerRenderer::new));
         NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent.LoggingOut e) ->
                 dev.createuniversal.space.Gravity.clearClient());
-        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.client.event.ClientTickEvent.Post e) -> {
-            var player = net.minecraft.client.Minecraft.getInstance().player;
-            if (player != null) {
-                dev.createuniversal.space.GravityDebug.clientTick(player);
-            }
-        });
         NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.tick.PlayerTickEvent.Post e) -> {
             if (e.getEntity() == net.minecraft.client.Minecraft.getInstance().player
                     && e.getEntity() instanceof net.minecraft.client.player.LocalPlayer local) {

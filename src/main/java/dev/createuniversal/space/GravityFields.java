@@ -171,7 +171,6 @@ public final class GravityFields {
         }
         ASSIGNED.clear();
         ASSIGNED.putAll(next);
-        GravityDebug.serverTick(server);
     }
 
     /** Marca en la entidad que su gravedad la hemos girado nosotros (para devolverla al cargar el mundo si hace falta). */
