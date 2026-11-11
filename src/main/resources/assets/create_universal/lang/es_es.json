@@ -162,5 +162,12 @@
   "create_universal.message.ship_loaded": "De vuelta en tu nave",
   "create_universal.message.ship_not_found": "Tu nave no ha aparecido: puede que se destruyera o que esté en otra dimensión",
   "block.create_universal.asteroid_rock": "Roca de asteroide",
-  "block.create_universal.ring_ice": "Hielo de los anillos"
+  "block.create_universal.ring_ice": "Hielo de los anillos",
+  "block.create_universal.asteroid_belt_fragment": "Roca del cinturón de asteroides",
+  "block.create_universal.saturn_ring_fragment": "Roca de los anillos de Saturno",
+  "block.create_universal.phobos_fragment": "Roca de Fobos",
+  "block.create_universal.deimos_fragment": "Roca de Deimos",
+  "create_universal.message.rock_picked": "Fragmento conseguido (quedan %s en esta roca)",
+  "create_universal.message.rock_empty": "Esta roca está agotada: vuelve en %s min",
+  "create_universal.message.rock_tool": "Hace falta un pico de diamante o mejor"
 }

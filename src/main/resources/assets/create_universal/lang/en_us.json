@@ -162,5 +162,12 @@
   "create_universal.message.ship_loaded": "Back on your ship",
   "create_universal.message.ship_not_found": "Your ship did not show up: it may have been destroyed or be in another dimension",
   "block.create_universal.asteroid_rock": "Asteroid Rock",
-  "block.create_universal.ring_ice": "Ring Ice"
+  "block.create_universal.ring_ice": "Ring Ice",
+  "block.create_universal.asteroid_belt_fragment": "Asteroid Belt Rock",
+  "block.create_universal.saturn_ring_fragment": "Saturn Ring Rock",
+  "block.create_universal.phobos_fragment": "Phobos Rock",
+  "block.create_universal.deimos_fragment": "Deimos Rock",
+  "create_universal.message.rock_picked": "Fragment collected (%s left on this rock)",
+  "create_universal.message.rock_empty": "This rock is depleted: come back in %s min",
+  "create_universal.message.rock_tool": "You need a diamond pickaxe or better"
 }

@@ -46,6 +46,11 @@ public final class BlockAssets {
             // alpha.10: rocas del cinturón de asteroides y hielo de los anillos de Saturno.
             {"asteroid_rock", 0x6e6359, 0.14, 1},
             {"ring_ice", 0xd8dcdf, 0.06, 3},
+            // alpha.10.1: fragmentos que salen al picar las rocas del espacio.
+            {"asteroid_belt_fragment", 0x7d6f61, 0.16, 1},
+            {"saturn_ring_fragment", 0xe6e9eb, 0.07, 3},
+            {"phobos_fragment", 0x4d4540, 0.14, 2},
+            {"deimos_fragment", 0x6a6058, 0.12, 2},
     };
 
     public static void main(String[] args) throws Exception {

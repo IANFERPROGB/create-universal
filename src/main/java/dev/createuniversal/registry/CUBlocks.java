@@ -80,6 +80,13 @@ public final class CUBlocks {
             BlockBehaviour.Properties.of().mapColor(MapColor.ICE).strength(-1.0F, 3600000.0F).noLootTable()
                     .sound(SoundType.GLASS));
 
+    // Fragmentos de rocas del espacio (alpha.10.1, D36): bloques decorativos que salen al picar las rocas con un pico de
+    // diamante o mejor. De momento no sirven para nada más.
+    public static final DeferredBlock<Block> BELT_FRAGMENT = rock("asteroid_belt_fragment", MapColor.COLOR_BROWN);
+    public static final DeferredBlock<Block> SATURN_RING_FRAGMENT = ice("saturn_ring_fragment", MapColor.ICE);
+    public static final DeferredBlock<Block> PHOBOS_FRAGMENT = rock("phobos_fragment", MapColor.COLOR_BLACK);
+    public static final DeferredBlock<Block> DEIMOS_FRAGMENT = rock("deimos_fragment", MapColor.COLOR_GRAY);
+
     private CUBlocks() {}
 
     private static DeferredBlock<Block> soil(String name, MapColor color) {

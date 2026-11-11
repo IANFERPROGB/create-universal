@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "": [
+      { "model": "create_universal:block/phobos_fragment" },
+      { "model": "create_universal:block/phobos_fragment", "y": 90 },
+      { "model": "create_universal:block/phobos_fragment", "y": 180 },
+      { "model": "create_universal:block/phobos_fragment", "y": 270 }
+    ]
+  }
+}

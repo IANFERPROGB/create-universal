@@ -21,7 +21,7 @@ public final class CUTab {
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, CreateUniversal.MOD_ID);
 
     /** Lo que no tiene sentido sacar suelto: la pechera "como bloque" (es la misma pechera) y el casco a medio montar. */
-    private static final Set<String> HIDDEN = Set.of("space_suit_tank", "incomplete_space_helmet");
+    private static final Set<String> HIDDEN = Set.of("space_suit_tank", "incomplete_space_helmet", "carbonaceous_regolith", "asteroid_rock", "ring_ice");
 
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB = TABS.register("main", () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.create_universal"))
