@@ -31,6 +31,7 @@ public final class CreateUniversalClient {
         NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.tick.PlayerTickEvent.Post e) -> {
             if (e.getEntity() == net.minecraft.client.Minecraft.getInstance().player
                     && e.getEntity() instanceof net.minecraft.client.player.LocalPlayer local) {
+                ShipCarry.afterTick(local);
                 ShipGravityAnchor.afterTick(local);
             }
         });

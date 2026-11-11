@@ -52,6 +52,8 @@ public final class CreateUniversal {
                 dev.createuniversal.network.SkyShipsPayload.STREAM_CODEC, dev.createuniversal.network.SkyShipsPayload::handle);
         event.registrar("1").playToClient(dev.createuniversal.network.DebrisMarkersPayload.TYPE,
                 dev.createuniversal.network.DebrisMarkersPayload.STREAM_CODEC, dev.createuniversal.network.DebrisMarkersPayload::handle);
+        event.registrar("1").playToClient(dev.createuniversal.network.ShipCarryPayload.TYPE,
+                dev.createuniversal.network.ShipCarryPayload.STREAM_CODEC, dev.createuniversal.network.ShipCarryPayload::handle);
         event.registrar("1").playToClient(dev.createuniversal.network.GravityStatePayload.TYPE,
                 dev.createuniversal.network.GravityStatePayload.STREAM_CODEC, dev.createuniversal.network.GravityStatePayload::handle);
     }

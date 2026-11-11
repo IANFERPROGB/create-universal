@@ -49,8 +49,8 @@ public final class LoginHold {
     private static final String TAG = CreateUniversal.MOD_ID + ":aboard";
     private static final long SETTLE_MS = 750;
     private static final long TIMEOUT_MS = 20_000;
-    /** De pie, tras colocarle: tiempo que se le mantiene en su punto de la nave hasta que Sable lo coge con el suelo. */
-    private static final long FOLLOW_MS = 1500;
+    /** De pie, tras colocarle: lo que dura sin recibir daño mientras su cliente lo lleva con la nave (ShipCarry). */
+    private static final long FOLLOW_MS = 5000;
 
     private static final class Hold {
         final UUID ship;
@@ -209,11 +209,9 @@ public final class LoginHold {
             SubLevel s = container != null ? container.getSubLevel(hold.ship) : null;
             ServerSubLevel ship = s instanceof ServerSubLevel sl && !sl.isRemoved() ? sl : null;
             if (hold.placedMs >= 0) {
-                // Ya colocado de pie: se le lleva con la nave un momento más.
-                if (ship == null || now - hold.placedMs > FOLLOW_MS || player.isPassenger()) {
+                // Ya colocado de pie: lo lleva su cliente (ShipCarry); aquí solo sigue sin recibir daño un momento.
+                if (now - hold.placedMs > FOLLOW_MS || player.isPassenger()) {
                     it.remove();
-                } else {
-                    follow(player, level, ship, hold.local);
                 }
                 continue;
             }
@@ -271,6 +269,8 @@ public final class LoginHold {
             }
         } else if (hold.local != null) {
             follow(player, level, ship, hold.local);
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                    new dev.createuniversal.network.ShipCarryPayload(ship.getUniqueId(), hold.local));
         }
         player.displayClientMessage(Component.translatable("create_universal.message.ship_loaded").withStyle(ChatFormatting.AQUA), true);
         CreateUniversal.LOGGER.info("{} vuelve a su sitio en la nave {}{}", player.getScoreboardName(), ship.getUniqueId(),
