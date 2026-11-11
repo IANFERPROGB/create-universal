@@ -62,10 +62,13 @@ public final class Gravity {
         CLIENT.clear();
     }
 
-    /** Orientación propia (gira el "arriba" del mundo al de la nave), o null si no hay o es en el suelo. */
+    /**
+     * Orientación propia (gira el "arriba" del mundo al de la nave), o null si no hay, es en el suelo o va sentado (sentado
+     * ya gira Sable con el asiento). Para la cámara y el dibujo: en el cliente, entre ticks, con la pose dibujada.
+     */
     public static Quaterniond orientation(Entity entity, float partialTicks) {
         State s = state(entity);
-        if (s == null || s.ship() == null) {
+        if (s == null || s.ship() == null || entity.isPassenger()) {
             return null;
         }
         SubLevel ship = OxygenZones.ship(entity.level(), s.ship());
@@ -79,6 +82,25 @@ public final class Gravity {
         Direction up = s.down().getOpposite();
         Quaterniond local = new Quaterniond().rotationTo(0.0, 1.0, 0.0, up.getStepX(), up.getStepY(), up.getStepZ());
         return shipRot.mul(local);
+    }
+
+    /**
+     * Para los choques: la orientación en ese momento del tick ({@code partialTicks} 0 = pose anterior de la nave, 1 = la
+     * actual), igual que mueve Sable la nave dentro del tick. Nunca la dibujada, que va unos ticks por detrás.
+     */
+    public static Quaterniond physicsOrientation(Entity entity, float partialTicks) {
+        State s = state(entity);
+        if (s == null || s.ship() == null || entity.isPassenger()) {
+            return null;
+        }
+        SubLevel ship = OxygenZones.ship(entity.level(), s.ship());
+        if (ship == null) {
+            return null;
+        }
+        Quaterniond shipRot = new Quaterniond(ship.lastPose().orientation())
+                .slerp(ship.logicalPose().orientation(), Math.max(0.0F, Math.min(1.0F, partialTicks)));
+        Direction up = s.down().getOpposite();
+        return shipRot.mul(new Quaterniond().rotationTo(0.0, 1.0, 0.0, up.getStepX(), up.getStepY(), up.getStepZ()));
     }
 
     /** "Arriba" de la entidad en coordenadas del mundo, o null si no hay gravedad propia girada. */

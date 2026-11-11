@@ -239,7 +239,7 @@ public final class OxygenZones {
         return BlockPos.containing(local.x, local.y, local.z);
     }
 
-    static SubLevel ship(Level level, UUID id) {
+    public static SubLevel ship(Level level, UUID id) {
         var container = SubLevelContainer.getContainer(level);
         SubLevel sub = container != null ? container.getSubLevel(id) : null;
         return sub == null || sub.isRemoved() ? null : sub;

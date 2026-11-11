@@ -61,9 +61,33 @@ public abstract class GravityTravelMixin extends Entity {
         if (createUniversal$up == null) {
             return;
         }
+        createUniversal$keepWithShip();
         BlockPos below = getBlockPosBelowThatAffectsMyMovement();
         float block = level().getBlockState(below).getFriction(level(), below, this);
         createUniversal$friction = onGround() ? block * 0.91F : 0.91F;
+    }
+
+    /**
+     * En el aire, Sable deja que quien salta se vaya quedando atrás respecto a la nave (va frenando la velocidad heredada).
+     * Dentro de la sala con gravedad de la nave se va con ella: la velocidad heredada es la de la nave en los ojos (con su
+     * giro), así un salto acaba donde empezó aunque la nave vuele deprisa (alpha.9.4.1). Pisando el suelo Sable ya lleva
+     * a la entidad con la nave y no usa este valor.
+     */
+    @Unique
+    private void createUniversal$keepWithShip() {
+        Gravity.State state = Gravity.state(this);
+        if (state == null || state.ship() == null) {
+            return;
+        }
+        dev.ryanhcode.sable.sublevel.SubLevel ship = dev.createuniversal.space.OxygenZones.ship(level(), state.ship());
+        if (ship == null) {
+            return;
+        }
+        Vec3 eye = getEyePosition();
+        Vector3d local = ship.logicalPose().transformPositionInverse(new Vector3d(eye.x, eye.y, eye.z));
+        Vector3d perTick = dev.ryanhcode.sable.Sable.HELPER.getVelocity(level(), ship, local, new Vector3d()).mul(0.05);
+        ((dev.ryanhcode.sable.mixinterface.entity.entity_sublevel_collision.LivingEntityMovementExtension) (Object) this)
+                .sable$getInheritedVelocity().set(perTick);
     }
 
     /** La velocidad tras moverse, antes de que Minecraft le ponga su rozamiento (solo en el caso normal: ni agua ni lava). */

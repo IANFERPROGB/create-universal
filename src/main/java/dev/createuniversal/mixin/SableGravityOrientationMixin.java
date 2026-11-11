@@ -32,7 +32,7 @@ public abstract class SableGravityOrientationMixin {
     private static void createUniversal$hasGravity(Entity entity, CallbackInfoReturnable<Boolean> cir) {
         if (entity != null) {
             Gravity.State s = Gravity.state(entity);
-            if (s != null && s.ship() != null) {
+            if (s != null && s.ship() != null && !entity.isPassenger()) {
                 cir.setReturnValue(true);
             }
         }

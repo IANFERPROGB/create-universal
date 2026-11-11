@@ -20,9 +20,22 @@ import java.util.UUID;
  * cliente). Se quitará cuando se encuentre la causa.
  */
 public final class GravityDebug {
-    private static final double JUMP = 1.5;
+    /** Movimiento respecto a la nave en un tick que cuenta como "salto" raro. */
+    private static final double JUMP = 0.8;
     private static final Map<UUID, Vec3> LAST = new HashMap<>();
     private static Vec3 lastClient;
+
+    /** Posición en las coordenadas de la nave de la gravedad (si la hay): así se mide el movimiento respecto a ella. */
+    private static Vec3 local(Player p, Gravity.State state) {
+        if (state.ship() == null) {
+            return p.position();
+        }
+        SubLevel ship = OxygenZones.ship(p.level(), state.ship());
+        if (ship == null) {
+            return p.position();
+        }
+        return ship.logicalPose().transformPositionInverse(p.position());
+    }
 
     private GravityDebug() {}
 
@@ -37,11 +50,11 @@ public final class GravityDebug {
                 }
                 continue;
             }
-            LAST.put(p.getUUID(), p.position());
+            LAST.put(p.getUUID(), local(p, state));
             if (last == null) {
                 CreateUniversal.LOGGER.info("[gravedad-debug] servidor: {} entra en la gravedad de un estabilizador {}", p.getScoreboardName(), state);
             }
-            double moved = last != null ? p.position().distanceTo(last) : 0.0;
+            double moved = last != null ? local(p, state).distanceTo(last) : 0.0;
             if (moved > JUMP || p.tickCount % 20 == 0) {
                 CreateUniversal.LOGGER.info("[gravedad-debug] servidor{}: {}", moved > JUMP ? " SALTO" : "", describe(p, moved));
             }
@@ -58,11 +71,11 @@ public final class GravityDebug {
             }
             return;
         }
-        double moved = lastClient != null ? p.position().distanceTo(lastClient) : 0.0;
+        double moved = lastClient != null ? local(p, state).distanceTo(lastClient) : 0.0;
         if (lastClient == null) {
             CreateUniversal.LOGGER.info("[gravedad-debug] cliente: entra en la gravedad de un estabilizador {}", state);
         }
-        lastClient = p.position();
+        lastClient = local(p, state);
         if (moved > JUMP || p.tickCount % 20 == 0) {
             CreateUniversal.LOGGER.info("[gravedad-debug] cliente{}: {}", moved > JUMP ? " SALTO" : "", describe(p, moved));
         }
