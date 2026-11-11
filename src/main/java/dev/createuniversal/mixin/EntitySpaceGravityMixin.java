@@ -16,7 +16,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * (Sable, Immersive Portals) también calculan la gravedad de las entidades y el atributo no bastaba.
  * Se aplica en el servidor y en el cliente, que es quien mueve al jugador.
  */
-@Mixin(Entity.class)
+// Prioridad alta: se aplica después que Gravity Control (que multiplica la gravedad por su fuerza), así lo nuestro es lo
+// último y no se pierde la gravedad del Estabilizador de gravedad en el espacio (alpha.9.3.3).
+@Mixin(value = Entity.class, priority = 1500)
 public abstract class EntitySpaceGravityMixin {
     @Shadow
     public abstract Level level();
