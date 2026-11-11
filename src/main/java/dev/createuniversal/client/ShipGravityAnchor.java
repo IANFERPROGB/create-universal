@@ -38,8 +38,8 @@ public final class ShipGravityAnchor {
 
     public static void afterTick(LocalPlayer player) {
         Gravity.State state = Gravity.state(player);
-        SubLevel ship = state != null && state.ship() != null ? OxygenZones.ship(player.level(), state.ship()) : null;
-        if (ship == null || player.isSpectator() || player.getAbilities().flying) {
+        SubLevel ship = Gravity.frameShip(player);
+        if (ship == null || player.isSpectator()) {
             lastShip = null;
             lastEye = null;
             return;
@@ -53,7 +53,7 @@ public final class ShipGravityAnchor {
             remember(ship, eye, seated);
             return;
         }
-        Direction up = state.down().getOpposite();
+        Direction up = state != null && state.ship() != null ? state.down().getOpposite() : Direction.UP;
         Vec3 upLocal = new Vec3(up.getStepX(), up.getStepY(), up.getStepZ());
         double step = eye.distanceTo(lastEye);
         boolean glitch = step > MAX_STEP || (!wasSeated && crossesSolid(player, lastEye, eye, upLocal, eyes));

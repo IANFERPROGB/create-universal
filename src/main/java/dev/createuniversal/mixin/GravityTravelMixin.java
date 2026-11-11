@@ -53,6 +53,7 @@ public abstract class GravityTravelMixin extends Entity {
         if (!isControlledByLocalInstance()) {
             return;
         }
+        createUniversal$keepWithShip();
         LivingEntity self = (LivingEntity) (Object) this;
         if (self instanceof Player p && p.getAbilities().flying) {
             return;
@@ -61,7 +62,6 @@ public abstract class GravityTravelMixin extends Entity {
         if (createUniversal$up == null) {
             return;
         }
-        createUniversal$keepWithShip();
         BlockPos below = getBlockPosBelowThatAffectsMyMovement();
         float block = level().getBlockState(below).getFriction(level(), below, this);
         createUniversal$friction = onGround() ? block * 0.91F : 0.91F;
@@ -75,11 +75,7 @@ public abstract class GravityTravelMixin extends Entity {
      */
     @Unique
     private void createUniversal$keepWithShip() {
-        Gravity.State state = Gravity.state(this);
-        if (state == null || state.ship() == null) {
-            return;
-        }
-        dev.ryanhcode.sable.sublevel.SubLevel ship = dev.createuniversal.space.OxygenZones.ship(level(), state.ship());
+        dev.ryanhcode.sable.sublevel.SubLevel ship = Gravity.frameShip(this);
         if (ship == null) {
             return;
         }

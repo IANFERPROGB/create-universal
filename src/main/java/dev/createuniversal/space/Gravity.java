@@ -103,6 +103,31 @@ public final class Gravity {
         return shipRot.mul(new Quaterniond().rotationTo(0.0, 1.0, 0.0, up.getStepX(), up.getStepY(), up.getStepZ()));
     }
 
+    /**
+     * La nave con la que va la entidad (alpha.9.11): la de su Estabilizador de gravedad, o en el espacio la nave dentro de
+     * cuyo volumen está. Dentro de una nave en el espacio se va con ella, como en la realidad (el aire de dentro va con la
+     * nave): sin esto, flotando, Sable deja que uno se vaya quedando atrás y a 100 b/s la nave lo atraviesa.
+     */
+    public static SubLevel frameShip(Entity entity) {
+        State s = state(entity);
+        if (s != null && s.ship() != null) {
+            SubLevel ship = OxygenZones.ship(entity.level(), s.ship());
+            if (ship != null) {
+                return ship;
+            }
+        }
+        if (entity.level().dimension() != CUDimensions.SPACE) {
+            return null;
+        }
+        var box = new dev.ryanhcode.sable.companion.math.BoundingBox3d(entity.getBoundingBox().inflate(0.5));
+        for (var access : dev.ryanhcode.sable.Sable.HELPER.getAllIntersecting(entity.level(), box)) {
+            if (access instanceof SubLevel ship && !ship.isRemoved()) {
+                return ship;
+            }
+        }
+        return null;
+    }
+
     /** "Arriba" de la entidad en coordenadas del mundo, o null si no hay gravedad propia girada. */
     public static Vector3d up(Entity entity) {
         Quaterniond q = orientation(entity, 1.0F);
