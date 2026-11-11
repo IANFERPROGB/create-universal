@@ -25,72 +25,64 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Modo satélite (D13, sección 4.6; rehecho en la alpha.9.5): una nave que está en la zona de un
- * planeta o una luna y no usa propulsores entra sola en órbita a la altura a la que esté, y orbita para siempre. Para
- * salir hay que encender los propulsores; al dejar de empujar unos segundos, si sigue en la zona, vuelve a quedar en
- * órbita a la nueva altura.
+ * Modo satélite (D13; rehecho en la alpha.9.6): dentro de la zona de un planeta o una luna, el
+ * astro curva el camino de la nave y la hace dar vueltas a su alrededor, pero <b>la velocidad es de la nave</b>:
  *
  * <ul>
- *   <li><b>Zona:</b> la de influencia del astro ({@link SolarSystem#frameBody}). Fobos y Deimos cuentan como Marte; lejos de
- *       todo (solo el Sol) no hay órbita.</li>
- *   <li><b>Órbita:</b> circular, a la distancia de la captura, en el plano que llevaba la nave (o el del astro si iba
- *       parada). Velocidad: Tierra ~5 b/s, Luna ~3, Júpiter ~18 ({@link #orbitSpeed}).</li>
- *   <li><b>Para siempre:</b> en cada paso de física se le pone a la nave la velocidad de la órbita (más la del astro, que
- *       también se mueve). Así no se va frenando ni se pierde aunque el motor de física la duerma. La captura es suave
- *       (unos 2 s).</li>
- *   <li><b>Propulsores:</b> si entre un paso y el siguiente la nave cambia de velocidad por su cuenta (empuje, choque),
- *       se suelta. Se vuelve a capturar tras {@link #CAPTURE_TICKS} sin empuje.</li>
- *   <li>No entran: las naves fijadas por el Estabilizador orbital, las que esperan tras un viaje, Fobos y Deimos, las
- *       posadas en ellos y los restos.</li>
+ *   <li>Con un impulso hacia un lado, da vueltas hacia ese lado y a esa velocidad. Si frena, da vueltas más despacio.
+ *       Los propulsores siempre mandan: no hay que "romper" la órbita.</li>
+ *   <li>Si se queda parada del todo (sin empujar {@link #START_SECONDS} s), empieza a dar vueltas sola en el sentido del
+ *       astro, hasta {@link #defaultSpeed}.</li>
+ *   <li>La altura se mantiene sin empujar (sin espirales). Empujando hacia arriba o hacia abajo se cambia, y se queda en la
+ *       nueva.</li>
+ *   <li>Fuera de la zona del astro (o cerca solo del Sol) no hay órbita.</li>
  * </ul>
+ *
+ * Cómo: en cada paso de física, la parte de la velocidad que va alrededor del astro se gira para que siga siendo
+ * tangente (el astro curva el camino sin cambiar la rapidez), y la parte que va hacia arriba o abajo se lleva a la altura
+ * guardada. Si la nave cambia de velocidad por su cuenta (propulsores, un choque), la altura guardada pasa a ser la actual.
+ * Así no se va frenando ni se pierde aunque el motor de física la duerma.
  */
 public final class SatelliteOrbits {
-    /** Ticks sin empuje para entrar (o volver a entrar) en órbita. */
-    private static final int CAPTURE_TICKS = 60;
-    /** Aceleración propia (bloques/s²) que cuenta como empuje: por encima, la nave se suelta de la órbita. */
-    private static final double THRUST_ACCEL = 0.6;
-    /** Segundos que tarda la captura en llevar la nave a la velocidad de la órbita. */
-    private static final double BLEND_SECONDS = 2.0;
-    /** Vuelta de una nave rozando la Tierra, en segundos; crece con el tamaño del astro y la altura. */
-    private static final double EARTH_PERIOD_S = 20 * 60;
+    /** Segundos parada del todo y sin empujar para empezar a dar vueltas sola. */
+    private static final double START_SECONDS = 3.0;
+    /** Por debajo de esta rapidez alrededor del astro (b/s) cuenta como parada. */
+    private static final double STOPPED = 0.25;
+    /** Aceleración con la que empieza a dar vueltas sola (b/s²). */
+    private static final double START_ACCEL = 1.5;
+    /** Cambio de velocidad propio (b/s²) que cuenta como empuje. */
+    private static final double THRUST_ACCEL = 1.0;
+    /** Una vuelta rozando la Tierra (s); crece con el tamaño del astro y la altura. */
+    private static final double EARTH_PERIOD_S = 15 * 60;
     private static final double EARTH_RADIUS = 1056;
 
     private static final class Orbit {
         final SolarSystem.Body body;
-        final double radius;
-        final double speed;
-        /** Normal del plano de la órbita: la dirección de avance es eje × radial. */
-        final Vec3 axis;
         final List<UUID> pieces;
-        double elapsed;
+        /** Altura (distancia al centro) que se mantiene sin empujar. */
+        double radius;
+        /** Normal del plano por defecto (antihorario visto desde arriba) para cuando empieza sola. */
+        final Vec3 axis;
+        double calmSeconds;
+        /** Arrancando sola tras estar parada: acelera hasta la rapidez por defecto. */
+        boolean spinningUp;
         Vector3d lastSet;
-        volatile boolean broken;
 
         Orbit(SolarSystem.Body body, double radius, Vec3 axis, List<UUID> pieces) {
             this.body = body;
             this.radius = radius;
-            this.speed = orbitSpeed(body, radius);
             this.axis = axis;
             this.pieces = pieces;
         }
     }
 
-    /** Órbitas activas, por la clave de su grupo de piezas. */
     private static final Map<UUID, Orbit> ORBITS = new HashMap<>();
     private static final Map<UUID, Orbit> BY_PIECE = new HashMap<>();
-    /** Ticks seguidos sin empuje de cada grupo que no está en órbita. */
-    private static final Map<UUID, Integer> CALM = new HashMap<>();
-    /** Velocidad del tick anterior, para ver si empuja. */
-    private static final Map<UUID, Vec3> LAST_VELOCITY = new HashMap<>();
 
     private SatelliteOrbits() {}
 
     public static boolean inOrbit(ServerSubLevel ship) {
         return BY_PIECE.containsKey(ship.getUniqueId());
-    }
-
-    private static Vec3 center(SolarSystem.Body body, double time) {
-        return SolarSystem.position(body, time);
     }
 
     /** El planeta o la luna de cuya zona es {@code pos}, o null (Fobos y Deimos cuentan como Marte). */
@@ -102,10 +94,14 @@ public final class SatelliteOrbits {
         return body == null || body.isSun() ? null : body;
     }
 
-    /** Velocidad de la órbita circular a esa distancia del centro del astro (bloques/s). */
-    static double orbitSpeed(SolarSystem.Body body, double r) {
+    /**
+     * Rapidez con la que da vueltas sola una nave que estaba parada (b/s): una vuelta en 15 min rozando la Tierra, más
+     * lenta en astros más grandes y algo más rápida lejos (para que se note): Tierra ~8 b/s a 150 bloques del suelo,
+     * ~28 a 14.000; Luna ~4.
+     */
+    static double defaultSpeed(SolarSystem.Body body, double r) {
         double radius = Math.max(body.radius(), 1.0);
-        double period = EARTH_PERIOD_S * Math.sqrt(radius / EARTH_RADIUS) * Math.pow(Math.max(r / radius, 1.0), 1.5);
+        double period = EARTH_PERIOD_S * Math.sqrt(radius / EARTH_RADIUS) * Math.sqrt(Math.max(r / radius, 1.0));
         return 2.0 * Math.PI * r / period;
     }
 
@@ -120,7 +116,7 @@ public final class SatelliteOrbits {
         return best;
     }
 
-    /** Cada tick del servidor en el espacio: capturas y salidas de órbita. */
+    /** Cada tick del servidor en el espacio: qué naves están en la zona de qué astro. */
     public static void tick(ServerLevel space) {
         ServerSubLevelContainer container = SubLevelContainer.getContainer(space);
         if (container == null) {
@@ -143,33 +139,14 @@ public final class SatelliteOrbits {
             Vec3 pos = centerOf(group);
             SolarSystem.Body body = orbitBody(pos, time);
             if (excluded(group) || body == null) {
-                release(key, space, null, false);
-                CALM.remove(key);
-                LAST_VELOCITY.remove(key);
+                release(key, space, group, orbit != null && body == null);
                 continue;
             }
-            if (orbit != null) {
-                if (orbit.broken || orbit.body != body) {
-                    release(key, space, group, true);
-                }
+            if (orbit != null && orbit.body == body) {
                 continue;
             }
-            RigidBodyHandle handle = container.physicsSystem().getPhysicsHandle(group.get(0));
-            if (handle == null || !handle.isValid()) {
-                continue;
-            }
-            Vector3d lv = handle.getLinearVelocity(new Vector3d());
-            Vec3 velocity = new Vec3(lv.x, lv.y, lv.z);
-            Vec3 last = LAST_VELOCITY.put(key, velocity);
-            // Lo que cambia la velocidad de un tick a otro, quitando lo que la cambia el astro (que también acelera).
-            Vec3 bodyChange = SolarSystem.acceleration(body, time).scale(1.0 / 20.0);
-            boolean pushing = last != null && velocity.subtract(last).subtract(bodyChange).length() * 20.0 > THRUST_ACCEL;
-            int calm = pushing ? 0 : CALM.getOrDefault(key, 0) + 1;
-            CALM.put(key, calm);
-            if (calm >= CAPTURE_TICKS) {
-                CALM.remove(key);
-                capture(space, group, key, body, pos, velocity, time);
-            }
+            release(key, space, group, false);
+            start(space, group, key, body, pos, time);
         }
         ORBITS.keySet().removeIf(k -> {
             if (!keys.contains(k)) {
@@ -178,8 +155,6 @@ public final class SatelliteOrbits {
             }
             return false;
         });
-        CALM.keySet().retainAll(keys);
-        LAST_VELOCITY.keySet().retainAll(keys);
     }
 
     private static boolean excluded(List<ServerSubLevel> group) {
@@ -192,35 +167,23 @@ public final class SatelliteOrbits {
         return false;
     }
 
-    private static void capture(ServerLevel level, List<ServerSubLevel> group, UUID key, SolarSystem.Body body, Vec3 pos,
-                                Vec3 velocity, double time) {
-        Vec3 d = pos.subtract(center(body, time));
+    private static void start(ServerLevel level, List<ServerSubLevel> group, UUID key, SolarSystem.Body body, Vec3 pos, double time) {
+        Vec3 d = pos.subtract(SolarSystem.position(body, time));
         double r = d.length();
         if (r < body.radius()) {
             return;
         }
         Vec3 radial = d.scale(1.0 / r);
-        // Plano de la órbita: el del movimiento que llevaba la nave respecto al astro; si iba casi parada, el del astro
-        // (antihorario visto desde arriba, como el sistema solar; sobre un polo, otro).
-        Vec3 rel = velocity.subtract(SolarSystem.velocity(body, time));
-        Vec3 tangential = rel.subtract(radial.scale(rel.dot(radial)));
-        Vec3 axis;
-        if (tangential.length() > 0.3) {
-            axis = radial.cross(tangential).normalize();
-        } else {
-            Vec3 up = Math.abs(radial.y) > 0.95 ? new Vec3(0, 0, 1) : new Vec3(0, 1, 0);
-            axis = up.subtract(radial.scale(up.dot(radial))).normalize();
-        }
+        Vec3 up = Math.abs(radial.y) > 0.95 ? new Vec3(0, 0, 1) : new Vec3(0, 1, 0);
+        Vec3 axis = up.subtract(radial.scale(up.dot(radial))).normalize();
         List<UUID> pieces = new ArrayList<>();
         group.forEach(s -> pieces.add(s.getUniqueId()));
         Orbit orbit = new Orbit(body, r, axis, pieces);
         ORBITS.put(key, orbit);
         pieces.forEach(id -> BY_PIECE.put(id, orbit));
-        Component name = Component.translatable("create_universal.body." + body.id());
-        tell(level, group, Component.translatable("create_universal.message.orbit_enter", name,
-                String.format(java.util.Locale.ROOT, "%.1f", orbit.speed)).withStyle(ChatFormatting.AQUA));
-        CreateUniversal.LOGGER.info("Nave {} en órbita de {} a {} bloques del centro ({} sobre el suelo), {} b/s", key, body.id(),
-                Math.round(r), Math.round(r - body.radius()), String.format(java.util.Locale.ROOT, "%.2f", orbit.speed));
+        tell(level, group, Component.translatable("create_universal.message.orbit_enter",
+                Component.translatable("create_universal.body." + body.id())).withStyle(ChatFormatting.AQUA));
+        CreateUniversal.LOGGER.info("Nave {} en la zona de {} a {} bloques del suelo", key, body.id(), Math.round(r - body.radius()));
     }
 
     private static void release(UUID key, ServerLevel level, List<ServerSubLevel> group, boolean announce) {
@@ -230,8 +193,9 @@ public final class SatelliteOrbits {
         }
         orbit.pieces.forEach(BY_PIECE::remove);
         if (announce && group != null) {
-            tell(level, group, Component.translatable("create_universal.message.orbit_leave").withStyle(ChatFormatting.GRAY));
-            CreateUniversal.LOGGER.info("Nave {} sale de la órbita de {}", key, orbit.body.id());
+            tell(level, group, Component.translatable("create_universal.message.orbit_leave",
+                    Component.translatable("create_universal.body." + orbit.body.id())).withStyle(ChatFormatting.GRAY));
+            CreateUniversal.LOGGER.info("Nave {} sale de la zona de {}", key, orbit.body.id());
         }
     }
 
@@ -247,9 +211,9 @@ public final class SatelliteOrbits {
         }
     }
 
-    /** Paso de física: la velocidad de la órbita, y si la nave empuja por su cuenta, se suelta. */
+    /** Paso de física: el astro curva el camino y mantiene la altura; la rapidez es de la nave. */
     public static void prePhysicsTick(SubLevelPhysicsSystem system, double timeStep) {
-        if (ORBITS.isEmpty() || system.getLevel().dimension() != CUDimensions.SPACE) {
+        if (ORBITS.isEmpty() || system.getLevel().dimension() != CUDimensions.SPACE || timeStep <= 0.0) {
             return;
         }
         ServerSubLevelContainer container = SubLevelContainer.getContainer(system.getLevel());
@@ -258,9 +222,6 @@ public final class SatelliteOrbits {
         }
         double time = SpaceLayout.time(system.getLevel());
         for (Orbit orbit : ORBITS.values()) {
-            if (orbit.broken) {
-                continue;
-            }
             List<ServerSubLevel> pieces = new ArrayList<>();
             for (UUID id : orbit.pieces) {
                 SubLevel s = container.getSubLevel(id);
@@ -275,38 +236,74 @@ public final class SatelliteOrbits {
             if (first == null || !first.isValid()) {
                 continue;
             }
-            Vector3d current = first.getLinearVelocity(new Vector3d());
-            // ¿Ha cambiado de velocidad por su cuenta desde el paso anterior? (propulsores, un choque)
-            if (orbit.lastSet != null && timeStep > 0.0
-                    && new Vector3d(current).sub(orbit.lastSet).length() / timeStep > THRUST_ACCEL * 2.0) {
-                orbit.broken = true;
-                continue;
-            }
-            Vec3 d = centerOf(pieces).subtract(center(orbit.body, time));
+            Vector3d cur = first.getLinearVelocity(new Vector3d());
+            Vec3 current = new Vec3(cur.x, cur.y, cur.z);
+            Vec3 d = centerOf(pieces).subtract(SolarSystem.position(orbit.body, time));
             double r = d.length();
             if (r < 1.0) {
                 continue;
             }
             Vec3 radial = d.scale(1.0 / r);
-            Vec3 tangent = orbit.axis.cross(radial);
-            if (tangent.lengthSqr() < 1.0e-6) {
-                continue;
+            Vec3 bodyVelocity = SolarSystem.velocity(orbit.body, time);
+
+            // ¿Empuja por su cuenta? Entonces la altura que se mantiene es la de ahora.
+            boolean pushing = orbit.lastSet != null
+                    && new Vector3d(cur).sub(orbit.lastSet).length() / timeStep > THRUST_ACCEL;
+            if (pushing) {
+                orbit.radius = r;
+                orbit.calmSeconds = 0.0;
+                orbit.spinningUp = false;
             }
-            tangent = tangent.normalize();
-            // Velocidad de la órbita más una corrección suave hacia su radio, más la del astro.
-            double back = Math.max(-2.0, Math.min(2.0, -0.5 * (r - orbit.radius)));
-            Vec3 target = tangent.scale(orbit.speed).add(radial.scale(back)).add(SolarSystem.velocity(orbit.body, time));
-            double blend = orbit.elapsed < BLEND_SECONDS ? Math.min(1.0, timeStep / (BLEND_SECONDS * 0.35)) : 1.0;
-            Vector3d wanted = new Vector3d(current).lerp(new Vector3d(target.x, target.y, target.z), blend);
-            Vector3d delta = new Vector3d(wanted).sub(current);
+
+            Vec3 rel = current.subtract(bodyVelocity);
+            double vr = rel.dot(radial);
+            Vec3 around = rel.subtract(radial.scale(vr));
+            double speed = around.length();
+
+            // Parada del todo un rato: empieza a dar vueltas sola en el sentido del astro.
+            if (!pushing && !orbit.spinningUp) {
+                if (speed < STOPPED) {
+                    orbit.calmSeconds += timeStep;
+                    if (orbit.calmSeconds >= START_SECONDS) {
+                        orbit.spinningUp = true;
+                    }
+                } else {
+                    orbit.calmSeconds = 0.0;
+                }
+            }
+            Vec3 direction;
+            if (speed > 1.0e-4) {
+                direction = around.scale(1.0 / speed);
+            } else {
+                direction = orbit.axis.cross(radial);
+                direction = direction.lengthSqr() < 1.0e-8 ? Vec3.ZERO : direction.normalize();
+            }
+            if (orbit.spinningUp) {
+                double full = defaultSpeed(orbit.body, r);
+                speed = Math.min(full, speed + START_ACCEL * timeStep);
+                if (speed >= full) {
+                    orbit.spinningUp = false;
+                    orbit.calmSeconds = 0.0;
+                }
+            }
+
+            // El astro curva el camino: la parte que va alrededor sigue tangente con la misma rapidez.
+            Vec3 aroundNew = direction.scale(speed);
+            // Altura: sin empujar, se lleva poco a poco a la guardada.
+            double vrNew = vr;
+            if (!pushing) {
+                double wanted = Math.max(-3.0, Math.min(3.0, -0.4 * (r - orbit.radius)));
+                vrNew = vr + (wanted - vr) * Math.min(1.0, timeStep / 0.6);
+            }
+            Vec3 target = bodyVelocity.add(aroundNew).add(radial.scale(vrNew));
+            Vector3d delta = new Vector3d(target.x - cur.x, target.y - cur.y, target.z - cur.z);
             for (ServerSubLevel ship : pieces) {
                 RigidBodyHandle h = system.getPhysicsHandle(ship);
                 if (h != null && h.isValid()) {
                     h.addLinearAndAngularVelocity(delta, new Vector3d());
                 }
             }
-            orbit.lastSet = wanted;
-            orbit.elapsed += timeStep;
+            orbit.lastSet = new Vector3d(target.x, target.y, target.z);
         }
     }
 
