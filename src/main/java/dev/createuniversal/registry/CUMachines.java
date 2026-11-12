@@ -48,6 +48,15 @@ public final class CUMachines {
             BLOCK_ENTITIES.register("gravity_stabilizer",
                     () -> BlockEntityType.Builder.of(GravityStabilizerBlockEntity::new, GRAVITY_STABILIZER.get()).build(null));
 
+    // Navegación (alpha.11): mesa de mapa.
+    public static final DeferredBlock<MapTableBlock> MAP_TABLE = BLOCKS.register("map_table",
+            () -> new MapTableBlock(BlockBehaviour.Properties.of().mapColor(MapColor.WOOD).strength(2.0F, 4.0F)
+                    .sound(SoundType.WOOD).noOcclusion()));
+
+    static {
+        ITEMS.register("map_table", () -> new BlockItem(MAP_TABLE.get(), new Item.Properties()));
+    }
+
     private CUMachines() {}
 
     public static void register(IEventBus modBus) {

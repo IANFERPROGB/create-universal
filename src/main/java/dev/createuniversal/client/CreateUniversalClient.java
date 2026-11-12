@@ -48,6 +48,11 @@ public final class CreateUniversalClient {
                         .apply()));
         NeoForge.EVENT_BUS.register(dev.createuniversal.client.sky.SpaceClock.class);
         NeoForge.EVENT_BUS.register(dev.createuniversal.client.sky.RockRenderer.class);
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.client.event.ClientTickEvent.Post e) ->
+                dev.createuniversal.client.nav.NavClient.tick());
+        modBus.addListener((net.neoforged.neoforge.client.event.RegisterGuiLayersEvent e) ->
+                e.registerBelow(net.neoforged.neoforge.client.gui.VanillaGuiLayers.CHAT, CreateUniversal.id("nav_destination"),
+                        dev.createuniversal.client.nav.NavClient::renderHud));
         NeoForge.EVENT_BUS.register(AtmosphericsCompat.class);
         NeoForge.EVENT_BUS.register(dev.createuniversal.client.effects.TransitionEffects.class);
         modBus.addListener((net.neoforged.neoforge.client.event.RegisterGuiLayersEvent e) ->

@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "GGG",
+    "SMS",
+    "W W"
+  ],
+  "key": {
+    "G": {
+      "tag": "c:glass_panes"
+    },
+    "S": {
+      "tag": "c:plates/brass"
+    },
+    "M": {
+      "item": "minecraft:map"
+    },
+    "W": {
+      "item": "minecraft:dark_oak_planks"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "create_universal:map_table"
+  }
+}

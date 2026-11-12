@@ -23,6 +23,10 @@ public final class DebrisMarkers {
 
     private DebrisMarkers() {}
 
+    public static List<DebrisMarkersPayload.Marker> markers() {
+        return markers;
+    }
+
     public static void receive(List<DebrisMarkersPayload.Marker> list) {
         markers = new ArrayList<>(list);
     }
