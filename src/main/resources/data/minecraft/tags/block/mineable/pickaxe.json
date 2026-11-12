@@ -26,6 +26,7 @@
     "create_universal:beryl_ore",
     "create_universal:deepslate_beryl_ore",
     "create_universal:orbital_stabilizer",
-    "create_universal:gravity_stabilizer"
+    "create_universal:gravity_stabilizer",
+    "create_universal:holo_projector"
   ]
 }

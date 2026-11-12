@@ -187,5 +187,12 @@
   "create_universal.nav.new_marker": "Marcador %s",
   "create_universal.nav.hud": "Destino: %s · %s bloques · llegada %s",
   "create_universal.nav.discovered": "Nuevo astro descubierto: %s",
-  "create_universal.nav.too_many": "Ya tienes %s marcadores: borra alguno"
+  "create_universal.nav.too_many": "Ya tienes %s marcadores: borra alguno",
+  "block.create_universal.holo_projector": "Proyector holográfico",
+  "create_universal.holo.size": "Tamaño: %s bloques",
+  "create_universal.holo.view.0": "Vista: la del mapa",
+  "create_universal.holo.view.1": "Vista: el sistema solar entero",
+  "create_universal.holo.view.2": "Vista: alrededor de ti",
+  "create_universal.holo.names_on": "Nombres: sí",
+  "create_universal.holo.names_off": "Nombres: no"
 }

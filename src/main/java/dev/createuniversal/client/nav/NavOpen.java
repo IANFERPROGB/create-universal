@@ -6,6 +6,10 @@ import net.minecraft.client.Minecraft;
 public final class NavOpen {
     private NavOpen() {}
 
+    public static void openProjector(dev.createuniversal.registry.HoloProjectorBlockEntity be) {
+        Minecraft.getInstance().setScreen(new HoloConfigScreen(be));
+    }
+
     public static void open() {
         Minecraft.getInstance().setScreen(new NavigationScreen());
     }

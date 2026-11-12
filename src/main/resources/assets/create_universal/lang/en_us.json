@@ -187,5 +187,12 @@
   "create_universal.nav.new_marker": "Marker %s",
   "create_universal.nav.hud": "Destination: %s · %s blocks · arrival %s",
   "create_universal.nav.discovered": "New body discovered: %s",
-  "create_universal.nav.too_many": "You already have %s markers: delete some"
+  "create_universal.nav.too_many": "You already have %s markers: delete some",
+  "block.create_universal.holo_projector": "Holographic Projector",
+  "create_universal.holo.size": "Size: %s blocks",
+  "create_universal.holo.view.0": "View: same as the map",
+  "create_universal.holo.view.1": "View: whole solar system",
+  "create_universal.holo.view.2": "View: around you",
+  "create_universal.holo.names_on": "Names: on",
+  "create_universal.holo.names_off": "Names: off"
 }

@@ -23,6 +23,9 @@ public final class CreateUniversalClient {
         modBus.addListener((net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers e) ->
                 e.registerBlockEntityRenderer(dev.createuniversal.registry.CUMachines.MAP_TABLE_BE.get(),
                         dev.createuniversal.client.nav.MapTableRenderer::new));
+        modBus.addListener((net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers e) ->
+                e.registerBlockEntityRenderer(dev.createuniversal.registry.CUMachines.HOLO_PROJECTOR_BE.get(),
+                        dev.createuniversal.client.nav.HoloProjectorRenderer::new));
         NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent.LoggingOut e) ->
                 dev.createuniversal.space.Gravity.clearClient());
         NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.tick.PlayerTickEvent.Post e) -> {

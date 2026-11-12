@@ -62,6 +62,20 @@ public final class CUMachines {
             BLOCK_ENTITIES.register("map_table",
                     () -> BlockEntityType.Builder.of(MapTableBlockEntity::new, MAP_TABLE.get()).build(null));
 
+    // Proyector holográfico (alpha.11.2).
+    public static final DeferredBlock<HoloProjectorBlock> HOLO_PROJECTOR = BLOCKS.register("holo_projector",
+            () -> new HoloProjectorBlock(BlockBehaviour.Properties.of().mapColor(MapColor.TERRACOTTA_YELLOW).strength(3.0F, 6.0F)
+                    .sound(SoundType.NETHERITE_BLOCK).requiresCorrectToolForDrops().noOcclusion().lightLevel(s -> 7)));
+
+    static {
+        ITEMS.register("holo_projector", () -> new BlockItem(HOLO_PROJECTOR.get(), new Item.Properties()));
+    }
+
+    @SuppressWarnings("DataFlowIssue")
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<HoloProjectorBlockEntity>> HOLO_PROJECTOR_BE =
+            BLOCK_ENTITIES.register("holo_projector",
+                    () -> BlockEntityType.Builder.of(HoloProjectorBlockEntity::new, HOLO_PROJECTOR.get()).build(null));
+
     private CUMachines() {}
 
     public static void register(IEventBus modBus) {

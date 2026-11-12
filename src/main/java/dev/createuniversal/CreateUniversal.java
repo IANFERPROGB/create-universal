@@ -56,6 +56,8 @@ public final class CreateUniversal {
                 dev.createuniversal.network.DebrisMarkersPayload.STREAM_CODEC, dev.createuniversal.network.DebrisMarkersPayload::handle);
         event.registrar("1").playToClient(dev.createuniversal.network.NavSyncPayload.TYPE,
                 dev.createuniversal.network.NavSyncPayload.STREAM_CODEC, dev.createuniversal.network.NavSyncPayload::handle);
+        event.registrar("1").playToServer(dev.createuniversal.network.HoloConfigPayload.TYPE,
+                dev.createuniversal.network.HoloConfigPayload.STREAM_CODEC, dev.createuniversal.network.HoloConfigPayload::handle);
         event.registrar("1").playToServer(dev.createuniversal.network.NavEditPayload.TYPE,
                 dev.createuniversal.network.NavEditPayload.STREAM_CODEC, dev.createuniversal.network.NavEditPayload::handle);
         event.registrar("1").playToClient(dev.createuniversal.network.ShipCarryPayload.TYPE,

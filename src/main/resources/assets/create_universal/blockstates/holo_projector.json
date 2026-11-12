@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "create_universal:block/holo_projector"
+    }
+  }
+}
