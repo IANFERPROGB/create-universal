@@ -20,6 +20,9 @@ public final class CreateUniversalClient {
         modBus.addListener((net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers e) ->
                 e.registerBlockEntityRenderer(dev.createuniversal.registry.CUMachines.GRAVITY_STABILIZER_BE.get(),
                         GravityStabilizerRenderer::new));
+        modBus.addListener((net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers e) ->
+                e.registerBlockEntityRenderer(dev.createuniversal.registry.CUMachines.MAP_TABLE_BE.get(),
+                        dev.createuniversal.client.nav.MapTableRenderer::new));
         NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent.LoggingOut e) ->
                 dev.createuniversal.space.Gravity.clearClient());
         NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.tick.PlayerTickEvent.Post e) -> {

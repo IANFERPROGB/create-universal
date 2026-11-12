@@ -63,6 +63,26 @@ public class NavigationScreen extends Screen {
     private static double scale = 40.0;
     private static boolean follow = true;
 
+    // Movimiento suave (como el mapa de Xaero): zoom que se desliza, inercia al soltar y vuelta suave al jugador.
+    private static double targetScale = 40.0;
+    /** Ancho (píxeles) de la pantalla la última vez: con la escala da los bloques que abarca la vista (para la mesa). */
+    private static double lastWidth = 427.0;
+    private boolean zoomAnchored;
+    private double anchorWorldX;
+    private double anchorWorldZ;
+    private double anchorPx;
+    private double anchorPy;
+    /** Inercia del arrastre (píxeles por segundo). */
+    private double velX;
+    private double velY;
+    private double dragVX;
+    private double dragVY;
+    private long lastDragNanos;
+    private boolean mouseDown;
+    /** Volviendo al jugador (tras pulsar C): se acerca deslizándose y luego lo sigue. */
+    private boolean catching;
+    private long lastFrameNanos;
+
     private String selected;
     private String approachText;
     private String approachFor;
@@ -136,10 +156,8 @@ public class NavigationScreen extends Screen {
     private void drawMap(GuiGraphics g) {
         double time = time();
         Vec3 player = NavClient.playerPosition(time);
-        if (follow) {
-            cx = player.x;
-            cz = player.z;
-        }
+        animate(player);
+        lastWidth = width;
         hits.clear();
 
         // Cinturón de asteroides (dos círculos tenues).
@@ -219,6 +237,60 @@ public class NavigationScreen extends Screen {
         Component label = known ? Component.translatable("create_universal.body." + body.id()) : Component.literal("?");
         g.drawString(font, label, (int) x + r + 3, (int) y - 4, known ? 0xFFDDDDDD : 0xFF888888);
         hits.add(new Object[] {key, (int) x, (int) y, Math.max(6, r)});
+    }
+
+    /** La vista del mapa para la mesa: centro (x, z) y bloques que abarca de lado a lado. */
+    public static double[] view(Vec3 player) {
+        double x = follow || Double.isNaN(cx) ? player.x : cx;
+        double z = follow || Double.isNaN(cx) ? player.z : cz;
+        return new double[] {x, z, targetScale * lastWidth};
+    }
+
+    public static int colorOf(String body) {
+        return COLORS.getOrDefault(body, 0xFFB8B8B8);
+    }
+
+    /** Un paso de la animación de la vista: zoom, inercia y seguir al jugador, según el tiempo real entre fotogramas. */
+    private void animate(Vec3 player) {
+        long now = System.nanoTime();
+        double dt = lastFrameNanos == 0 ? 0.0 : Math.min(0.1, (now - lastFrameNanos) / 1.0e9);
+        lastFrameNanos = now;
+        if (Math.abs(scale - targetScale) / targetScale > 1.0e-4) {
+            double k = 1.0 - Math.exp(-dt * 14.0);
+            scale = Math.exp(Math.log(scale) + (Math.log(targetScale) - Math.log(scale)) * k);
+        } else {
+            scale = targetScale;
+            zoomAnchored = false;
+        }
+        if (zoomAnchored && !follow) {
+            // Lo que había bajo el cursor sigue bajo el cursor mientras se desliza el zoom.
+            cx = anchorWorldX - (anchorPx - width / 2.0) * scale;
+            cz = anchorWorldZ - (anchorPy - height / 2.0) * scale;
+        }
+        if (!mouseDown && Math.abs(velX) + Math.abs(velY) > 2.0) {
+            cx -= velX * dt * scale;
+            cz -= velY * dt * scale;
+            double decay = Math.exp(-dt * 4.5);
+            velX *= decay;
+            velY *= decay;
+            if (zoomAnchored) {
+                anchorWorldX -= velX * dt * scale;
+                anchorWorldZ -= velY * dt * scale;
+            }
+        }
+        if (follow) {
+            if (catching) {
+                double k = 1.0 - Math.exp(-dt * 9.0);
+                cx += (player.x - cx) * k;
+                cz += (player.z - cz) * k;
+                if (Math.hypot(player.x - cx, player.z - cz) / scale < 0.5) {
+                    catching = false;
+                }
+            } else {
+                cx = player.x;
+                cz = player.z;
+            }
+        }
     }
 
     /** La órbita: la posición del astro a lo largo de una vuelta (así sale con su inclinación de verdad). */
@@ -434,6 +506,11 @@ public class NavigationScreen extends Screen {
             return true;
         }
         dragged = false;
+        if (button == 0) {
+            mouseDown = true;
+            velX = 0.0;
+            velY = 0.0;
+        }
         if (button == 1) {
             String hit = hitAt(mx, my);
             if (hit != null && hit.startsWith("marker:")) {
@@ -454,7 +531,14 @@ public class NavigationScreen extends Screen {
             cx -= dx * scale;
             cz -= dy * scale;
             follow = false;
+            catching = false;
+            zoomAnchored = false;
             dragged = true;
+            long now = System.nanoTime();
+            double dt = lastDragNanos == 0 ? 0.016 : Math.max(0.001, (now - lastDragNanos) / 1.0e9);
+            lastDragNanos = now;
+            dragVX = dragVX * 0.6 + dx / dt * 0.4;
+            dragVY = dragVY * 0.6 + dy / dt * 0.4;
             return true;
         }
         return super.mouseDragged(mx, my, button, dx, dy);
@@ -462,6 +546,16 @@ public class NavigationScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mx, double my, int button) {
+        if (button == 0) {
+            mouseDown = false;
+            // Al soltar, el mapa sigue deslizándose (si se estaba moviendo hace un momento).
+            boolean recent = System.nanoTime() - lastDragNanos < 60_000_000L;
+            velX = dragged && recent ? dragVX : 0.0;
+            velY = dragged && recent ? dragVY : 0.0;
+            dragVX = 0.0;
+            dragVY = 0.0;
+            lastDragNanos = 0;
+        }
         if (button == 0 && !dragged && !overWidget(mx, my)) {
             selected = hitAt(mx, my);
             updateWidgets();
@@ -477,13 +571,15 @@ public class NavigationScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mx, double my, double dx, double dy) {
-        double beforeX = wx(mx);
-        double beforeZ = wz(my);
-        scale = Math.max(0.2, Math.min(6000.0, scale * Math.pow(0.8, dy)));
-        if (!follow) {
-            cx = beforeX - (mx - width / 2.0) * scale;
-            cz = beforeZ - (my - height / 2.0) * scale;
+        // El zoom va hacia la nueva escala poco a poco (ver animate), con lo de bajo el cursor quieto.
+        if (!zoomAnchored || Math.hypot(mx - anchorPx, my - anchorPy) > 2.0) {
+            anchorWorldX = wx(mx);
+            anchorWorldZ = wz(my);
+            anchorPx = mx;
+            anchorPy = my;
         }
+        zoomAnchored = true;
+        targetScale = Math.max(0.2, Math.min(6000.0, targetScale * Math.pow(0.8, dy)));
         return true;
     }
 
@@ -501,6 +597,10 @@ public class NavigationScreen extends Screen {
         }
         if (key == GLFW.GLFW_KEY_C) {
             follow = true;
+            catching = true;
+            velX = 0.0;
+            velY = 0.0;
+            zoomAnchored = false;
             return true;
         }
         if (key == GLFW.GLFW_KEY_DELETE) {

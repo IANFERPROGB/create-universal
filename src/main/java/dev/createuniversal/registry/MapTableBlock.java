@@ -13,7 +13,7 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 /** Mesa de mapa (D47, alpha.11): con clic derecho se abre el mapa del sistema solar. */
-public class MapTableBlock extends Block {
+public class MapTableBlock extends Block implements net.minecraft.world.level.block.EntityBlock {
     private static final VoxelShape SHAPE = Shapes.or(
             Block.box(0, 12, 0, 16, 16, 16),
             Block.box(1, 0, 1, 4, 12, 4), Block.box(12, 0, 1, 15, 12, 4),
@@ -26,6 +26,21 @@ public class MapTableBlock extends Block {
     @Override
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return SHAPE;
+    }
+
+    @Override
+    public net.minecraft.world.level.block.entity.BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+        return new MapTableBlockEntity(pos, state);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends net.minecraft.world.level.block.entity.BlockEntity> net.minecraft.world.level.block.entity.BlockEntityTicker<T> getTicker(
+            Level level, BlockState state, net.minecraft.world.level.block.entity.BlockEntityType<T> type) {
+        if (!level.isClientSide || type != CUMachines.MAP_TABLE_BE.get()) {
+            return null;
+        }
+        return (l, p, st, be) -> MapTableBlockEntity.clientTick(l, p, st, (MapTableBlockEntity) be);
     }
 
     @Override

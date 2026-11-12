@@ -57,6 +57,11 @@ public final class CUMachines {
         ITEMS.register("map_table", () -> new BlockItem(MAP_TABLE.get(), new Item.Properties()));
     }
 
+    @SuppressWarnings("DataFlowIssue")
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<MapTableBlockEntity>> MAP_TABLE_BE =
+            BLOCK_ENTITIES.register("map_table",
+                    () -> BlockEntityType.Builder.of(MapTableBlockEntity::new, MAP_TABLE.get()).build(null));
+
     private CUMachines() {}
 
     public static void register(IEventBus modBus) {
