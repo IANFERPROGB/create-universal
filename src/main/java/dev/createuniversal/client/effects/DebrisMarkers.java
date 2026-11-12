@@ -31,6 +31,25 @@ public final class DebrisMarkers {
         markers = new ArrayList<>(list);
     }
 
+    /** Clave para elegirlos en el mapa: "debris:x,y,z" (redondeado). */
+    public static String key(DebrisMarkersPayload.Marker m) {
+        return "debris:" + Math.round(m.x()) + "," + Math.round(m.y()) + "," + Math.round(m.z());
+    }
+
+    public static DebrisMarkersPayload.Marker byKey(String key) {
+        for (DebrisMarkersPayload.Marker m : markers) {
+            if (key(m).equals(key)) {
+                return m;
+            }
+        }
+        return null;
+    }
+
+    /** Lo quita ya de la pantalla (el servidor manda luego la lista buena). */
+    public static void forget(DebrisMarkersPayload.Marker m) {
+        markers.remove(m);
+    }
+
     public static void render(GuiGraphics g, DeltaTracker delta) {
         Minecraft mc = Minecraft.getInstance();
         if (markers.isEmpty() || mc.level == null || mc.player == null || mc.options.hideGui) {

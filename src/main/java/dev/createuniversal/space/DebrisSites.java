@@ -52,6 +52,23 @@ public final class DebrisSites extends SavedData {
         }
     }
 
+    /** El jugador ya no quiere ver estos restos (lo quita desde el mapa, alpha.11.2.1). Los restos siguen ahí. */
+    public static void dismiss(ServerPlayer player, double x, double y, double z) {
+        DebrisSites data = get(player.getServer());
+        Vec3 at = new Vec3(x, y, z);
+        boolean changed = false;
+        for (Site s : data.sites) {
+            if (s.pos().distanceToSqr(at) < 4.0 && s.players().remove(player.getUUID())) {
+                changed = true;
+            }
+        }
+        if (changed) {
+            data.sites.removeIf(s -> s.players().isEmpty());
+            data.setDirty();
+        }
+        send(player, data);
+    }
+
     /** Quita los caducados. */
     public static void prune(MinecraftServer server) {
         DebrisSites data = get(server);

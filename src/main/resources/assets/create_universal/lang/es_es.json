@@ -182,7 +182,7 @@
   "create_universal.nav.following": "Siguiéndote",
   "create_universal.nav.set_destination": "Fijar como destino",
   "create_universal.nav.clear_destination": "Quitar destino",
-  "create_universal.nav.delete_marker": "Borrar marcador",
+  "create_universal.nav.delete_marker": "Quitar marcador",
   "create_universal.nav.marker_name": "Nombre del marcador",
   "create_universal.nav.new_marker": "Marcador %s",
   "create_universal.nav.hud": "Destino: %s · %s bloques · llegada %s",
@@ -194,5 +194,6 @@
   "create_universal.holo.view.1": "Vista: el sistema solar entero",
   "create_universal.holo.view.2": "Vista: alrededor de ti",
   "create_universal.holo.names_on": "Nombres: sí",
-  "create_universal.holo.names_off": "Nombres: no"
+  "create_universal.holo.names_off": "Nombres: no",
+  "create_universal.nav.debris": "Restos de nave"
 }

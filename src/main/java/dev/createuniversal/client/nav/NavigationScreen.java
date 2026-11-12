@@ -30,7 +30,7 @@ import java.util.Map;
  * <ul>
  *   <li>Rueda: zoom (hacia el cursor). Arrastrar: moverse. C: volver al jugador.</li>
  *   <li>Clic: elegir un astro o marcador (distancia, llegada a tu velocidad, próximo acercamiento).</li>
- *   <li>Clic derecho en un hueco: marcador nuevo. Supr: borrar el marcador elegido. Intro: fijarlo como destino.</li>
+ *   <li>Clic derecho en un hueco: marcador nuevo. Supr: borrar el marcador o los restos elegidos. Intro: fijarlo como destino.</li>
  * </ul>
  */
 public class NavigationScreen extends Screen {
@@ -185,7 +185,9 @@ public class NavigationScreen extends Screen {
             if (m.dimension().equals(CUDimensions.SPACE.location()) && m.expires() > Minecraft.getInstance().level.getGameTime()) {
                 int x = (int) sx(m.x());
                 int y = (int) sy(m.z());
-                g.drawCenteredString(font, "✕", x, y - 4, DEBRIS);
+                String key = DebrisMarkers.key(m);
+                g.drawCenteredString(font, "✕", x, y - 4, key.equals(selected) ? SELECT : DEBRIS);
+                hits.add(new Object[] {key, x, y, 6});
             }
         }
         for (Navigation.Marker m : NavClient.markers()) {
@@ -452,6 +454,7 @@ public class NavigationScreen extends Screen {
 
     private void updateWidgets() {
         boolean marker = selected != null && selected.startsWith("marker:");
+        boolean debris = selected != null && selected.startsWith("debris:");
         nameBox.setVisible(marker);
         if (marker) {
             Navigation.Marker m = NavClient.marker(selected.substring(7));
@@ -462,7 +465,7 @@ public class NavigationScreen extends Screen {
                 ? Component.translatable("create_universal.nav.clear_destination")
                 : selected != null ? Component.translatable("create_universal.nav.set_destination")
                 : Component.translatable("create_universal.nav.clear_destination"));
-        deleteButton.visible = marker;
+        deleteButton.visible = marker || debris;
     }
 
     private void toggleDestination() {
@@ -477,6 +480,17 @@ public class NavigationScreen extends Screen {
     private void deleteSelected() {
         if (selected != null && selected.startsWith("marker:")) {
             PacketDistributor.sendToServer(new NavEditPayload(NavEditPayload.REMOVE, selected.substring(7), "", 0, 0, 0));
+            if (selected.equals(NavClient.destination())) {
+                NavClient.setDestination(null);
+            }
+            selected = null;
+            updateWidgets();
+        } else if (selected != null && selected.startsWith("debris:")) {
+            DebrisMarkersPayload.Marker d = DebrisMarkers.byKey(selected);
+            if (d != null) {
+                PacketDistributor.sendToServer(new NavEditPayload(NavEditPayload.REMOVE_DEBRIS, "", "", d.x(), d.y(), d.z()));
+                DebrisMarkers.forget(d);
+            }
             if (selected.equals(NavClient.destination())) {
                 NavClient.setDestination(null);
             }

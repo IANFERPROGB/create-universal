@@ -129,6 +129,10 @@ public final class NavClient {
             Navigation.Marker m = marker(target.substring(7));
             return m == null ? null : new double[] {m.x(), m.y(), m.z(), 0, 0, 0, 0};
         }
+        if (target.startsWith("debris:")) {
+            dev.createuniversal.network.DebrisMarkersPayload.Marker d = dev.createuniversal.client.effects.DebrisMarkers.byKey(target);
+            return d == null ? null : new double[] {d.x(), d.y(), d.z(), 0, 0, 0, 0};
+        }
         return null;
     }
 
@@ -139,6 +143,9 @@ public final class NavClient {
         if (target.startsWith("body:")) {
             String id = target.substring(5);
             return isDiscovered(id) ? Component.translatable("create_universal.body." + id) : Component.literal("?");
+        }
+        if (target.startsWith("debris:")) {
+            return Component.translatable("create_universal.nav.debris");
         }
         Navigation.Marker m = marker(target.substring(7));
         return Component.literal(m != null ? m.name() : "?");

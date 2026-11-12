@@ -160,6 +160,14 @@ public class HoloProjectorRenderer implements BlockEntityRenderer<HoloProjectorB
             int color = known ? NavigationScreen.colorOf(body.id()) : 0xFF707070;
             cube(vc, m, (float) p.x, (float) p.y, (float) p.z, s, alpha(color, flicker));
         }
+        for (dev.createuniversal.network.DebrisMarkersPayload.Marker d : dev.createuniversal.client.effects.DebrisMarkers.markers()) {
+            if (mc.level != null && d.dimension().equals(CUDimensions.SPACE.location()) && d.expires() > mc.level.getGameTime()) {
+                Vec3 p = proj.map(new Vec3(d.x(), d.y(), d.z()));
+                if (p.length() <= limit) {
+                    cube(vc, m, (float) p.x, (float) p.y, (float) p.z, 0.018F * size, alpha(0xFFFF8A3D, flicker));
+                }
+            }
+        }
         for (Navigation.Marker mk : NavClient.markers()) {
             Vec3 p = proj.map(new Vec3(mk.x(), mk.y(), mk.z()));
             if (p.length() <= limit) {
