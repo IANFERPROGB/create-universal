@@ -56,6 +56,8 @@ public final class CreateUniversalClient {
         NeoForge.EVENT_BUS.register(dev.createuniversal.client.sky.RockRenderer.class);
         NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.client.event.ClientTickEvent.Post e) ->
                 dev.createuniversal.client.nav.NavClient.tick());
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.client.event.ClientTickEvent.Post e) ->
+                dev.createuniversal.client.compat.XaeroCompat.tick());
         modBus.addListener((net.neoforged.neoforge.client.event.RegisterGuiLayersEvent e) ->
                 e.registerBelow(net.neoforged.neoforge.client.gui.VanillaGuiLayers.CHAT, CreateUniversal.id("nav_destination"),
                         dev.createuniversal.client.nav.NavClient::renderHud));

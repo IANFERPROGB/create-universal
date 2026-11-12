@@ -195,5 +195,6 @@
   "create_universal.holo.view.2": "Vista: alrededor de ti",
   "create_universal.holo.names_on": "Nombres: sí",
   "create_universal.holo.names_off": "Nombres: no",
-  "create_universal.nav.debris": "Restos de nave"
+  "create_universal.nav.debris": "Restos de nave",
+  "create_universal.nav.ship": "Nave aparcada"
 }

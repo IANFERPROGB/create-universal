@@ -38,6 +38,7 @@ public final class CreateUniversal {
         NeoForge.EVENT_BUS.register(dev.createuniversal.space.LoginHold.class);
         NeoForge.EVENT_BUS.register(dev.createuniversal.space.RockPicking.class);
         NeoForge.EVENT_BUS.register(dev.createuniversal.space.Navigation.class);
+        NeoForge.EVENT_BUS.register(dev.createuniversal.space.ParkedShips.class);
         dev.createuniversal.space.ShipAnchor.register();
         NeoForge.EVENT_BUS.addListener(dev.createuniversal.space.Moonlets::onBreak);
         NeoForge.EVENT_BUS.addListener(dev.createuniversal.space.Moonlets::onPlace);
@@ -54,6 +55,8 @@ public final class CreateUniversal {
                 dev.createuniversal.network.SkyShipsPayload.STREAM_CODEC, dev.createuniversal.network.SkyShipsPayload::handle);
         event.registrar("1").playToClient(dev.createuniversal.network.DebrisMarkersPayload.TYPE,
                 dev.createuniversal.network.DebrisMarkersPayload.STREAM_CODEC, dev.createuniversal.network.DebrisMarkersPayload::handle);
+        event.registrar("1").playToClient(dev.createuniversal.network.ParkedShipsPayload.TYPE,
+                dev.createuniversal.network.ParkedShipsPayload.STREAM_CODEC, dev.createuniversal.network.ParkedShipsPayload::handle);
         event.registrar("1").playToClient(dev.createuniversal.network.NavSyncPayload.TYPE,
                 dev.createuniversal.network.NavSyncPayload.STREAM_CODEC, dev.createuniversal.network.NavSyncPayload::handle);
         event.registrar("1").playToServer(dev.createuniversal.network.HoloConfigPayload.TYPE,

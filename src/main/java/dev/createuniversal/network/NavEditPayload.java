@@ -16,6 +16,8 @@ public record NavEditPayload(int action, String id, String name, double x, doubl
     public static final int RENAME = 2;
     /** Quitar el punto de unos restos de nave (por su posición). */
     public static final int REMOVE_DEBRIS = 3;
+    /** Quitar del mapa una nave aparcada (id = su UUID). */
+    public static final int REMOVE_SHIP = 4;
 
     public static final Type<NavEditPayload> TYPE = new Type<>(CreateUniversal.id("nav_edit"));
     public static final StreamCodec<ByteBuf, NavEditPayload> STREAM_CODEC = StreamCodec.of(NavEditPayload::write, NavEditPayload::read);
@@ -48,6 +50,7 @@ public record NavEditPayload(int action, String id, String name, double x, doubl
                 case REMOVE -> Navigation.removeMarker(player, p.id());
                 case RENAME -> Navigation.renameMarker(player, p.id(), p.name());
                 case REMOVE_DEBRIS -> dev.createuniversal.space.DebrisSites.dismiss(player, p.x(), p.y(), p.z());
+                case REMOVE_SHIP -> dev.createuniversal.space.ParkedShips.remove(player, p.id());
                 default -> {
                 }
             }

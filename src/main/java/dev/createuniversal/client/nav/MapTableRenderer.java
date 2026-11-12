@@ -98,6 +98,9 @@ public class MapTableRenderer implements BlockEntityRenderer<MapTableBlockEntity
                 square(vc, m, u.applyAsDouble(d.x()), v.applyAsDouble(d.z()), dot * 2.0, y + 0.0008F, size, 0xFFFF8A3D);
             }
         }
+        for (dev.createuniversal.network.ParkedShipsPayload.Ship s : NavClient.spaceShips()) {
+            square(vc, m, u.applyAsDouble(s.x()), v.applyAsDouble(s.z()), dot * 2.2, y + 0.0008F, size, 0xFF7CFF8A);
+        }
         for (Navigation.Marker mk : NavClient.markers()) {
             square(vc, m, u.applyAsDouble(mk.x()), v.applyAsDouble(mk.z()), dot * 2.0, y + 0.0008F, size, 0xFF58E1FF);
         }

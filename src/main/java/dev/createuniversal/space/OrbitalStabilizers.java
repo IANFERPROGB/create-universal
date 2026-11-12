@@ -56,13 +56,19 @@ public final class OrbitalStabilizers {
             return;
         }
         long now = level.getGameTime();
+        boolean fresh = false;
         for (ServerSubLevel piece : group) {
             Pin pin = PINS.get(piece.getUniqueId());
             if (pin == null || pin.level != level) {
                 PINS.put(piece.getUniqueId(), new Pin(level, piece, now));
+                fresh |= piece == ship;
             } else {
                 pin.lastRequest = now;
             }
+        }
+        if (fresh) {
+            // Aparcada: sale en el mapa aunque luego quede lejos y sin cargar (alpha.11.3).
+            ParkedShips.park(level, ship);
         }
     }
 

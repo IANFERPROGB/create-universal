@@ -195,5 +195,6 @@
   "create_universal.holo.view.2": "View: around you",
   "create_universal.holo.names_on": "Names: on",
   "create_universal.holo.names_off": "Names: off",
-  "create_universal.nav.debris": "Ship debris"
+  "create_universal.nav.debris": "Ship debris",
+  "create_universal.nav.ship": "Parked ship"
 }

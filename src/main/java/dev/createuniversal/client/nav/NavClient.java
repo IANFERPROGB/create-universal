@@ -26,7 +26,9 @@ import java.util.Set;
 public final class NavClient {
     private static final Set<String> DISCOVERED = new HashSet<>();
     private static final List<Navigation.Marker> MARKERS = new ArrayList<>();
-    /** Destino: "body:<id>" o "marker:<id>", o null. */
+    private static final List<dev.createuniversal.network.ParkedShipsPayload.Ship> SHIPS = new ArrayList<>();
+    private static final List<XaeroPoint> XAERO = new ArrayList<>();
+    /** Destino: "body:<id>", "marker:<id>", "debris:x,y,z", "ship:<uuid>" o "xaero:nombre@x,z", o null. */
     private static String destination;
     private static Vec3 lastPos;
     private static Vec3 velocity = Vec3.ZERO;
@@ -41,6 +43,67 @@ public final class NavClient {
         if (destination != null && destination.startsWith("marker:") && marker(destination.substring(7)) == null) {
             destination = null;
         }
+    }
+
+    /** Un punto de ruta propio de Xaero en el espacio (alpha.11.3). */
+    public record XaeroPoint(String name, double x, double y, double z, int color) {
+        public String key() {
+            return "xaero:" + name + "@" + Math.round(x) + "," + Math.round(z);
+        }
+    }
+
+    public static void receiveShips(List<dev.createuniversal.network.ParkedShipsPayload.Ship> ships) {
+        SHIPS.clear();
+        SHIPS.addAll(ships);
+        if (destination != null && destination.startsWith("ship:") && ship(destination.substring(5)) == null) {
+            destination = null;
+        }
+    }
+
+    public static List<dev.createuniversal.network.ParkedShipsPayload.Ship> ships() {
+        return SHIPS;
+    }
+
+    /** Las aparcadas en el espacio (las que salen en el mapa, la mesa y el proyector). */
+    public static List<dev.createuniversal.network.ParkedShipsPayload.Ship> spaceShips() {
+        List<dev.createuniversal.network.ParkedShipsPayload.Ship> list = new ArrayList<>();
+        for (dev.createuniversal.network.ParkedShipsPayload.Ship s : SHIPS) {
+            if (s.dimension().equals(CUDimensions.SPACE.location())) {
+                list.add(s);
+            }
+        }
+        return list;
+    }
+
+    public static dev.createuniversal.network.ParkedShipsPayload.Ship ship(String id) {
+        for (dev.createuniversal.network.ParkedShipsPayload.Ship s : SHIPS) {
+            if (s.id().equals(id)) {
+                return s;
+            }
+        }
+        return null;
+    }
+
+    public static Component shipName(dev.createuniversal.network.ParkedShipsPayload.Ship s) {
+        return s.name().isBlank() ? Component.translatable("create_universal.nav.ship") : Component.literal(s.name());
+    }
+
+    public static void receiveXaero(List<XaeroPoint> points) {
+        XAERO.clear();
+        XAERO.addAll(points);
+    }
+
+    public static List<XaeroPoint> xaeroPoints() {
+        return XAERO;
+    }
+
+    private static XaeroPoint xaero(String key) {
+        for (XaeroPoint p : XAERO) {
+            if (p.key().equals(key)) {
+                return p;
+            }
+        }
+        return null;
     }
 
     public static boolean isDiscovered(String body) {
@@ -133,6 +196,14 @@ public final class NavClient {
             dev.createuniversal.network.DebrisMarkersPayload.Marker d = dev.createuniversal.client.effects.DebrisMarkers.byKey(target);
             return d == null ? null : new double[] {d.x(), d.y(), d.z(), 0, 0, 0, 0};
         }
+        if (target.startsWith("ship:")) {
+            dev.createuniversal.network.ParkedShipsPayload.Ship s = ship(target.substring(5));
+            return s == null ? null : new double[] {s.x(), s.y(), s.z(), 0, 0, 0, 0};
+        }
+        if (target.startsWith("xaero:")) {
+            XaeroPoint p = xaero(target);
+            return p == null ? null : new double[] {p.x(), p.y(), p.z(), 0, 0, 0, 0};
+        }
         return null;
     }
 
@@ -146,6 +217,14 @@ public final class NavClient {
         }
         if (target.startsWith("debris:")) {
             return Component.translatable("create_universal.nav.debris");
+        }
+        if (target.startsWith("ship:")) {
+            dev.createuniversal.network.ParkedShipsPayload.Ship s = ship(target.substring(5));
+            return s != null ? shipName(s) : Component.literal("?");
+        }
+        if (target.startsWith("xaero:")) {
+            XaeroPoint p = xaero(target);
+            return Component.literal(p != null ? p.name() : "?");
         }
         Navigation.Marker m = marker(target.substring(7));
         return Component.literal(m != null ? m.name() : "?");

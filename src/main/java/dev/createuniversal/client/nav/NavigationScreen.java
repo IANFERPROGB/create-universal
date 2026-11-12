@@ -25,7 +25,7 @@ import java.util.Map;
 
 /**
  * El mapa del sistema solar (alpha.11, D46–D49): visto desde arriba (norte = −Z arriba), con las órbitas, los astros en
- * su sitio de ahora, el jugador, sus marcadores y los restos de naves.
+ * su sitio de ahora, el jugador, sus marcadores, los restos de naves, las naves aparcadas y los puntos de ruta de Xaero.
  *
  * <ul>
  *   <li>Rueda: zoom (hacia el cursor). Arrastrar: moverse. C: volver al jugador.</li>
@@ -39,6 +39,7 @@ public class NavigationScreen extends Screen {
     private static final int MARKER = 0xFF58E1FF;
     private static final int DEBRIS = 0xFFFF8A3D;
     private static final int PLAYER = 0xFFFFFFFF;
+    private static final int SHIP = 0xFF7CFF8A;
     private static final int SELECT = 0xFFFFE066;
     private static final Map<String, Integer> COLORS = new HashMap<>();
 
@@ -189,6 +190,24 @@ public class NavigationScreen extends Screen {
                 g.drawCenteredString(font, "✕", x, y - 4, key.equals(selected) ? SELECT : DEBRIS);
                 hits.add(new Object[] {key, x, y, 6});
             }
+        }
+        for (NavClient.XaeroPoint p : NavClient.xaeroPoints()) {
+            int x = (int) sx(p.x());
+            int y = (int) sy(p.z());
+            String key = p.key();
+            g.drawCenteredString(font, "▼", x, y - 4, key.equals(selected) ? SELECT : p.color());
+            g.drawString(font, p.name(), x + 6, y - 4, (p.color() & 0x00FFFFFF) | 0xB0000000);
+            hits.add(new Object[] {key, x, y, 6});
+        }
+        for (dev.createuniversal.network.ParkedShipsPayload.Ship s : NavClient.spaceShips()) {
+            int x = (int) sx(s.x());
+            int y = (int) sy(s.z());
+            String key = "ship:" + s.id();
+            int c = key.equals(selected) ? SELECT : SHIP;
+            g.fill(x - 3, y - 3, x + 4, y + 4, c);
+            g.fill(x - 2, y - 2, x + 3, y + 3, 0xFF0B2A12);
+            g.drawString(font, NavClient.shipName(s), x + 6, y - 4, SHIP);
+            hits.add(new Object[] {key, x, y, 6});
         }
         for (Navigation.Marker m : NavClient.markers()) {
             int x = (int) sx(m.x());
@@ -454,7 +473,7 @@ public class NavigationScreen extends Screen {
 
     private void updateWidgets() {
         boolean marker = selected != null && selected.startsWith("marker:");
-        boolean debris = selected != null && selected.startsWith("debris:");
+        boolean debris = selected != null && (selected.startsWith("debris:") || selected.startsWith("ship:"));
         nameBox.setVisible(marker);
         if (marker) {
             Navigation.Marker m = NavClient.marker(selected.substring(7));
@@ -480,6 +499,13 @@ public class NavigationScreen extends Screen {
     private void deleteSelected() {
         if (selected != null && selected.startsWith("marker:")) {
             PacketDistributor.sendToServer(new NavEditPayload(NavEditPayload.REMOVE, selected.substring(7), "", 0, 0, 0));
+            if (selected.equals(NavClient.destination())) {
+                NavClient.setDestination(null);
+            }
+            selected = null;
+            updateWidgets();
+        } else if (selected != null && selected.startsWith("ship:")) {
+            PacketDistributor.sendToServer(new NavEditPayload(NavEditPayload.REMOVE_SHIP, selected.substring(5), "", 0, 0, 0));
             if (selected.equals(NavClient.destination())) {
                 NavClient.setDestination(null);
             }

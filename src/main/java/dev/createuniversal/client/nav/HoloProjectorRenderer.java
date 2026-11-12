@@ -168,6 +168,12 @@ public class HoloProjectorRenderer implements BlockEntityRenderer<HoloProjectorB
                 }
             }
         }
+        for (dev.createuniversal.network.ParkedShipsPayload.Ship s : NavClient.spaceShips()) {
+            Vec3 p = proj.map(new Vec3(s.x(), s.y(), s.z()));
+            if (p.length() <= limit) {
+                cube(vc, m, (float) p.x, (float) p.y, (float) p.z, 0.022F * size, alpha(0xFF7CFF8A, flicker));
+            }
+        }
         for (Navigation.Marker mk : NavClient.markers()) {
             Vec3 p = proj.map(new Vec3(mk.x(), mk.y(), mk.z()));
             if (p.length() <= limit) {
