@@ -18,6 +18,22 @@ public final class CreateUniversalClient {
                 e.registerBlockEntityRenderer(dev.createuniversal.registry.CUMachines.ORBITAL_STABILIZER_BE.get(),
                         com.simibubi.create.content.kinetics.base.ShaftRenderer::new));
         modBus.addListener((net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers e) ->
+                e.registerBlockEntityRenderer(dev.createuniversal.registry.CUMachines.SHIP_ASSISTANT_BE.get(),
+                        com.simibubi.create.content.kinetics.base.ShaftRenderer::new));
+        modBus.addListener((net.neoforged.fml.event.lifecycle.FMLClientSetupEvent e) -> e.enqueueWork(() ->
+                dev.engine_room.flywheel.lib.visualization.SimpleBlockEntityVisualizer
+                        .builder(dev.createuniversal.registry.CUMachines.SHIP_ASSISTANT_BE.get())
+                        .factory(com.simibubi.create.content.kinetics.base.SingleAxisRotatingVisual::shaft)
+                        .skipVanillaRender(be -> true)
+                        .apply()));
+        modBus.addListener((net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent e) ->
+                e.register(dev.createuniversal.client.assistant.AssistantHud.TOGGLE));
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.client.event.ClientTickEvent.Post e) ->
+                dev.createuniversal.client.assistant.AssistantHud.tick());
+        modBus.addListener((net.neoforged.neoforge.client.event.RegisterGuiLayersEvent e) ->
+                e.registerBelow(net.neoforged.neoforge.client.gui.VanillaGuiLayers.CHAT, CreateUniversal.id("assistant_hud"),
+                        dev.createuniversal.client.assistant.AssistantHud::render));
+        modBus.addListener((net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers e) ->
                 e.registerBlockEntityRenderer(dev.createuniversal.registry.CUMachines.GRAVITY_STABILIZER_BE.get(),
                         GravityStabilizerRenderer::new));
         modBus.addListener((net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers e) ->

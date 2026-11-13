@@ -55,6 +55,12 @@ public final class CreateUniversal {
                 dev.createuniversal.network.SkyShipsPayload.STREAM_CODEC, dev.createuniversal.network.SkyShipsPayload::handle);
         event.registrar("1").playToClient(dev.createuniversal.network.DebrisMarkersPayload.TYPE,
                 dev.createuniversal.network.DebrisMarkersPayload.STREAM_CODEC, dev.createuniversal.network.DebrisMarkersPayload::handle);
+        event.registrar("1").playToClient(dev.createuniversal.network.AssistantHudPayload.TYPE,
+                dev.createuniversal.network.AssistantHudPayload.STREAM_CODEC, dev.createuniversal.network.AssistantHudPayload::handle);
+        event.registrar("1").playToClient(dev.createuniversal.network.AssistantInfoPayload.TYPE,
+                dev.createuniversal.network.AssistantInfoPayload.STREAM_CODEC, dev.createuniversal.network.AssistantInfoPayload::handle);
+        event.registrar("1").playToServer(dev.createuniversal.network.AssistantMarkPayload.TYPE,
+                dev.createuniversal.network.AssistantMarkPayload.STREAM_CODEC, dev.createuniversal.network.AssistantMarkPayload::handle);
         event.registrar("1").playToClient(dev.createuniversal.network.ParkedShipsPayload.TYPE,
                 dev.createuniversal.network.ParkedShipsPayload.STREAM_CODEC, dev.createuniversal.network.ParkedShipsPayload::handle);
         event.registrar("1").playToClient(dev.createuniversal.network.NavSyncPayload.TYPE,

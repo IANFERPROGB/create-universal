@@ -1,0 +1,39 @@
+{
+  "type": "create:mechanical_crafting",
+  "accept_mirrored": true,
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "create:brass_casing"
+    },
+    "E": {
+      "item": "create:electron_tube"
+    },
+    "A": {
+      "item": "create_universal:assistant_core"
+    },
+    "D": {
+      "item": "create:display_board"
+    },
+    "S": {
+      "tag": "c:plates/brass"
+    },
+    "T": {
+      "item": "create:shaft"
+    },
+    "P": {
+      "item": "create:precision_mechanism"
+    }
+  },
+  "pattern": [
+    "SDDDS",
+    "EPCPE",
+    "TCACT",
+    "EPCPE",
+    "SCCCS"
+  ],
+  "result": {
+    "count": 1,
+    "id": "create_universal:ship_assistant"
+  }
+}

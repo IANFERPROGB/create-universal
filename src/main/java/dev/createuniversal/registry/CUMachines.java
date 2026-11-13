@@ -76,6 +76,23 @@ public final class CUMachines {
             BLOCK_ENTITIES.register("holo_projector",
                     () -> BlockEntityType.Builder.of(HoloProjectorBlockEntity::new, HOLO_PROJECTOR.get()).build(null));
 
+    // Asistente de nave (alpha.12).
+    public static final DeferredBlock<ShipAssistantBlock> SHIP_ASSISTANT = BLOCKS.register("ship_assistant",
+            () -> new ShipAssistantBlock(BlockBehaviour.Properties.of().mapColor(MapColor.TERRACOTTA_YELLOW).strength(3.0F, 6.0F)
+                    .sound(SoundType.NETHERITE_BLOCK).requiresCorrectToolForDrops().noOcclusion().lightLevel(s -> 5)));
+
+    static {
+        ITEMS.register("ship_assistant", () -> new BlockItem(SHIP_ASSISTANT.get(), new Item.Properties().rarity(net.minecraft.world.item.Rarity.EPIC)));
+        ITEMS.register("assistant_core", () -> new Item(new Item.Properties().rarity(net.minecraft.world.item.Rarity.RARE)));
+        ITEMS.register("incomplete_assistant_core",
+                () -> new com.simibubi.create.content.processing.sequenced.SequencedAssemblyItem(new Item.Properties()));
+    }
+
+    @SuppressWarnings("DataFlowIssue")
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ShipAssistantBlockEntity>> SHIP_ASSISTANT_BE =
+            BLOCK_ENTITIES.register("ship_assistant",
+                    () -> BlockEntityType.Builder.of(ShipAssistantBlockEntity::new, SHIP_ASSISTANT.get()).build(null));
+
     private CUMachines() {}
 
     public static void register(IEventBus modBus) {
@@ -87,6 +104,8 @@ public final class CUMachines {
             BlockStressValues.IMPACTS.register(ORBITAL_STABILIZER.get(), () -> 16.0);
             // El doble: 4.096 SU a 128 RPM (D51).
             BlockStressValues.IMPACTS.register(GRAVITY_STABILIZER.get(), () -> 32.0);
+            // Giroscopio del asistente: 1.536 SU a 64 RPM (alpha.12).
+            BlockStressValues.IMPACTS.register(SHIP_ASSISTANT.get(), () -> 24.0);
         }));
     }
 }

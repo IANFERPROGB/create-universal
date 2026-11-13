@@ -248,7 +248,12 @@ public final class NavClient {
         return String.format(Locale.ROOT, "%d", Math.round(blocks));
     }
 
-    static String formatTime(double seconds) {
+    /** El nombre de un destino ("body:mars", "marker:..."), para otras pantallas. */
+    public static Component targetNameOf(String target) {
+        return targetName(target);
+    }
+
+    public static String formatTime(double seconds) {
         if (seconds < 0) {
             return "—";
         }

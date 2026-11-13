@@ -1,0 +1,87 @@
+{
+  "type": "create:sequenced_assembly",
+  "ingredient": {
+    "item": "create:precision_mechanism"
+  },
+  "loops": 4,
+  "results": [
+    {
+      "chance": 90.0,
+      "id": "create_universal:assistant_core"
+    },
+    {
+      "chance": 6.0,
+      "id": "create:electron_tube"
+    },
+    {
+      "chance": 4.0,
+      "id": "create:brass_sheet"
+    }
+  ],
+  "sequence": [
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "create_universal:incomplete_assistant_core"
+        },
+        {
+          "item": "create:electron_tube"
+        }
+      ],
+      "results": [
+        {
+          "id": "create_universal:incomplete_assistant_core"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "create_universal:incomplete_assistant_core"
+        },
+        {
+          "item": "minecraft:diamond"
+        }
+      ],
+      "results": [
+        {
+          "id": "create_universal:incomplete_assistant_core"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "create_universal:incomplete_assistant_core"
+        },
+        {
+          "tag": "c:plates/brass"
+        }
+      ],
+      "results": [
+        {
+          "id": "create_universal:incomplete_assistant_core"
+        }
+      ]
+    },
+    {
+      "type": "create:pressing",
+      "ingredients": [
+        {
+          "item": "create_universal:incomplete_assistant_core"
+        }
+      ],
+      "results": [
+        {
+          "id": "create_universal:incomplete_assistant_core"
+        }
+      ]
+    }
+  ],
+  "transitional_item": {
+    "id": "create_universal:incomplete_assistant_core"
+  }
+}
