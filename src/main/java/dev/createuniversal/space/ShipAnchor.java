@@ -101,6 +101,7 @@ public final class ShipAnchor {
         SableEventPlatform.INSTANCE.onPhysicsTick(SatelliteOrbits::prePhysicsTick);
         // Tras todo lo que empuja: la nave fijada se queda donde está.
         SableEventPlatform.INSTANCE.onPhysicsTick(OrbitalStabilizers::prePhysicsTick);
+        SableEventPlatform.INSTANCE.onPhysicsTick(Autopilot::prePhysicsTick);
         // La última: fija la posición y la velocidad de Fobos y Deimos, pase lo que pase antes.
         SableEventPlatform.INSTANCE.onPhysicsTick(Moonlets::prePhysicsTick);
     }

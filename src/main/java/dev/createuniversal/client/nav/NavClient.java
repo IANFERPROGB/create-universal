@@ -248,6 +248,12 @@ public final class NavClient {
         return String.format(Locale.ROOT, "%d", Math.round(blocks));
     }
 
+    /** Dónde está ahora un destino (x, y, z), o null. */
+    public static net.minecraft.world.phys.Vec3 targetPosition(String target) {
+        double[] t = target(target, SpaceClock.renderTime(0.0F));
+        return t == null ? null : new net.minecraft.world.phys.Vec3(t[0], t[1], t[2]);
+    }
+
     /** El nombre de un destino ("body:mars", "marker:..."), para otras pantallas. */
     public static Component targetNameOf(String target) {
         return targetName(target);

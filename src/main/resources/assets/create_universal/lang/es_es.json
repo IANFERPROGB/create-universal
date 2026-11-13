@@ -232,5 +232,18 @@
   "create_universal.assistant.dir.north": "el norte de la nave",
   "create_universal.assistant.dir.south": "el sur de la nave",
   "create_universal.assistant.dir.east": "el este de la nave",
-  "create_universal.assistant.dir.west": "el oeste de la nave"
+  "create_universal.assistant.dir.west": "el oeste de la nave",
+  "create_universal.assistant.status.turning": "Piloto: girando la nave",
+  "create_universal.assistant.status.flying": "Piloto: acelerando hacia el destino",
+  "create_universal.assistant.status.braking": "Piloto: frenando",
+  "create_universal.assistant.status.cruising": "Piloto: en camino",
+  "create_universal.assistant.status.arrived": "Piloto: has llegado",
+  "create_universal.assistant.status.no_engines": "Piloto: no hay propulsores que funcionen aquí",
+  "create_universal.assistant.status.manual": "Piloto desconectado: has tocado los controles",
+  "create_universal.assistant.status.lost": "Piloto desconectado: el destino ya no existe",
+  "create_universal.assistant.status.not_in_space": "El piloto automático solo funciona en el espacio",
+  "create_universal.assistant.status.stopped": "Piloto apagado",
+  "create_universal.assistant.go": "Piloto automático: ir a %s",
+  "create_universal.assistant.go_none": "Elige un destino en el mapa para el piloto",
+  "create_universal.assistant.stop": "Apagar el piloto automático"
 }

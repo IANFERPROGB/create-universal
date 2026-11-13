@@ -53,8 +53,26 @@ public class AssistantScreen extends Screen {
 
     @Override
     protected void init() {
+        String dest = dev.createuniversal.client.nav.NavClient.destination();
+        if (info.piloting()) {
+            addRenderableWidget(Button.builder(Component.translatable("create_universal.assistant.stop"),
+                    b -> PacketDistributor.sendToServer(new dev.createuniversal.network.AssistantCommandPayload(info.pos(), false, "", 0, 0, 0)))
+                    .bounds(width / 2 - 100, height - 52, 200, 20).build());
+        } else {
+            Component label = dest != null
+                    ? Component.translatable("create_universal.assistant.go", dev.createuniversal.client.nav.NavClient.targetNameOf(dest))
+                    : Component.translatable("create_universal.assistant.go_none");
+            Button go = Button.builder(label, b -> {
+                net.minecraft.world.phys.Vec3 p = dev.createuniversal.client.nav.NavClient.targetPosition(dest);
+                if (p != null) {
+                    PacketDistributor.sendToServer(new dev.createuniversal.network.AssistantCommandPayload(info.pos(), true, dest, p.x, p.y, p.z));
+                }
+            }).bounds(width / 2 - 100, height - 52, 200, 20).build();
+            go.active = dest != null && info.gyroReady() && !info.engines().isEmpty();
+            addRenderableWidget(go);
+        }
         int y = othersTop() + 12;
-        for (int i = scroll; i < info.others().size() && y < height - 40; i++) {
+        for (int i = scroll; i < info.others().size() && y < height - 64; i++) {
             AssistantInfoPayload.OtherRow o = info.others().get(i);
             Component label = Component.translatable(o.marked() ? "create_universal.assistant.marked" : "create_universal.assistant.unmarked");
             addRenderableWidget(Button.builder(label, b -> PacketDistributor.sendToServer(new AssistantMarkPayload(info.pos(), o.block())))
@@ -111,7 +129,7 @@ public class AssistantScreen extends Screen {
         if (info.others().isEmpty()) {
             g.drawString(font, Component.translatable("create_universal.assistant.no_others"), x + 8, oy, 0xFF9AA4B4);
         }
-        for (int i = scroll; i < info.others().size() && oy < height - 40; i++) {
+        for (int i = scroll; i < info.others().size() && oy < height - 64; i++) {
             AssistantInfoPayload.OtherRow o = info.others().get(i);
             ResourceLocation id = ResourceLocation.tryParse(o.block());
             Component name = id != null && BuiltInRegistries.BLOCK.containsKey(id)
@@ -119,6 +137,6 @@ public class AssistantScreen extends Screen {
             g.drawString(font, Component.literal(o.count() + " × ").append(name), x + 8, oy + 1, o.marked() ? 0xFF7CFF8A : 0xFFDDDDDD);
             oy += 16;
         }
-        g.drawCenteredString(font, Component.translatable("create_universal.assistant.others_help"), width / 2, height - 40, 0xFF7A8496);
+        g.drawCenteredString(font, Component.translatable("create_universal.assistant.others_help"), width / 2, height - 64, 0xFF7A8496);
     }
 }

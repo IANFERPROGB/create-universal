@@ -38,6 +38,17 @@ public class ShipAssistantBlock extends RotatedPillarKineticBlock implements IBE
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
 
+    /** Salida de redstone: la potencia del piloto (0–15), para los motores de "Otros" (alpha.12.1). */
+    @Override
+    protected boolean isSignalSource(BlockState state) {
+        return true;
+    }
+
+    @Override
+    protected int getSignal(BlockState state, net.minecraft.world.level.BlockGetter level, BlockPos pos, Direction direction) {
+        return level.getBlockEntity(pos) instanceof ShipAssistantBlockEntity be ? be.redstoneOut() : 0;
+    }
+
     @Override
     public Class<ShipAssistantBlockEntity> getBlockEntityClass() {
         return ShipAssistantBlockEntity.class;

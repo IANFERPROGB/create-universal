@@ -152,8 +152,15 @@ public final class ShipAssistant {
         }
     }
 
+    /** Potencia de 0 a 1 para un propulsor que el asistente sabe manejar; negativo = devolverle el control a la redstone. */
+    public static void setPower(BlockEntity be, float power) {
+        if (PROPULSION && be != null) {
+            PropulsionEngines.setPower(be, power);
+        }
+    }
+
     /** La ficha completa para la pantalla del asistente. */
-    public static AssistantInfoPayload info(BlockPos pos, Result r, Set<String> marked, boolean gyroReady) {
+    public static AssistantInfoPayload info(BlockPos pos, Result r, Set<String> marked, boolean gyroReady, boolean piloting) {
         TreeMap<String, Integer> groups = new TreeMap<>();
         for (Engine e : r.engines()) {
             String key = e.kind() + "|" + e.push().getName() + "|" + e.efficiency() + "|" + (e.active() ? 1 : 0);
@@ -168,6 +175,6 @@ public final class ShipAssistant {
         for (var o : r.others().entrySet()) {
             others.add(new AssistantInfoPayload.OtherRow(o.getKey(), o.getValue(), marked.contains(o.getKey())));
         }
-        return new AssistantInfoPayload(pos, rows, others, r.fuel(), r.fuelCapacity(), r.mass(), gyroReady);
+        return new AssistantInfoPayload(pos, rows, others, r.fuel(), r.fuelCapacity(), r.mass(), gyroReady, piloting);
     }
 }

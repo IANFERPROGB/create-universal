@@ -232,5 +232,18 @@
   "create_universal.assistant.dir.north": "ship north",
   "create_universal.assistant.dir.south": "ship south",
   "create_universal.assistant.dir.east": "ship east",
-  "create_universal.assistant.dir.west": "ship west"
+  "create_universal.assistant.dir.west": "ship west",
+  "create_universal.assistant.status.turning": "Autopilot: turning the ship",
+  "create_universal.assistant.status.flying": "Autopilot: accelerating to the destination",
+  "create_universal.assistant.status.braking": "Autopilot: braking",
+  "create_universal.assistant.status.cruising": "Autopilot: on the way",
+  "create_universal.assistant.status.arrived": "Autopilot: you have arrived",
+  "create_universal.assistant.status.no_engines": "Autopilot: no thrusters working here",
+  "create_universal.assistant.status.manual": "Autopilot off: you touched the controls",
+  "create_universal.assistant.status.lost": "Autopilot off: the destination is gone",
+  "create_universal.assistant.status.not_in_space": "The autopilot only works in space",
+  "create_universal.assistant.status.stopped": "Autopilot off",
+  "create_universal.assistant.go": "Autopilot: go to %s",
+  "create_universal.assistant.go_none": "Pick a destination on the map for the autopilot",
+  "create_universal.assistant.stop": "Turn the autopilot off"
 }

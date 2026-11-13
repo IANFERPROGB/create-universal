@@ -59,6 +59,8 @@ public final class CreateUniversal {
                 dev.createuniversal.network.AssistantHudPayload.STREAM_CODEC, dev.createuniversal.network.AssistantHudPayload::handle);
         event.registrar("1").playToClient(dev.createuniversal.network.AssistantInfoPayload.TYPE,
                 dev.createuniversal.network.AssistantInfoPayload.STREAM_CODEC, dev.createuniversal.network.AssistantInfoPayload::handle);
+        event.registrar("1").playToServer(dev.createuniversal.network.AssistantCommandPayload.TYPE,
+                dev.createuniversal.network.AssistantCommandPayload.STREAM_CODEC, dev.createuniversal.network.AssistantCommandPayload::handle);
         event.registrar("1").playToServer(dev.createuniversal.network.AssistantMarkPayload.TYPE,
                 dev.createuniversal.network.AssistantMarkPayload.STREAM_CODEC, dev.createuniversal.network.AssistantMarkPayload::handle);
         event.registrar("1").playToClient(dev.createuniversal.network.ParkedShipsPayload.TYPE,
