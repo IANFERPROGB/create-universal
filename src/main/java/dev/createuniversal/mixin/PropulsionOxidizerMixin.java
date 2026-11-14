@@ -18,6 +18,7 @@ import java.lang.reflect.Method;
  * oxígeno del aire. Donde no lo hay (el espacio y los astros, salvo en una sala con oxígeno) empujan la mitad, salvo que
  * lleven oxidante en su depósito de oxidante (el propulsor normal lo tiene). El iónico, el de combustible sólido y el
  * creativo no cambian. El efecto de la presión del aire ya lo calcula Create Propulsion con la de Sable.
+ * Además, con el Motor de crucero encendido en su nave y lejos de todo, todos empujan ×4 (alpha.12.4).
  */
 @Pseudo
 @Mixin(targets = "dev.propulsionteam.propulsionsimulated.content.thruster.AbstractThrusterBlockEntity", remap = false)
@@ -30,20 +31,20 @@ public abstract class PropulsionOxidizerMixin {
 
     @Inject(method = "calculateAtmosphericFactor", at = @At("RETURN"), cancellable = true, require = 0)
     private void createUniversal$needsOxygen(CallbackInfoReturnable<Double> cir) {
-        if (isIon()) {
-            return;
-        }
-        String type = getClass().getName();
-        if (type.contains("solid_fuel") || type.contains("creative")) {
-            return;
-        }
         net.minecraft.world.level.block.entity.BlockEntity self = (net.minecraft.world.level.block.entity.BlockEntity) (Object) this;
         Level level = self.getLevel();
         BlockPos pos = self.getBlockPos();
-        if (level == null || Breathing.hasAirAround(level, pos) || createUniversal$hasOxidizer()) {
-            return;
+        double factor = 1.0;
+        String type = getClass().getName();
+        if (!isIon() && !type.contains("solid_fuel") && !type.contains("creative") && level != null
+                && !Breathing.hasAirAround(level, pos) && !createUniversal$hasOxidizer()) {
+            factor = 0.5;
         }
-        cir.setReturnValue(cir.getReturnValue() * 0.5);
+        // Motor de crucero encendido en su nave, lejos de todo: ×4 (alpha.12.4, D95).
+        factor *= dev.createuniversal.space.CruiseDrives.factor(level, pos);
+        if (factor != 1.0) {
+            cir.setReturnValue(cir.getReturnValue() * factor);
+        }
     }
 
     @Unique

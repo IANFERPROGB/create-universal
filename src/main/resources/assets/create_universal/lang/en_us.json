@@ -241,7 +241,7 @@
   "create_universal.assistant.status.no_engines": "Autopilot: no thrusters working here",
   "create_universal.assistant.status.manual": "Autopilot off: you touched the controls",
   "create_universal.assistant.status.lost": "Autopilot off: the destination is gone",
-  "create_universal.assistant.status.not_in_space": "The autopilot only works in space",
+  "create_universal.assistant.status.not_in_space": "The autopilot only works in space, on Earth and on planets",
   "create_universal.assistant.status.stopped": "Autopilot off",
   "create_universal.assistant.go": "Autopilot: go to %s",
   "create_universal.assistant.go_none": "Pick a destination on the map for the autopilot",
@@ -257,5 +257,13 @@
   "create_universal.assistant.status.exploring": "Autopilot: exploring (straight ahead)",
   "create_universal.assistant.status.found": "Autopilot: new body! Braking",
   "create_universal.assistant.status.found_stopped": "Autopilot: new body found, ship stopped",
-  "create_universal.assistant.max_speed": "Top speed: %s b/s"
+  "create_universal.assistant.max_speed": "Top speed: %s b/s",
+  "block.create_universal.cruise_drive": "Cruise Drive",
+  "create_universal.cruise_drive.status.not_on_ship": "Only works inside a ship",
+  "create_universal.cruise_drive.status.not_in_space": "Only works in space",
+  "create_universal.cruise_drive.status.too_slow": "Needs at least %s RPM",
+  "create_universal.cruise_drive.status.near": "Standing by: too close to a body or a rock field",
+  "create_universal.cruise_drive.status.active": "Running: thrusters push ×4",
+  "create_universal.assistant.cruise": "Cruise ×4",
+  "create_universal.assistant.status.climbing": "Autopilot: taking off to space"
 }

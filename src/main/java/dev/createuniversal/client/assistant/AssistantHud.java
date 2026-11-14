@@ -67,6 +67,10 @@ public final class AssistantHud {
         // Línea 2: velocidad, motores, aire.
         String speed = String.format(Locale.ROOT, "%.1f b/s", hud.speed());
         g.drawString(font, speed, x0 + 6, y0 + 14, 0xFFFFFFFF);
+        if (hud.cruise()) {
+            Component cruise = Component.translatable("create_universal.assistant.cruise");
+            g.drawString(font, cruise, x0 + 150, y0 + 14, 0xFF8FD6FF);
+        }
         Component engines = Component.translatable("create_universal.assistant.engines", hud.working(), hud.total());
         g.drawString(font, engines, x0 + 80, y0 + 14, hud.working() > 0 ? 0xFFDDDDDD : 0xFFFF6060);
         Component air = Component.translatable(hud.air() ? "create_universal.assistant.air_ok" : "create_universal.assistant.air_none");

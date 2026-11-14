@@ -93,6 +93,20 @@ public final class CUMachines {
             BLOCK_ENTITIES.register("ship_assistant",
                     () -> BlockEntityType.Builder.of(ShipAssistantBlockEntity::new, SHIP_ASSISTANT.get()).build(null));
 
+    // Motor de crucero (alpha.12.4).
+    public static final DeferredBlock<CruiseDriveBlock> CRUISE_DRIVE = BLOCKS.register("cruise_drive",
+            () -> new CruiseDriveBlock(BlockBehaviour.Properties.of().mapColor(MapColor.TERRACOTTA_BLUE).strength(3.0F, 6.0F)
+                    .sound(SoundType.NETHERITE_BLOCK).requiresCorrectToolForDrops().noOcclusion().lightLevel(s -> 4)));
+
+    static {
+        ITEMS.register("cruise_drive", () -> new BlockItem(CRUISE_DRIVE.get(), new Item.Properties().rarity(net.minecraft.world.item.Rarity.EPIC)));
+    }
+
+    @SuppressWarnings("DataFlowIssue")
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CruiseDriveBlockEntity>> CRUISE_DRIVE_BE =
+            BLOCK_ENTITIES.register("cruise_drive",
+                    () -> BlockEntityType.Builder.of(CruiseDriveBlockEntity::new, CRUISE_DRIVE.get()).build(null));
+
     private CUMachines() {}
 
     public static void register(IEventBus modBus) {
@@ -106,6 +120,8 @@ public final class CUMachines {
             BlockStressValues.IMPACTS.register(GRAVITY_STABILIZER.get(), () -> 32.0);
             // Giroscopio del asistente: 1.536 SU a 64 RPM (alpha.12).
             BlockStressValues.IMPACTS.register(SHIP_ASSISTANT.get(), () -> 24.0);
+            // Motor de crucero: 8.192 SU a 128 RPM (alpha.12.4).
+            BlockStressValues.IMPACTS.register(CRUISE_DRIVE.get(), () -> 64.0);
         }));
     }
 }

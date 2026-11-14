@@ -36,7 +36,7 @@ public final class Autopilot {
     /** Velocidad máxima por defecto (se cambia en la pantalla del asistente). */
     public static final int CRUISE = 250;
     /** Velocidades máximas que se pueden elegir (bloques/s). */
-    public static final int[] SPEEDS = {25, 50, 75, 99, 125, 150, 200, 250, 300, 400, 500, 750, 1000};
+    public static final int[] SPEEDS = {25, 50, 75, 99, 125, 150, 200, 250, 300, 400, 500, 750, 1000, 1500, 2000, 3000};
     private static final double ALIGN_DEG = 15.0;
 
     /** Lo que el giroscopio tiene que hacer con una nave en el próximo paso de física. */
@@ -119,6 +119,17 @@ public final class Autopilot {
     /** Sin empujar: el giroscopio solo frena el giro de la nave. */
     private static void hold(ServerLevel level, ServerSubLevel ship, Vector3d local, Vector3d axisWorld, double rpm) {
         STEER.put(ship.getUniqueId(), new Steer(level, local, axisWorld, alphaMax(ship, rpm)));
+    }
+
+    /**
+     * Pide al giroscopio que el lado {@code main} de la nave mire hacia {@code want} (mundo). Devuelve el coseno del
+     * ángulo que falta (1 = ya apunta bien).
+     */
+    public static double steer(ServerLevel level, ServerSubLevel ship, Direction main, Vector3d want, double rpm) {
+        Vector3d local = new Vector3d(main.getStepX(), main.getStepY(), main.getStepZ());
+        Vector3d axisWorld = new Quaterniond(ship.logicalPose().orientation()).transform(new Vector3d(local));
+        STEER.put(ship.getUniqueId(), new Steer(level, local, new Vector3d(want).normalize(), alphaMax(ship, rpm)));
+        return axisWorld.dot(new Vector3d(want).normalize());
     }
 
     public static void release(UUID ship) {

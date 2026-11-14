@@ -113,7 +113,7 @@ public final class FastTravelChunks {
     }
 
     /** Cerca de un astro (a menos de su radio de la superficie, 3.000 bloques como poco) o de un campo de rocas. */
-    private static boolean nearSomething(Vec3 pos, double time) {
+    public static boolean nearSomething(Vec3 pos, double time) {
         for (SolarSystem.Body b : SolarSystem.bodies()) {
             if (pos.distanceTo(SolarSystem.position(b, time)) - b.radius() < Math.max(3_000.0, b.radius())) {
                 return true;

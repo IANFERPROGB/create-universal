@@ -241,7 +241,7 @@
   "create_universal.assistant.status.no_engines": "Piloto: no hay propulsores que funcionen aquí",
   "create_universal.assistant.status.manual": "Piloto desconectado: has tocado los controles",
   "create_universal.assistant.status.lost": "Piloto desconectado: el destino ya no existe",
-  "create_universal.assistant.status.not_in_space": "El piloto automático solo funciona en el espacio",
+  "create_universal.assistant.status.not_in_space": "El piloto solo funciona en el espacio, la Tierra y los planetas",
   "create_universal.assistant.status.stopped": "Piloto apagado",
   "create_universal.assistant.go": "Piloto automático: ir a %s",
   "create_universal.assistant.go_none": "Elige un destino en el mapa para el piloto",
@@ -257,5 +257,13 @@
   "create_universal.assistant.status.exploring": "Piloto: explorando (recto hacia delante)",
   "create_universal.assistant.status.found": "Piloto: ¡astro nuevo! Frenando",
   "create_universal.assistant.status.found_stopped": "Piloto: astro nuevo descubierto, nave parada",
-  "create_universal.assistant.max_speed": "Velocidad máxima: %s b/s"
+  "create_universal.assistant.max_speed": "Velocidad máxima: %s b/s",
+  "block.create_universal.cruise_drive": "Motor de crucero",
+  "create_universal.cruise_drive.status.not_on_ship": "Solo funciona dentro de una nave",
+  "create_universal.cruise_drive.status.not_in_space": "Solo funciona en el espacio",
+  "create_universal.cruise_drive.status.too_slow": "Necesita al menos %s RPM",
+  "create_universal.cruise_drive.status.near": "En espera: demasiado cerca de un astro o de un campo de rocas",
+  "create_universal.cruise_drive.status.active": "En marcha: los propulsores empujan ×4",
+  "create_universal.assistant.cruise": "Crucero ×4",
+  "create_universal.assistant.status.climbing": "Piloto: despegando hacia el espacio"
 }

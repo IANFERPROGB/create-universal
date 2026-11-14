@@ -1,0 +1,39 @@
+{
+  "type": "create:mechanical_crafting",
+  "accept_mirrored": true,
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "create:brass_casing"
+    },
+    "N": {
+      "tag": "c:ingots/netherite"
+    },
+    "A": {
+      "item": "create_universal:assistant_core"
+    },
+    "P": {
+      "item": "create:precision_mechanism"
+    },
+    "E": {
+      "item": "create:electron_tube"
+    },
+    "T": {
+      "item": "create:shaft"
+    },
+    "S": {
+      "item": "minecraft:nether_star"
+    }
+  },
+  "pattern": [
+    "CENEC",
+    "PCACP",
+    "TNSNT",
+    "PCACP",
+    "CENEC"
+  ],
+  "result": {
+    "count": 1,
+    "id": "create_universal:cruise_drive"
+  }
+}

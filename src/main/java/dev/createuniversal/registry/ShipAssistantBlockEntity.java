@@ -131,7 +131,7 @@ public class ShipAssistantBlockEntity extends KineticBlockEntity {
         ShipAssistant.sendHud(server, ship, new AssistantHudPayload(shown, engaged ? target : "",
                 (float) ShipAssistant.speed(server, ship), last.working(marked), last.total(marked), last.fuel(), last.fuelCapacity(),
                 hull, Breathing.hasAirAround(server, worldPosition), engaged ? (float) eta : -1.0F, last.energy(), last.energyCapacity(),
-                last.solidItems()));
+                last.solidItems(), dev.createuniversal.space.CruiseDrives.boosting(ship)));
     }
 
     // ---------------------------------------------------------------- piloto automático
@@ -142,7 +142,7 @@ public class ShipAssistantBlockEntity extends KineticBlockEntity {
             return;
         }
         ServerSubLevel ship = ship();
-        if (ship == null || level.dimension() != CUDimensions.SPACE) {
+        if (ship == null || !canFlyFrom(server)) {
             note("not_in_space");
             return;
         }
@@ -150,16 +150,9 @@ public class ShipAssistantBlockEntity extends KineticBlockEntity {
             last = ShipAssistant.scan(server, ship);
         }
         if (target.equals(EXPLORE)) {
-            // Explorar: recto hacia donde empujan los motores principales, hasta que alguien de a bordo descubra un astro.
-            Direction main = mainDirection();
-            if (main == null) {
-                note("no_engines");
-                return;
-            }
-            org.joml.Vector3d dir = new org.joml.Quaterniond(ship.logicalPose().orientation())
-                    .transform(new org.joml.Vector3d(main.getStepX(), main.getStepY(), main.getStepZ()));
-            Vec3 c = dev.createuniversal.space.Autopilot.center(ship);
-            fixed = c.add(dir.x * 5.0e7, dir.y * 5.0e7, dir.z * 5.0e7);
+            // Explorar: recto hacia donde empujan los motores principales (se decide ya en el espacio), hasta que alguien
+            // de a bordo descubra un astro.
+            fixed = null;
             exploreSince = server.getServer().overworld().getGameTime();
             exploreFound = false;
         }
@@ -198,8 +191,14 @@ public class ShipAssistantBlockEntity extends KineticBlockEntity {
         pilotStatusUntil = level != null ? level.getGameTime() + 200 : 0;
     }
 
+    /** Desde dónde puede volar el piloto: el espacio y, para despegar, la Tierra y los planetas (alpha.12.4). */
+    private static boolean canFlyFrom(ServerLevel level) {
+        return level.dimension() == CUDimensions.SPACE || level.dimension() == net.minecraft.world.level.Level.OVERWORLD
+                || dev.createuniversal.space.surface.PlanetSurface.byDimension(level.dimension()) != null;
+    }
+
     private void pilotTick(ServerLevel server, ServerSubLevel ship) {
-        if (ship == null || ship.isRemoved() || server.dimension() != CUDimensions.SPACE) {
+        if (ship == null || ship.isRemoved() || !canFlyFrom(server)) {
             disengage("not_in_space");
             return;
         }
@@ -226,15 +225,24 @@ public class ShipAssistantBlockEntity extends KineticBlockEntity {
             pilotStatus = "no_rotation";
             return;
         }
-        Autopilot.Goal goal = Autopilot.goal(target, fixed, SpaceLayout.time(server));
-        if (goal == null) {
-            disengage("lost");
-            return;
-        }
         Direction main = mainDirection();
         if (main == null) {
             powerAll(null, 0.0);
             pilotStatus = "no_engines";
+            return;
+        }
+        if (server.dimension() != CUDimensions.SPACE) {
+            climbTick(server, ship, main);
+            return;
+        }
+        if (target.equals(EXPLORE) && fixed == null) {
+            org.joml.Vector3d dir = new org.joml.Quaterniond(ship.logicalPose().orientation())
+                    .transform(new org.joml.Vector3d(main.getStepX(), main.getStepY(), main.getStepZ()));
+            fixed = Autopilot.center(ship).add(dir.x * 5.0e7, dir.y * 5.0e7, dir.z * 5.0e7);
+        }
+        Autopilot.Goal goal = Autopilot.goal(target, fixed, SpaceLayout.time(server));
+        if (goal == null) {
+            disengage("lost");
             return;
         }
         // Mide lo que de verdad acelera la nave a tope (cambio de velocidad en la dirección del empuje).
@@ -242,6 +250,8 @@ public class ShipAssistantBlockEntity extends KineticBlockEntity {
         if (lastVel != null && lastThrust != null && lastThrottle > 0.4) {
             Vec3 dv = v.subtract(lastVel);
             double a = (dv.x * lastThrust.x + dv.y * lastThrust.y + dv.z * lastThrust.z) * 20.0 / lastThrottle;
+            // Con el motor de crucero se empuja ×4: se guarda lo que daría sin él, que es con lo que hay que frenar al llegar.
+            a /= dev.createuniversal.space.CruiseDrives.boosting(ship) ? dev.createuniversal.space.CruiseDrives.FACTOR : 1.0;
             if (a > 0.05 && a < 500.0) {
                 accel = accel * 0.92 + a * 0.08;
             }
@@ -271,6 +281,24 @@ public class ShipAssistantBlockEntity extends KineticBlockEntity {
         } else {
             arrivedTicks = 0;
         }
+    }
+
+    /**
+     * Despegue (alpha.12.4): en la Tierra o en un planeta, sube recto (motores principales hacia arriba) a 80 b/s como
+     * mucho, quitando la deriva de lado, hasta pasar la altura de salida; el traslado al espacio lleva el asistente con
+     * todo guardado y allí sigue hacia el destino.
+     */
+    private void climbTick(ServerLevel server, ServerSubLevel ship, Direction main) {
+        Vec3 v = Autopilot.velocity(server, ship);
+        double want = Math.min(maxSpeed, 80.0);
+        Vector3d up = new Vector3d(-v.x * 0.3, Math.max(0.0, want - v.y) + 12.0, -v.z * 0.3);
+        double cos = Autopilot.steer(server, ship, main, up, getSpeed());
+        boolean aligned = cos > Math.cos(Math.toRadians(15.0));
+        double throttle = aligned ? Math.max(0.25, Math.min(1.0, 0.6 + (want - v.y) / 30.0)) * cos : 0.0;
+        powerAll(main, throttle);
+        lastVel = null;
+        eta = -1;
+        pilotStatus = aligned ? "climbing" : "turning";
     }
 
     /** El lado de la nave hacia el que más empujan sus propulsores (contando cuánto rinden aquí). */

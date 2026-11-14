@@ -26,6 +26,15 @@ public final class CreateUniversalClient {
                         .factory(com.simibubi.create.content.kinetics.base.SingleAxisRotatingVisual::shaft)
                         .skipVanillaRender(be -> true)
                         .apply()));
+        modBus.addListener((net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers e) ->
+                e.registerBlockEntityRenderer(dev.createuniversal.registry.CUMachines.CRUISE_DRIVE_BE.get(),
+                        com.simibubi.create.content.kinetics.base.ShaftRenderer::new));
+        modBus.addListener((net.neoforged.fml.event.lifecycle.FMLClientSetupEvent e) -> e.enqueueWork(() ->
+                dev.engine_room.flywheel.lib.visualization.SimpleBlockEntityVisualizer
+                        .builder(dev.createuniversal.registry.CUMachines.CRUISE_DRIVE_BE.get())
+                        .factory(com.simibubi.create.content.kinetics.base.SingleAxisRotatingVisual::shaft)
+                        .skipVanillaRender(be -> true)
+                        .apply()));
         modBus.addListener((net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent e) ->
                 e.register(dev.createuniversal.client.assistant.AssistantHud.TOGGLE));
         NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.client.event.ClientTickEvent.Post e) ->
