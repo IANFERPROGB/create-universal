@@ -192,7 +192,7 @@ public final class ShipAssistant {
     }
 
     /** La ficha completa para la pantalla del asistente. */
-    public static AssistantInfoPayload info(BlockPos pos, Result r, Set<String> marked, boolean gyroReady, boolean piloting) {
+    public static AssistantInfoPayload info(BlockPos pos, Result r, Set<String> marked, boolean gyroReady, boolean piloting, int maxSpeed) {
         TreeMap<String, Integer> groups = new TreeMap<>();
         for (Engine e : r.engines()) {
             String key = e.kind() + "|" + e.push().getName() + "|" + e.efficiency() + "|" + (e.active() ? 1 : 0);
@@ -208,6 +208,6 @@ public final class ShipAssistant {
             others.add(new AssistantInfoPayload.OtherRow(o.getKey(), o.getValue(), marked.contains(o.getKey())));
         }
         return new AssistantInfoPayload(pos, rows, others, r.fuel(), r.fuelCapacity(), r.mass(), gyroReady, piloting, r.energy(),
-                r.energyCapacity(), r.solidItems());
+                r.energyCapacity(), r.solidItems(), maxSpeed);
     }
 }

@@ -77,8 +77,15 @@ public class AssistantScreen extends Screen {
             explore.active = info.gyroReady() && !info.engines().isEmpty();
             addRenderableWidget(explore);
         }
+        // Velocidad máxima del piloto: − y + a los lados del texto.
+        addRenderableWidget(Button.builder(Component.literal("−"), b -> PacketDistributor.sendToServer(
+                new dev.createuniversal.network.AssistantCommandPayload(info.pos(), false, "speed:-1", 0, 0, 0)))
+                .bounds(width / 2 - 100, height - 96, 20, 20).build());
+        addRenderableWidget(Button.builder(Component.literal("+"), b -> PacketDistributor.sendToServer(
+                new dev.createuniversal.network.AssistantCommandPayload(info.pos(), false, "speed:1", 0, 0, 0)))
+                .bounds(width / 2 + 80, height - 96, 20, 20).build());
         int y = othersTop() + 12;
-        for (int i = scroll; i < info.others().size() && y < height - 98; i++) {
+        for (int i = scroll; i < info.others().size() && y < height - 120; i++) {
             AssistantInfoPayload.OtherRow o = info.others().get(i);
             Component label = Component.translatable(o.marked() ? "create_universal.assistant.marked" : "create_universal.assistant.unmarked");
             addRenderableWidget(Button.builder(label, b -> PacketDistributor.sendToServer(new AssistantMarkPayload(info.pos(), o.block())))
@@ -140,7 +147,7 @@ public class AssistantScreen extends Screen {
         if (info.others().isEmpty()) {
             g.drawString(font, Component.translatable("create_universal.assistant.no_others"), x + 8, oy, 0xFF9AA4B4);
         }
-        for (int i = scroll; i < info.others().size() && oy < height - 98; i++) {
+        for (int i = scroll; i < info.others().size() && oy < height - 120; i++) {
             AssistantInfoPayload.OtherRow o = info.others().get(i);
             ResourceLocation id = ResourceLocation.tryParse(o.block());
             Component name = id != null && BuiltInRegistries.BLOCK.containsKey(id)
@@ -148,13 +155,15 @@ public class AssistantScreen extends Screen {
             g.drawString(font, Component.literal(o.count() + " × ").append(name), x + 8, oy + 1, o.marked() ? 0xFF7CFF8A : 0xFFDDDDDD);
             oy += 16;
         }
-        g.drawCenteredString(font, Component.translatable("create_universal.assistant.others_help"), width / 2, height - 98, 0xFF7A8496);
+        g.drawCenteredString(font, Component.translatable("create_universal.assistant.others_help"), width / 2, height - 120, 0xFF7A8496);
+        g.drawCenteredString(font, Component.translatable("create_universal.assistant.max_speed", info.maxSpeed()), width / 2, height - 90,
+                0xFFFFE066);
         // Por qué no se puede encender el piloto (si no se puede).
         if (!info.piloting()) {
             String why = !info.gyroReady() ? "create_universal.assistant.why.gyro" : info.engines().isEmpty() ? "create_universal.assistant.why.engines"
                     : dev.createuniversal.client.nav.NavClient.destination() == null ? "create_universal.assistant.why.destination" : null;
             if (why != null) {
-                g.drawCenteredString(font, Component.translatable(why, 64), width / 2, height - 86, 0xFFFFB050);
+                g.drawCenteredString(font, Component.translatable(why, 64), width / 2, height - 108, 0xFFFFB050);
             }
         }
     }

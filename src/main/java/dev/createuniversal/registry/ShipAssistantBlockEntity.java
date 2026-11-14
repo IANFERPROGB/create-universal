@@ -59,6 +59,8 @@ public class ShipAssistantBlockEntity extends KineticBlockEntity {
     private boolean engaged;
     private long exploreSince;
     private boolean exploreFound;
+    /** Velocidad máxima del piloto (bloques/s), respecto al astro de la zona. */
+    private int maxSpeed = Autopilot.CRUISE;
     private String target = "";
     private Vec3 fixed;
     /** Aceleración medida a tope (bloques/s²); empieza con una suposición prudente. */
@@ -255,7 +257,7 @@ public class ShipAssistantBlockEntity extends KineticBlockEntity {
             fixed = c.add(ahead);
             goal = Autopilot.goal(target, fixed, SpaceLayout.time(server));
         }
-        Autopilot.Command c = Autopilot.guide(server, ship, goal, main, accel, getSpeed());
+        Autopilot.Command c = Autopilot.guide(server, ship, goal, main, accel, getSpeed(), maxSpeed);
         powerAll(main, c.throttle());
         lastThrottle = c.throttle();
         lastThrust = c.thrustWorld();
@@ -324,7 +326,23 @@ public class ShipAssistantBlockEntity extends KineticBlockEntity {
             return;
         }
         last = ShipAssistant.scan((ServerLevel) level, ship);
-        PacketDistributor.sendToPlayer(player, ShipAssistant.info(worldPosition, last, marked, status() == Status.READY, engaged));
+        PacketDistributor.sendToPlayer(player, ShipAssistant.info(worldPosition, last, marked, status() == Status.READY, engaged, maxSpeed));
+    }
+
+    /** Cambia la velocidad máxima a la siguiente (o la anterior) de la lista. */
+    public void stepMaxSpeed(int step) {
+        int i = 0;
+        for (int k = 0; k < Autopilot.SPEEDS.length; k++) {
+            if (Autopilot.SPEEDS[k] <= maxSpeed) {
+                i = k;
+            }
+        }
+        maxSpeed = Autopilot.SPEEDS[Math.max(0, Math.min(Autopilot.SPEEDS.length - 1, i + step))];
+        setChanged();
+    }
+
+    public int maxSpeed() {
+        return maxSpeed;
     }
 
     public void toggleMark(String block) {
@@ -347,6 +365,7 @@ public class ShipAssistantBlockEntity extends KineticBlockEntity {
         }
         tag.put("Marked", list);
         tag.putDouble("MaxMass", maxMass);
+        tag.putInt("MaxSpeed", maxSpeed);
         tag.putInt("RedstoneOut", redstoneOut);
         if (!clientPacket) {
             tag.putBoolean("Engaged", engaged);
@@ -370,6 +389,7 @@ public class ShipAssistantBlockEntity extends KineticBlockEntity {
             marked.add(t.getAsString());
         }
         maxMass = tag.getDouble("MaxMass");
+        maxSpeed = tag.contains("MaxSpeed") ? tag.getInt("MaxSpeed") : Autopilot.CRUISE;
         redstoneOut = tag.getInt("RedstoneOut");
         if (!clientPacket) {
             engaged = tag.getBoolean("Engaged");

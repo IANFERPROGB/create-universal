@@ -256,5 +256,6 @@
   "create_universal.assistant.explore_target": "exploración",
   "create_universal.assistant.status.exploring": "Piloto: explorando (recto hacia delante)",
   "create_universal.assistant.status.found": "Piloto: ¡astro nuevo! Frenando",
-  "create_universal.assistant.status.found_stopped": "Piloto: astro nuevo descubierto, nave parada"
+  "create_universal.assistant.status.found_stopped": "Piloto: astro nuevo descubierto, nave parada",
+  "create_universal.assistant.max_speed": "Velocidad máxima: %s b/s"
 }

@@ -14,7 +14,7 @@ import java.util.List;
 /** Servidor → cliente: la ficha del Asistente de nave para su pantalla (alpha.12). Abre la pantalla o la actualiza. */
 public record AssistantInfoPayload(BlockPos pos, List<EngineRow> engines, List<OtherRow> others, long fuel, long fuelCapacity,
                                    double mass, boolean gyroReady, boolean piloting, long energy, long energyCapacity,
-                                   int solid) implements CustomPacketPayload {
+                                   int solid, int maxSpeed) implements CustomPacketPayload {
     /** Un grupo de propulsores iguales: tipo, hacia dónde empujan (en la nave), rendimiento aquí, si están encendidos. */
     public record EngineRow(String kind, String push, int efficiency, boolean active, int count) {}
 
@@ -49,6 +49,7 @@ public record AssistantInfoPayload(BlockPos pos, List<EngineRow> engines, List<O
         f.writeVarLong(p.energy());
         f.writeVarLong(p.energyCapacity());
         f.writeVarInt(p.solid());
+        f.writeVarInt(p.maxSpeed());
     }
 
     private static AssistantInfoPayload read(ByteBuf buf) {
@@ -65,7 +66,7 @@ public record AssistantInfoPayload(BlockPos pos, List<EngineRow> engines, List<O
             others.add(new OtherRow(f.readUtf(256), f.readVarInt(), f.readBoolean()));
         }
         return new AssistantInfoPayload(pos, engines, others, f.readVarLong(), f.readVarLong(), f.readDouble(), f.readBoolean(), f.readBoolean(),
-                f.readVarLong(), f.readVarLong(), f.readVarInt());
+                f.readVarLong(), f.readVarLong(), f.readVarInt(), f.readVarInt());
     }
 
     @Override

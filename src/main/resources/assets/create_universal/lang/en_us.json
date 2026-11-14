@@ -256,5 +256,6 @@
   "create_universal.assistant.explore_target": "exploration",
   "create_universal.assistant.status.exploring": "Autopilot: exploring (straight ahead)",
   "create_universal.assistant.status.found": "Autopilot: new body! Braking",
-  "create_universal.assistant.status.found_stopped": "Autopilot: new body found, ship stopped"
+  "create_universal.assistant.status.found_stopped": "Autopilot: new body found, ship stopped",
+  "create_universal.assistant.max_speed": "Top speed: %s b/s"
 }

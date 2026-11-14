@@ -22,6 +22,10 @@ public abstract class ImmPortalsSpaceLoadDistanceMixin {
             at = @At(value = "INVOKE", target = "Lqouteall/imm_ptl/core/McHelper;getPlayerLoadDistance(Lnet/minecraft/server/level/ServerPlayer;)I"))
     private static int createUniversal$shortRadiusInSpace(ServerPlayer player) {
         int normal = Math.max(2, Math.min(player.requestedViewDistance(), player.server.getPlayerList().getViewDistance()));
-        return player.level().dimension() == CUDimensions.SPACE ? Math.min(CREATE_UNIVERSAL$SPACE_RADIUS, normal) : normal;
+        if (player.level().dimension() != CUDimensions.SPACE) {
+            return normal;
+        }
+        // A más de 99 b/s lejos de los astros, solo el chunk en el que está (alpha.12.3, FastTravelChunks).
+        return dev.createuniversal.space.FastTravelChunks.skipSpaceChunks(player) ? 0 : Math.min(CREATE_UNIVERSAL$SPACE_RADIUS, normal);
     }
 }

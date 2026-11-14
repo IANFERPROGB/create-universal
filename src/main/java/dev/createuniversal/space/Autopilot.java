@@ -33,7 +33,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * </ul>
  */
 public final class Autopilot {
-    public static final double CRUISE = 250.0;
+    /** Velocidad máxima por defecto (se cambia en la pantalla del asistente). */
+    public static final int CRUISE = 250;
+    /** Velocidades máximas que se pueden elegir (bloques/s). */
+    public static final int[] SPEEDS = {25, 50, 75, 99, 125, 150, 200, 250, 300, 400, 500, 750, 1000};
     private static final double ALIGN_DEG = 15.0;
 
     /** Lo que el giroscopio tiene que hacer con una nave en el próximo paso de física. */
@@ -78,7 +81,7 @@ public final class Autopilot {
      * Un tick de guiado. {@code main} es el lado de la nave hacia el que empujan los propulsores principales y
      * {@code accel} la aceleración que dan a tope (bloques/s²).
      */
-    public static Command guide(ServerLevel level, ServerSubLevel ship, Goal goal, Direction main, double accel, double rpm) {
+    public static Command guide(ServerLevel level, ServerSubLevel ship, Goal goal, Direction main, double accel, double rpm, double cruise) {
         Vec3 p = OrbitalFrame.centerOf(ship);
         Vec3 v = velocity(level, ship);
         Vec3 r = goal.pos().subtract(p);
@@ -95,7 +98,7 @@ public final class Autopilot {
         }
 
         Vec3 dir = avoid(level, p, goal, r);
-        double speed = Math.min(CRUISE, Math.sqrt(2.0 * a * Math.max(0.0, dist)));
+        double speed = Math.min(cruise, Math.sqrt(2.0 * a * Math.max(0.0, dist)));
         Vec3 want = goal.vel().add(dir.scale(speed));
         Vec3 err = want.subtract(v);
         double closing = u.dot(r.normalize());

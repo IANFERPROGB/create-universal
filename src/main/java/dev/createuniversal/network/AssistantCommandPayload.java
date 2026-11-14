@@ -47,7 +47,10 @@ public record AssistantCommandPayload(BlockPos pos, boolean engage, String targe
                 return;
             }
             if (player.level().getBlockEntity(p.pos()) instanceof ShipAssistantBlockEntity be) {
-                if (p.engage() && !p.target().isEmpty()) {
+                if (p.target().startsWith("speed:")) {
+                    // Botones − / + de la velocidad máxima ("speed:1" o "speed:-1").
+                    be.stepMaxSpeed(p.target().endsWith("-1") ? -1 : 1);
+                } else if (p.engage() && !p.target().isEmpty()) {
                     be.engage(p.target(), p.target().startsWith("body:") ? null : new Vec3(p.x(), p.y(), p.z()));
                 } else {
                     be.disengage("stopped");

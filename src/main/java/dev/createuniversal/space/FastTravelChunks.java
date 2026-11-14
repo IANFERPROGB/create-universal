@@ -38,6 +38,12 @@ public final class FastTravelChunks {
     }
 
     private static final Map<UUID, Track> TRACKS = new HashMap<>();
+    /** En el espacio, por encima de esta velocidad (respecto al astro de la zona) y lejos de todo, no se cargan chunks. */
+    private static final double SPACE_SKIP_ABOVE = 99.0;
+    /** ...y se vuelven a cargar al bajar de esta (un poco menos, para que no se encienda y apague sin parar). */
+    private static final double SPACE_SKIP_BELOW = 95.0;
+    /** Jugadores en el espacio a los que ahora mismo no se les cargan chunks (salvo el suyo). */
+    private static final java.util.Set<UUID> SPACE_SKIP = new java.util.HashSet<>();
     private static final Map<ServerLevel, List<Mover>> MOVERS = new HashMap<>();
     private static int budget = 4;
 
@@ -60,6 +66,7 @@ public final class FastTravelChunks {
             }
             t.last = pos;
             seen.put(player.getUUID(), t);
+            spaceSkip(player, level, pos, t.velocity.scale(20.0));
             if (t.velocity.length() * 20.0 >= FAST) {
                 int radius = server.getPlayerList().getViewDistance() * 16;
                 Vec3 ahead = t.velocity.scale(LOOKAHEAD_TICKS);
@@ -73,6 +80,60 @@ public final class FastTravelChunks {
         }
         TRACKS.clear();
         TRACKS.putAll(seen);
+        SPACE_SKIP.retainAll(seen.keySet());
+    }
+
+    /**
+     * Espacio (alpha.12.3): entre astros no hay nada, así que a más de 99 b/s (respecto al astro en
+     * cuya zona estás) no se cargan los chunks de alrededor, solo el tuyo. Cerca de un astro, de un campo de rocas o
+     * yendo despacio, se cargan como siempre.
+     */
+    private static void spaceSkip(ServerPlayer player, ServerLevel level, Vec3 pos, Vec3 velocity) {
+        UUID id = player.getUUID();
+        if (level.dimension() != CUDimensions.SPACE) {
+            SPACE_SKIP.remove(id);
+            return;
+        }
+        double time = SpaceLayout.time(level);
+        SolarSystem.Body frame = SolarSystem.frameBody(pos, time);
+        Vec3 rel = frame != null ? velocity.subtract(SolarSystem.velocity(frame, time)) : velocity;
+        double speed = rel.length();
+        boolean skipping = SPACE_SKIP.contains(id);
+        boolean fast = skipping ? speed > SPACE_SKIP_BELOW : speed > SPACE_SKIP_ABOVE;
+        boolean skip = fast && !nearSomething(pos, time);
+        if (skip != skipping) {
+            if (skip) {
+                SPACE_SKIP.add(id);
+            } else {
+                SPACE_SKIP.remove(id);
+            }
+            dev.createuniversal.CreateUniversal.LOGGER.debug("Espacio: {} a {} b/s: {}", player.getScoreboardName(), Math.round(speed),
+                    skip ? "sin cargar chunks" : "carga normal");
+        }
+    }
+
+    /** Cerca de un astro (a menos de su radio de la superficie, 3.000 bloques como poco) o de un campo de rocas. */
+    private static boolean nearSomething(Vec3 pos, double time) {
+        for (SolarSystem.Body b : SolarSystem.bodies()) {
+            if (pos.distanceTo(SolarSystem.position(b, time)) - b.radius() < Math.max(3_000.0, b.radius())) {
+                return true;
+            }
+        }
+        for (SpaceRocks.Field f : SpaceRocks.fields()) {
+            Vec3 c = SpaceRocks.center(f, time);
+            org.joml.Vector3d l = SpaceRocks.frame(f, time).conjugate(new org.joml.Quaterniond())
+                    .transform(new org.joml.Vector3d(pos.x - c.x, pos.y - c.y, pos.z - c.z));
+            double r = Math.hypot(l.x, l.z);
+            if (r > f.rMin() - 1_500.0 && r < f.rMax() + 1_500.0 && Math.abs(l.y) < f.half() + 1_500.0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Si a este jugador, en el espacio, no hay que cargarle chunks alrededor ahora mismo. */
+    public static boolean skipSpaceChunks(ServerPlayer player) {
+        return SPACE_SKIP.contains(player.getUUID());
     }
 
     /** Chunks nuevos que se pueden pedir en este tick (Immersive Portals pide como mucho 4 a la vez). */
