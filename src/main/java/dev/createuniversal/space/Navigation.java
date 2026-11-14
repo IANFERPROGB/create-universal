@@ -128,6 +128,9 @@ public final class Navigation {
         return d.discovered.computeIfAbsent(player, k -> new LinkedHashSet<>(KNOWN));
     }
 
+    /** Cuándo descubrió cada jugador su último astro (tiempo del Overworld), para la orden de explorar (alpha.12.2). */
+    public static final java.util.Map<UUID, Long> LAST_DISCOVERY = new java.util.concurrent.ConcurrentHashMap<>();
+
     /** Descubre un astro (con aviso). @return true si era nuevo */
     public static boolean discover(ServerPlayer player, String body) {
         Data d = Data.get(player.server);
@@ -135,6 +138,7 @@ public final class Navigation {
             return false;
         }
         d.setDirty();
+        LAST_DISCOVERY.put(player.getUUID(), player.server.overworld().getGameTime());
         player.displayClientMessage(Component.translatable("create_universal.nav.discovered",
                 Component.translatable("create_universal.body." + body)).withStyle(ChatFormatting.AQUA), false);
         player.serverLevel().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE,

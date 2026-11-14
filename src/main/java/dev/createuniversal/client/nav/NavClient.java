@@ -218,6 +218,9 @@ public final class NavClient {
         if (target.startsWith("debris:")) {
             return Component.translatable("create_universal.nav.debris");
         }
+        if (target.equals("explore")) {
+            return Component.translatable("create_universal.assistant.explore_target");
+        }
         if (target.startsWith("ship:")) {
             dev.createuniversal.network.ParkedShipsPayload.Ship s = ship(target.substring(5));
             return s != null ? shipName(s) : Component.literal("?");

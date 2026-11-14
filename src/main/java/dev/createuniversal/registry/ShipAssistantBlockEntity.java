@@ -55,7 +55,10 @@ public class ShipAssistantBlockEntity extends KineticBlockEntity {
     private int timer;
 
     // ---- piloto automático
+    public static final String EXPLORE = "explore";
     private boolean engaged;
+    private long exploreSince;
+    private boolean exploreFound;
     private String target = "";
     private Vec3 fixed;
     /** Aceleración medida a tope (bloques/s²); empieza con una suposición prudente. */
@@ -125,7 +128,8 @@ public class ShipAssistantBlockEntity extends KineticBlockEntity {
         }
         ShipAssistant.sendHud(server, ship, new AssistantHudPayload(shown, engaged ? target : "",
                 (float) ShipAssistant.speed(server, ship), last.working(marked), last.total(marked), last.fuel(), last.fuelCapacity(),
-                hull, Breathing.hasAirAround(server, worldPosition), engaged ? (float) eta : -1.0F));
+                hull, Breathing.hasAirAround(server, worldPosition), engaged ? (float) eta : -1.0F, last.energy(), last.energyCapacity(),
+                last.solidItems()));
     }
 
     // ---------------------------------------------------------------- piloto automático
@@ -142,6 +146,20 @@ public class ShipAssistantBlockEntity extends KineticBlockEntity {
         }
         if (last == null) {
             last = ShipAssistant.scan(server, ship);
+        }
+        if (target.equals(EXPLORE)) {
+            // Explorar: recto hacia donde empujan los motores principales, hasta que alguien de a bordo descubra un astro.
+            Direction main = mainDirection();
+            if (main == null) {
+                note("no_engines");
+                return;
+            }
+            org.joml.Vector3d dir = new org.joml.Quaterniond(ship.logicalPose().orientation())
+                    .transform(new org.joml.Vector3d(main.getStepX(), main.getStepY(), main.getStepZ()));
+            Vec3 c = dev.createuniversal.space.Autopilot.center(ship);
+            fixed = c.add(dir.x * 5.0e7, dir.y * 5.0e7, dir.z * 5.0e7);
+            exploreSince = server.getServer().overworld().getGameTime();
+            exploreFound = false;
         }
         this.target = target;
         this.fixed = fixed;
@@ -227,15 +245,26 @@ public class ShipAssistantBlockEntity extends KineticBlockEntity {
             }
         }
         lastVel = v;
+        if (target.equals(EXPLORE) && !exploreFound
+                && ShipAssistant.discoveredSince(server, ship, exploreSince)) {
+            // ¡Astro nuevo! Se frena donde dé tiempo (punto de parada a esta velocidad) y ahí se queda.
+            exploreFound = true;
+            double stopDist = v.lengthSqr() / (2.0 * Math.max(0.5, accel * 0.7));
+            Vec3 c = Autopilot.center(ship);
+            Vec3 ahead = v.lengthSqr() > 1.0e-6 ? v.normalize().scale(stopDist) : Vec3.ZERO;
+            fixed = c.add(ahead);
+            goal = Autopilot.goal(target, fixed, SpaceLayout.time(server));
+        }
         Autopilot.Command c = Autopilot.guide(server, ship, goal, main, accel, getSpeed());
         powerAll(main, c.throttle());
         lastThrottle = c.throttle();
         lastThrust = c.thrustWorld();
         eta = c.eta();
-        pilotStatus = c.status();
+        pilotStatus = target.equals(EXPLORE) && !exploreFound && !c.status().equals("turning") ? "exploring"
+                : exploreFound && !c.status().equals("arrived") ? "found" : c.status();
         if (c.status().equals("arrived")) {
             if (++arrivedTicks > 40) {
-                disengage("arrived");
+                disengage(target.equals(EXPLORE) ? "found_stopped" : "arrived");
             }
         } else {
             arrivedTicks = 0;
@@ -323,6 +352,8 @@ public class ShipAssistantBlockEntity extends KineticBlockEntity {
             tag.putBoolean("Engaged", engaged);
             tag.putString("Target", target);
             tag.putDouble("Accel", accel);
+            tag.putLong("ExploreSince", exploreSince);
+            tag.putBoolean("ExploreFound", exploreFound);
             if (fixed != null) {
                 tag.putDouble("FixedX", fixed.x);
                 tag.putDouble("FixedY", fixed.y);
@@ -344,6 +375,8 @@ public class ShipAssistantBlockEntity extends KineticBlockEntity {
             engaged = tag.getBoolean("Engaged");
             target = tag.getString("Target");
             accel = tag.contains("Accel") ? tag.getDouble("Accel") : 3.0;
+            exploreSince = tag.getLong("ExploreSince");
+            exploreFound = tag.getBoolean("ExploreFound");
             fixed = tag.contains("FixedX") ? new Vec3(tag.getDouble("FixedX"), tag.getDouble("FixedY"), tag.getDouble("FixedZ")) : null;
         }
     }

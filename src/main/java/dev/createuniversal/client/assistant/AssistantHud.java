@@ -46,11 +46,13 @@ public final class AssistantHud {
         int w = 300;
         int x0 = g.guiWidth() / 2 - w / 2;
         int y0 = 16;
-        g.fill(x0, y0, x0 + w, y0 + 36, 0x90101820);
+        boolean extra = hud.energyCapacity() > 0 || hud.solid() > 0;
+        g.fill(x0, y0, x0 + w, y0 + (extra ? 47 : 36), 0x90101820);
         g.fill(x0, y0, x0 + w, y0 + 1, 0xFF58E1FF);
 
         // Línea 1: estado y destino.
-        boolean ready = hud.status().equals("ready") || hud.status().startsWith("flying");
+        boolean ready = !hud.status().equals("no_rotation") && !hud.status().equals("not_on_ship") && !hud.status().equals("manual")
+                && !hud.status().equals("lost") && !hud.status().equals("not_in_space") && !hud.status().equals("no_engines");
         Component status = Component.translatable("create_universal.assistant.title").append(" · ")
                 .append(Component.translatable("create_universal.assistant.status." + hud.status(), 64));
         g.drawString(font, status, x0 + 6, y0 + 4, ready ? 0xFF8FD6FF : 0xFFFFB050);
@@ -74,6 +76,14 @@ public final class AssistantHud {
         int fuelPct = hud.fuelCapacity() > 0 ? (int) Math.round(100.0 * hud.fuel() / hud.fuelCapacity()) : -1;
         bar(g, font, x0 + 6, y0 + 25, Component.translatable("create_universal.assistant.fuel"), fuelPct, 0xFFFFB050);
         bar(g, font, x0 + 156, y0 + 25, Component.translatable("create_universal.assistant.hull"), hud.hull(), 0xFF7CFF8A);
+        // Línea 4: energía (FE) y combustible sólido, si los hay.
+        if (hud.energyCapacity() > 0) {
+            bar(g, font, x0 + 6, y0 + 36, Component.translatable("create_universal.assistant.energy"),
+                    (int) Math.round(100.0 * hud.energy() / hud.energyCapacity()), 0xFF8FD6FF);
+        }
+        if (hud.solid() > 0) {
+            g.drawString(font, Component.translatable("create_universal.assistant.solid", hud.solid()), x0 + 156, y0 + 36, 0xFFFFB050);
+        }
     }
 
     private static void bar(GuiGraphics g, Font font, int x, int y, Component label, int pct, int color) {

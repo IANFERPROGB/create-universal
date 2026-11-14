@@ -221,7 +221,7 @@
   "create_universal.assistant.kind.liquid": "liquid fuel",
   "create_universal.assistant.kind.vector": "vector",
   "create_universal.assistant.kind.creative": "creative",
-  "create_universal.assistant.fuel_line": "Fuel and tanks: %s · Mass: %s t",
+  "create_universal.assistant.fuel_line": "Liquid fuel: %s · Mass: %s t",
   "create_universal.assistant.others_title": "Others (look like engines, unknown to me)",
   "create_universal.assistant.no_others": "None",
   "create_universal.assistant.marked": "Engine ✓",
@@ -245,5 +245,16 @@
   "create_universal.assistant.status.stopped": "Autopilot off",
   "create_universal.assistant.go": "Autopilot: go to %s",
   "create_universal.assistant.go_none": "Pick a destination on the map for the autopilot",
-  "create_universal.assistant.stop": "Turn the autopilot off"
+  "create_universal.assistant.stop": "Turn the autopilot off",
+  "create_universal.assistant.energy": "Energy",
+  "create_universal.assistant.solid": "Solid: %s",
+  "create_universal.assistant.energy_line": "Energy: %s · Solid fuel: %s",
+  "create_universal.assistant.why.gyro": "Cannot fly: the gyroscope needs at least %s RPM on its shaft",
+  "create_universal.assistant.why.engines": "Cannot fly: no thrusters I know how to drive",
+  "create_universal.assistant.why.destination": "To go somewhere, pick a destination on the map (table or projector)",
+  "create_universal.assistant.explore": "Explore: fly until a new body is found",
+  "create_universal.assistant.explore_target": "exploration",
+  "create_universal.assistant.status.exploring": "Autopilot: exploring (straight ahead)",
+  "create_universal.assistant.status.found": "Autopilot: new body! Braking",
+  "create_universal.assistant.status.found_stopped": "Autopilot: new body found, ship stopped"
 }

@@ -15,7 +15,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * @param eta     segundos para llegar, o −1
  */
 public record AssistantHudPayload(String status, String target, float speed, int working, int total, long fuel, long fuelCapacity,
-                                  int hull, boolean air, float eta) implements CustomPacketPayload {
+                                  int hull, boolean air, float eta, long energy, long energyCapacity, int solid) implements CustomPacketPayload {
     public static final Type<AssistantHudPayload> TYPE = new Type<>(CreateUniversal.id("assistant_hud"));
     public static final StreamCodec<ByteBuf, AssistantHudPayload> STREAM_CODEC = StreamCodec.of(AssistantHudPayload::write, AssistantHudPayload::read);
 
@@ -31,12 +31,15 @@ public record AssistantHudPayload(String status, String target, float speed, int
         f.writeVarInt(p.hull());
         f.writeBoolean(p.air());
         f.writeFloat(p.eta());
+        f.writeVarLong(p.energy());
+        f.writeVarLong(p.energyCapacity());
+        f.writeVarInt(p.solid());
     }
 
     private static AssistantHudPayload read(ByteBuf buf) {
         FriendlyByteBuf f = new FriendlyByteBuf(buf);
         return new AssistantHudPayload(f.readUtf(64), f.readUtf(128), f.readFloat(), f.readVarInt(), f.readVarInt(), f.readVarLong(),
-                f.readVarLong(), f.readVarInt(), f.readBoolean(), f.readFloat());
+                f.readVarLong(), f.readVarInt(), f.readBoolean(), f.readFloat(), f.readVarLong(), f.readVarLong(), f.readVarInt());
     }
 
     @Override

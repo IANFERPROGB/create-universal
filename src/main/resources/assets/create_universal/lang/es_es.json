@@ -221,7 +221,7 @@
   "create_universal.assistant.kind.liquid": "de combustible líquido",
   "create_universal.assistant.kind.vector": "vectorial",
   "create_universal.assistant.kind.creative": "creativo",
-  "create_universal.assistant.fuel_line": "Combustible y depósitos: %s · Masa: %s t",
+  "create_universal.assistant.fuel_line": "Combustible líquido: %s · Masa: %s t",
   "create_universal.assistant.others_title": "Otros (parecen motores y no los conozco)",
   "create_universal.assistant.no_others": "Nada",
   "create_universal.assistant.marked": "Es motor ✓",
@@ -245,5 +245,16 @@
   "create_universal.assistant.status.stopped": "Piloto apagado",
   "create_universal.assistant.go": "Piloto automático: ir a %s",
   "create_universal.assistant.go_none": "Elige un destino en el mapa para el piloto",
-  "create_universal.assistant.stop": "Apagar el piloto automático"
+  "create_universal.assistant.stop": "Apagar el piloto automático",
+  "create_universal.assistant.energy": "Energía",
+  "create_universal.assistant.solid": "Sólido: %s",
+  "create_universal.assistant.energy_line": "Energía: %s · Combustible sólido: %s",
+  "create_universal.assistant.why.gyro": "No puede pilotar: el giroscopio necesita al menos %s RPM en su eje",
+  "create_universal.assistant.why.engines": "No puede pilotar: no hay propulsores que sepa manejar",
+  "create_universal.assistant.why.destination": "Para ir a un sitio, elige un destino en el mapa (mesa o proyector)",
+  "create_universal.assistant.explore": "Explorar: avanzar hasta descubrir un astro nuevo",
+  "create_universal.assistant.explore_target": "exploración",
+  "create_universal.assistant.status.exploring": "Piloto: explorando (recto hacia delante)",
+  "create_universal.assistant.status.found": "Piloto: ¡astro nuevo! Frenando",
+  "create_universal.assistant.status.found_stopped": "Piloto: astro nuevo descubierto, nave parada"
 }

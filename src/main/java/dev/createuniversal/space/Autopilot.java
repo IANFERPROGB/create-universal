@@ -61,6 +61,11 @@ public final class Autopilot {
         return fixed == null ? null : new Goal(fixed, Vec3.ZERO, 48.0, null);
     }
 
+    /** Centro de la nave en el mundo. */
+    public static Vec3 center(ServerSubLevel ship) {
+        return OrbitalFrame.centerOf(ship);
+    }
+
     /** Velocidad de la nave en el mundo (bloques/s). */
     public static Vec3 velocity(ServerLevel level, ServerSubLevel ship) {
         var mass = ship.getMassTracker();
@@ -160,7 +165,47 @@ public final class Autopilot {
             bestT = t;
             waypoint = c.add(off.normalize().scale(safe * 1.25));
         }
-        return (waypoint != null ? waypoint.subtract(p) : r).normalize();
+        Vec3 aim = waypoint != null ? waypoint : goal.pos();
+        Vec3 rocks = rocks(p, aim, time);
+        return (rocks != null ? rocks : aim).subtract(p).normalize();
+    }
+
+    /**
+     * Campos de rocas (cinturón de asteroides, anillos de Saturno): si el camino de los próximos 30.000 bloques entra en
+     * uno, apunta por encima (o por debajo, según de qué lado venga) de su plano. Si la nave ya está dentro, no lo cuenta.
+     */
+    private static Vec3 rocks(Vec3 p, Vec3 aim, double time) {
+        Vec3 seg = aim.subtract(p);
+        double len = Math.min(seg.length(), 30_000.0);
+        if (len < 1.0) {
+            return null;
+        }
+        Vec3 dir = seg.normalize();
+        for (SpaceRocks.Field f : SpaceRocks.fields()) {
+            Vec3 c = SpaceRocks.center(f, time);
+            Quaterniond inv = SpaceRocks.frame(f, time).conjugate(new Quaterniond());
+            double margin = 150.0;
+            Vector3d start = inv.transform(new Vector3d(p.x - c.x, p.y - c.y, p.z - c.z));
+            if (inside(f, start, margin)) {
+                continue;
+            }
+            for (int k = 1; k <= 64; k++) {
+                Vec3 s = p.add(dir.scale(len * k / 64.0));
+                Vector3d l = inv.transform(new Vector3d(s.x - c.x, s.y - c.y, s.z - c.z));
+                if (inside(f, l, margin)) {
+                    double side = start.y >= 0 ? 1.0 : -1.0;
+                    l.y = side * (f.half() + margin + 400.0);
+                    Vector3d w = SpaceRocks.frame(f, time).transform(l);
+                    return new Vec3(c.x + w.x, c.y + w.y, c.z + w.z);
+                }
+            }
+        }
+        return null;
+    }
+
+    private static boolean inside(SpaceRocks.Field f, Vector3d local, double margin) {
+        double r = Math.hypot(local.x, local.z);
+        return r > f.rMin() - margin && r < f.rMax() + margin && Math.abs(local.y) < f.half() + margin;
     }
 
     /** Paso de física: el giroscopio. */

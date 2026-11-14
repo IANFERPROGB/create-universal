@@ -47,7 +47,17 @@ final class PropulsionEngines {
                 efficiency = 50;
             }
         }
-        return new ShipAssistant.Engine(t.getBlockPos(), kind, push, efficiency, t.isActive(), t.getFuelAmountMb(), t.getFuelCapacityMb());
+        int items = 0;
+        if (t instanceof dev.propulsionteam.propulsionsimulated.content.thruster.solid_fuel_thruster.SolidFuelThrusterBlockEntity s) {
+            items = s.inventory.getStackInSlot(dev.propulsionteam.propulsionsimulated.content.thruster.solid_fuel_thruster.SolidFuelThrusterItemHandler.FUEL_SLOT)
+                    .getCount() + (s.getDisplayBurnTimeRemaining() > 0 ? 1 : 0);
+        }
+        return new ShipAssistant.Engine(t.getBlockPos(), kind, push, efficiency, t.isActive(), t.getFuelAmountMb(), t.getFuelCapacityMb(), items);
+    }
+
+    /** Si este líquido le sirve de combustible a los propulsores de Create Propulsion. */
+    static boolean isFuel(net.minecraft.world.level.material.Fluid fluid) {
+        return dev.propulsionteam.propulsionsimulated.content.thruster.ThrusterFuelManager.getFuelPropertiesMap().containsKey(fluid);
     }
 
     /** Potencia de 0 a 1 que pone el asistente; con un valor negativo se le devuelve el control a la redstone. */

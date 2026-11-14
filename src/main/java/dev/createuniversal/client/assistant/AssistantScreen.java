@@ -48,7 +48,7 @@ public class AssistantScreen extends Screen {
     }
 
     private int othersTop() {
-        return 46 + Math.max(1, info.engines().size()) * 11 + 30;
+        return 46 + Math.max(1, info.engines().size()) * 11 + 30 + (info.energyCapacity() > 0 || info.solid() > 0 ? 11 : 0);
     }
 
     @Override
@@ -70,9 +70,15 @@ public class AssistantScreen extends Screen {
             }).bounds(width / 2 - 100, height - 52, 200, 20).build();
             go.active = dest != null && info.gyroReady() && !info.engines().isEmpty();
             addRenderableWidget(go);
+            Button explore = Button.builder(Component.translatable("create_universal.assistant.explore"),
+                    b -> PacketDistributor.sendToServer(new dev.createuniversal.network.AssistantCommandPayload(info.pos(), true,
+                            dev.createuniversal.registry.ShipAssistantBlockEntity.EXPLORE, 0, 0, 0)))
+                    .bounds(width / 2 - 100, height - 74, 200, 20).build();
+            explore.active = info.gyroReady() && !info.engines().isEmpty();
+            addRenderableWidget(explore);
         }
         int y = othersTop() + 12;
-        for (int i = scroll; i < info.others().size() && y < height - 64; i++) {
+        for (int i = scroll; i < info.others().size() && y < height - 98; i++) {
             AssistantInfoPayload.OtherRow o = info.others().get(i);
             Component label = Component.translatable(o.marked() ? "create_universal.assistant.marked" : "create_universal.assistant.unmarked");
             addRenderableWidget(Button.builder(label, b -> PacketDistributor.sendToServer(new AssistantMarkPayload(info.pos(), o.block())))
@@ -122,6 +128,11 @@ public class AssistantScreen extends Screen {
                 ? String.format(Locale.ROOT, "%,d / %,d mB", info.fuel(), info.fuelCapacity()) : "—";
         g.drawString(font, Component.translatable("create_universal.assistant.fuel_line", fuel,
                 String.format(Locale.ROOT, "%.1f", info.mass() / 1000.0)), x, y, 0xFFB8C8E0);
+        if (info.energyCapacity() > 0 || info.solid() > 0) {
+            y += 11;
+            String energy = info.energyCapacity() > 0 ? String.format(Locale.ROOT, "%,d / %,d FE", info.energy(), info.energyCapacity()) : "—";
+            g.drawString(font, Component.translatable("create_universal.assistant.energy_line", energy, info.solid()), x, y, 0xFFB8C8E0);
+        }
 
         int oy = othersTop();
         g.drawString(font, Component.translatable("create_universal.assistant.others_title"), x, oy, 0xFF8FD6FF);
@@ -129,7 +140,7 @@ public class AssistantScreen extends Screen {
         if (info.others().isEmpty()) {
             g.drawString(font, Component.translatable("create_universal.assistant.no_others"), x + 8, oy, 0xFF9AA4B4);
         }
-        for (int i = scroll; i < info.others().size() && oy < height - 64; i++) {
+        for (int i = scroll; i < info.others().size() && oy < height - 98; i++) {
             AssistantInfoPayload.OtherRow o = info.others().get(i);
             ResourceLocation id = ResourceLocation.tryParse(o.block());
             Component name = id != null && BuiltInRegistries.BLOCK.containsKey(id)
@@ -137,6 +148,14 @@ public class AssistantScreen extends Screen {
             g.drawString(font, Component.literal(o.count() + " × ").append(name), x + 8, oy + 1, o.marked() ? 0xFF7CFF8A : 0xFFDDDDDD);
             oy += 16;
         }
-        g.drawCenteredString(font, Component.translatable("create_universal.assistant.others_help"), width / 2, height - 64, 0xFF7A8496);
+        g.drawCenteredString(font, Component.translatable("create_universal.assistant.others_help"), width / 2, height - 98, 0xFF7A8496);
+        // Por qué no se puede encender el piloto (si no se puede).
+        if (!info.piloting()) {
+            String why = !info.gyroReady() ? "create_universal.assistant.why.gyro" : info.engines().isEmpty() ? "create_universal.assistant.why.engines"
+                    : dev.createuniversal.client.nav.NavClient.destination() == null ? "create_universal.assistant.why.destination" : null;
+            if (why != null) {
+                g.drawCenteredString(font, Component.translatable(why, 64), width / 2, height - 86, 0xFFFFB050);
+            }
+        }
     }
 }
