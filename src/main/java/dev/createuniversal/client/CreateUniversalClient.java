@@ -35,6 +35,9 @@ public final class CreateUniversalClient {
                         .factory(com.simibubi.create.content.kinetics.base.SingleAxisRotatingVisual::shaft)
                         .skipVanillaRender(be -> true)
                         .apply()));
+        // Ponder (beta.1, D65): mantener W sobre el asistente, la mesa, el proyector, el estabilizador de gravedad, el motor
+        // de crucero o la pechera.
+        net.createmod.ponder.foundation.PonderIndex.addPlugin(new dev.createuniversal.client.ponder.CUPonderPlugin());
         // Descripciones con Shift al estilo de Create (beta, D66): todo objeto del mod que tenga texto ".tooltip.summary".
         modBus.addListener((net.neoforged.fml.event.lifecycle.FMLClientSetupEvent e) -> e.enqueueWork(() -> {
             for (var reg : java.util.List.of(dev.createuniversal.registry.CUBlocks.ITEMS, dev.createuniversal.registry.CUSuit.ITEMS,
