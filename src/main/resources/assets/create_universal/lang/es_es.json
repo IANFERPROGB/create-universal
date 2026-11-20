@@ -276,5 +276,7 @@
   "create_universal.sleep.event.sun": "la nave entra en la zona de calor del %s en %s min",
   "create_universal.sleep.event.rocks": "la nave entra en %s en %s min",
   "create_universal.rocks.asteroid_belt": "el cinturón de asteroides",
-  "create_universal.rocks.saturn_rings": "los anillos de Saturno"
+  "create_universal.rocks.saturn_rings": "los anillos de Saturno",
+  "create_universal.sleep.event.fuel": "la nave se queda sin combustible en %s min",
+  "create_universal.sleep.event.oxygen": "la nave se queda sin oxígeno en %s min"
 }

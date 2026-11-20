@@ -43,7 +43,10 @@ import java.util.concurrent.ConcurrentHashMap;
  *       calcula. Fijada con el Estabilizador orbital, se queda; en órbita, sigue dando vueltas a su astro; si no, sigue
  *       recta a su velocidad (dentro de la zona de un astro, con el astro).</li>
  *   <li>Si en ese tiempo una nave con alguien durmiendo va a chocar con un astro, entrar en la zona de calor del Sol o en
- *       un campo de rocas, o llegar al destino del piloto automático, el salto se corta 5 minutos antes y se avisa.</li>
+ *       un campo de rocas, llegar al destino del piloto automático o quedarse sin combustible o sin oxígeno, el salto se
+ *       corta 5 minutos antes y se avisa.</li>
+ *   <li>Lo que la nave estaba gastando ({@link ShipSupplies}: combustible y oxígeno) se quita de sus depósitos, y si iba
+ *       empujando sigue acelerando igual durante el salto (alpha.13.1).</li>
  *   <li>Después hay que esperar 30 minutos reales para volver a dormir en el espacio.</li>
  * </ul>
  */
@@ -94,6 +97,15 @@ public final class SpaceSleep {
         }
     }
 
+    /** Las medidas de gasto de las naves con gente (cada 2 s, en el espacio). */
+    @SubscribeEvent
+    public static void onServerTick(net.neoforged.neoforge.event.tick.ServerTickEvent.Post event) {
+        ServerLevel space = event.getServer().getLevel(CUDimensions.SPACE);
+        if (space != null) {
+            ShipSupplies.tick(space);
+        }
+    }
+
     /** Minecraft ya ha visto que duermen todos los del espacio: en vez de pasar a la mañana, el salto. */
     @SubscribeEvent
     public static void onSleepFinished(SleepFinishedTimeEvent event) {
@@ -116,7 +128,7 @@ public final class SpaceSleep {
     }
 
     private record Plan(List<ServerSubLevel> group, Vec3 start, Path path, SolarSystem.Body orbiting, boolean sleepersAboard,
-                        Arrival arrival) {}
+                        Arrival arrival, ShipSupplies.Rates rates) {}
 
     private record Event(double t, Component what) {}
 
@@ -210,8 +222,10 @@ public final class SpaceSleep {
         ServerSubLevel root = group.get(0);
         Vec3 c0 = OrbitalFrame.centerOf(root);
         Vec3 v0 = Autopilot.velocity(space, root);
+        ShipSupplies.Rates rates = ShipSupplies.rates(group);
+        Vec3 acc = rates.accel();
         if (OrbitalStabilizers.isPinned(group)) {
-            return new Plan(group, c0, fixed(c0), null, sleepers, arrival);
+            return new Plan(group, c0, fixed(c0), null, sleepers, arrival, rates);
         }
         SolarSystem.Body orbitBody = SatelliteOrbits.orbitBodyOf(root);
         if (orbitBody != null) {
@@ -237,10 +251,10 @@ public final class SpaceSleep {
                         Vector3d v = new Quaterniond().rotateAxis(omega * t, axis).transform(new Vector3d(tangential.x, tangential.y, tangential.z));
                         return SolarSystem.velocity(orbitBody, time + t * 20.0).add(v.x, v.y, v.z);
                     }
-                }, orbitBody, sleepers, arrival);
+                }, orbitBody, sleepers, arrival, rates);
             }
         }
-        // Recta; dentro de la zona de un astro (no el Sol), con el astro.
+        // Recta (acelerando si iba empujando); dentro de la zona de un astro (no el Sol), con el astro.
         SolarSystem.Body frame = SolarSystem.frameBody(c0, time);
         if (frame != null && !frame.isSun()) {
             Vec3 rel0 = c0.subtract(SolarSystem.position(frame, time));
@@ -248,26 +262,26 @@ public final class SpaceSleep {
             return new Plan(group, c0, new Path() {
                 @Override
                 public Vec3 pos(double t) {
-                    return SolarSystem.position(frame, time + t * 20.0).add(rel0).add(vrel.scale(t));
+                    return SolarSystem.position(frame, time + t * 20.0).add(rel0).add(vrel.scale(t)).add(acc.scale(0.5 * t * t));
                 }
 
                 @Override
                 public Vec3 vel(double t) {
-                    return SolarSystem.velocity(frame, time + t * 20.0).add(vrel);
+                    return SolarSystem.velocity(frame, time + t * 20.0).add(vrel).add(acc.scale(t));
                 }
-            }, null, sleepers, arrival);
+            }, null, sleepers, arrival, rates);
         }
         return new Plan(group, c0, new Path() {
             @Override
             public Vec3 pos(double t) {
-                return c0.add(v0.scale(t));
+                return c0.add(v0.scale(t)).add(acc.scale(0.5 * t * t));
             }
 
             @Override
             public Vec3 vel(double t) {
-                return v0;
+                return v0.add(acc.scale(t));
             }
-        }, null, sleepers, arrival);
+        }, null, sleepers, arrival, rates);
     }
 
     private static Path fixed(Vec3 c0) {
@@ -292,6 +306,18 @@ public final class SpaceSleep {
             return new Event(plan.arrival().seconds(), Component.translatable("create_universal.sleep.event.arrival",
                     Math.round(plan.arrival().seconds() / 60.0)));
         }
+        // Combustible u oxígeno que se acaban.
+        Event supplies = null;
+        ShipSupplies.Rates r = plan.rates();
+        if (r.oxygenRate() > 0 && r.oxygen() / r.oxygenRate() < horizon) {
+            double t = r.oxygen() / r.oxygenRate();
+            supplies = new Event(t, Component.translatable("create_universal.sleep.event.oxygen", Math.round(t / 60.0)));
+        }
+        if (r.fuelRate() > 0 && r.fuel() / r.fuelRate() < horizon && (supplies == null || r.fuel() / r.fuelRate() < supplies.t())) {
+            double t = r.fuel() / r.fuelRate();
+            supplies = new Event(t, Component.translatable("create_universal.sleep.event.fuel", Math.round(t / 60.0)));
+        }
+        double limit = supplies != null ? supplies.t() : horizon;
         Vec3 start = plan.path().pos(0);
         List<SolarSystem.Body> bodies = SolarSystem.bodies();
         boolean[] near0 = new boolean[bodies.size()];
@@ -303,7 +329,7 @@ public final class SpaceSleep {
         for (int i = 0; i < inRocks0.length; i++) {
             inRocks0[i] = inField(SpaceRocks.fields().get(i), start, time);
         }
-        for (double t = STEP; t <= horizon; t += STEP) {
+        for (double t = STEP; t <= limit; t += STEP) {
             Vec3 p = plan.path().pos(t);
             double tt = time + t * 20.0;
             for (int i = 0; i < bodies.size(); i++) {
@@ -325,7 +351,7 @@ public final class SpaceSleep {
                 }
             }
         }
-        return null;
+        return supplies;
     }
 
     /** A qué distancia del centro de un astro hay peligro: el Sol, su zona de calor; los demás, a 300 bloques del suelo. */
@@ -342,6 +368,7 @@ public final class SpaceSleep {
 
     /** Pone la nave (todas sus piezas, con lo que va a bordo en el mundo) donde estaría y con la velocidad que tendría. */
     private static void move(ServerLevel space, ServerSubLevelContainer container, Plan plan, double seconds) {
+        ShipSupplies.consume(space, plan.group(), plan.rates(), seconds);
         Vec3 delta = plan.path().pos(seconds).subtract(plan.start());
         Vec3 newVel = plan.path().vel(seconds);
         if (delta.lengthSqr() < 1.0e-6) {

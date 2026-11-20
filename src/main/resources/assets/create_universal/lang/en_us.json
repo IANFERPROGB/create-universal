@@ -276,5 +276,7 @@
   "create_universal.sleep.event.sun": "the ship enters the heat zone of the %s in %s min",
   "create_universal.sleep.event.rocks": "the ship enters %s in %s min",
   "create_universal.rocks.asteroid_belt": "the asteroid belt",
-  "create_universal.rocks.saturn_rings": "the rings of Saturn"
+  "create_universal.rocks.saturn_rings": "the rings of Saturn",
+  "create_universal.sleep.event.fuel": "the ship runs out of fuel in %s min",
+  "create_universal.sleep.event.oxygen": "the ship runs out of oxygen in %s min"
 }
