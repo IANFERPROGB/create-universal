@@ -99,7 +99,8 @@ public final class FastTravelChunks {
         Vec3 rel = frame != null ? velocity.subtract(SolarSystem.velocity(frame, time)) : velocity;
         double speed = rel.length();
         boolean skipping = SPACE_SKIP.contains(id);
-        boolean fast = skipping ? speed > SPACE_SKIP_BELOW : speed > SPACE_SKIP_ABOVE;
+        double above = dev.createuniversal.CUConfig.NO_CHUNKS_ABOVE.get();
+        boolean fast = above > 0 && (skipping ? speed > above - (SPACE_SKIP_ABOVE - SPACE_SKIP_BELOW) : speed > above);
         boolean skip = fast && !nearSomething(pos, time);
         if (skip != skipping) {
             if (skip) {

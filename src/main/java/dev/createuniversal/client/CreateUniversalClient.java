@@ -35,6 +35,18 @@ public final class CreateUniversalClient {
                         .factory(com.simibubi.create.content.kinetics.base.SingleAxisRotatingVisual::shaft)
                         .skipVanillaRender(be -> true)
                         .apply()));
+        // Descripciones con Shift al estilo de Create (beta, D66): todo objeto del mod que tenga texto ".tooltip.summary".
+        modBus.addListener((net.neoforged.fml.event.lifecycle.FMLClientSetupEvent e) -> e.enqueueWork(() -> {
+            for (var reg : java.util.List.of(dev.createuniversal.registry.CUBlocks.ITEMS, dev.createuniversal.registry.CUSuit.ITEMS,
+                    dev.createuniversal.registry.CUMinerals.ITEMS, dev.createuniversal.registry.CUMachines.ITEMS)) {
+                for (var holder : reg.getEntries()) {
+                    net.minecraft.world.item.Item item = holder.get();
+                    com.simibubi.create.foundation.item.TooltipModifier.REGISTRY.register(item,
+                            new com.simibubi.create.foundation.item.ItemDescription.Modifier(item,
+                                    net.createmod.catnip.lang.FontHelper.Palette.STANDARD_CREATE));
+                }
+            }
+        }));
         modBus.addListener((net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent e) ->
                 e.register(dev.createuniversal.client.assistant.AssistantHud.TOGGLE));
         NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.client.event.ClientTickEvent.Post e) ->

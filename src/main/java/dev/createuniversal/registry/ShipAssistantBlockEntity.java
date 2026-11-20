@@ -251,7 +251,7 @@ public class ShipAssistantBlockEntity extends KineticBlockEntity {
             Vec3 dv = v.subtract(lastVel);
             double a = (dv.x * lastThrust.x + dv.y * lastThrust.y + dv.z * lastThrust.z) * 20.0 / lastThrottle;
             // Con el motor de crucero se empuja ×4: se guarda lo que daría sin él, que es con lo que hay que frenar al llegar.
-            a /= dev.createuniversal.space.CruiseDrives.boosting(ship) ? dev.createuniversal.space.CruiseDrives.FACTOR : 1.0;
+            a /= dev.createuniversal.space.CruiseDrives.boosting(ship) ? dev.createuniversal.space.CruiseDrives.factor() : 1.0;
             if (a > 0.05 && a < 500.0) {
                 accel = accel * 0.92 + a * 0.08;
             }

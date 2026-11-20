@@ -12,10 +12,13 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Motor de crucero (alpha.12.4, D26, D95): mientras una nave lleva uno encendido y está lejos de los astros y de los
  * campos de rocas (la misma zona en la que ya no se cargan chunks, D94), sus propulsores de Create Propulsion empujan
- * {@link #FACTOR} veces más. Al acercarse a algo se apaga solo.
+ * {@link #factor()} veces más (4 por defecto). Al acercarse a algo se apaga solo.
  */
 public final class CruiseDrives {
-    public static final double FACTOR = 4.0;
+    /** Cuánto más empujan (configurable, 4 por defecto). */
+    public static double factor() {
+        return dev.createuniversal.CUConfig.CRUISE_FACTOR.get();
+    }
     /** Ticks que dura el impulso desde la última vez que el bloque dijo que sigue encendido. */
     private static final long HOLD = 20;
 
@@ -39,6 +42,6 @@ public final class CruiseDrives {
             return 1.0;
         }
         SubLevel ship = Sable.HELPER.getContaining(level, pos);
-        return ship != null && boosting(ship) ? FACTOR : 1.0;
+        return ship != null && boosting(ship) ? factor() : 1.0;
     }
 }

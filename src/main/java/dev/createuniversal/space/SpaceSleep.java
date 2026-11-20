@@ -51,12 +51,16 @@ import java.util.concurrent.ConcurrentHashMap;
  * </ul>
  */
 public final class SpaceSleep {
-    /** Media hora real. */
-    public static final double JUMP_SECONDS = 1_800.0;
+    /** Lo que se salta (media hora real por defecto, configurable). */
+    private static double jumpSeconds() {
+        return dev.createuniversal.CUConfig.SLEEP_MINUTES.get() * 60.0;
+    }
     /** Se despierta 5 minutos antes de lo que vaya a pasar. */
     private static final double WAKE_BEFORE = 300.0;
     /** Cooldown: 30 minutos reales (ticks del Overworld, que el salto no cambia). */
-    private static final long COOLDOWN_TICKS = 36_000L;
+    private static long cooldownTicks() {
+        return dev.createuniversal.CUConfig.SLEEP_COOLDOWN_MINUTES.get() * 1200L;
+    }
     private static final double STEP = 5.0;
 
     /** Llegada prevista del piloto automático de cada nave (s desde ahora, al apuntarla) y cuándo se apuntó. */
@@ -173,12 +177,12 @@ public final class SpaceSleep {
             if (!plan.sleepersAboard()) {
                 continue;
             }
-            Event e = firstEvent(plan, time, JUMP_SECONDS + WAKE_BEFORE, true);
+            Event e = firstEvent(plan, time, jumpSeconds() + WAKE_BEFORE, true);
             if (e != null && (first == null || e.t() < first.t())) {
                 first = e;
             }
         }
-        double seconds = JUMP_SECONDS;
+        double seconds = jumpSeconds();
         if (first != null) {
             seconds = Math.min(seconds, first.t() - WAKE_BEFORE);
         }
@@ -207,7 +211,7 @@ public final class SpaceSleep {
         int minutes = (int) Math.round(seconds / 60.0);
         for (ServerPlayer p : space.players()) {
             p.displayClientMessage(Component.translatable("create_universal.sleep.slept", minutes).withStyle(ChatFormatting.AQUA), false);
-            if (first != null && seconds < JUMP_SECONDS) {
+            if (first != null && seconds < jumpSeconds()) {
                 Component alarm = Component.translatable("create_universal.sleep.alarm").withStyle(ChatFormatting.RED);
                 p.connection.send(new ClientboundSetTitleTextPacket(alarm));
                 p.connection.send(new ClientboundSetSubtitleTextPacket(first.what().copy().withStyle(ChatFormatting.GOLD)));
@@ -423,7 +427,7 @@ public final class SpaceSleep {
         if (last <= 0) {
             return 0;
         }
-        return Math.max(0, COOLDOWN_TICKS - (server.overworld().getGameTime() - last));
+        return Math.max(0, cooldownTicks() - (server.overworld().getGameTime() - last));
     }
 
     private static final class Data extends SavedData {

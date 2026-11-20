@@ -8,6 +8,10 @@ public final class CUConfig {
     public static final ModConfigSpec.IntValue EXIT_ALTITUDE;
     public static final ModConfigSpec.IntValue DEBRIS_MINUTES;
     public static final ModConfigSpec.IntValue SHIPS_PER_PLAYER;
+    public static final ModConfigSpec.IntValue NO_CHUNKS_ABOVE;
+    public static final ModConfigSpec.IntValue SLEEP_MINUTES;
+    public static final ModConfigSpec.IntValue SLEEP_COOLDOWN_MINUTES;
+    public static final ModConfigSpec.DoubleValue CRUISE_FACTOR;
     public static final ModConfigSpec.IntValue ROCK_COLLISION_CHUNKS;
     public static final ModConfigSpec.IntValue MAX_ACTIVE_ROCKS;
     public static final ModConfigSpec.IntValue ROCK_RENDER_DISTANCE;
@@ -26,6 +30,18 @@ public final class CUConfig {
         SHIPS_PER_PLAYER = b
                 .comment("Naves de cada jugador que se mantienen cargadas en el espacio aunque no haya nadie cerca (D70). / Ships per player kept loaded in space with nobody around.")
                 .defineInRange("shipsPerPlayer", 10, 0, 100);
+        NO_CHUNKS_ABOVE = b
+                .comment("En el espacio, por encima de esta velocidad (b/s) y lejos de astros y rocas no se cargan chunks alrededor del jugador (D94). 0 = siempre se cargan. / In space, above this speed and far from bodies and rocks, no chunks are loaded around the player. 0 = always loaded.")
+                .defineInRange("noChunksAboveSpeed", 99, 0, 100_000);
+        SLEEP_MINUTES = b
+                .comment("Minutos reales que se saltan al dormir en el espacio (D54). / Real minutes skipped when sleeping in space.")
+                .defineInRange("sleepMinutes", 30, 1, 600);
+        SLEEP_COOLDOWN_MINUTES = b
+                .comment("Minutos reales de espera para volver a dormir en el espacio (D54). / Real minutes before you can sleep in space again.")
+                .defineInRange("sleepCooldownMinutes", 30, 0, 600);
+        CRUISE_FACTOR = b
+                .comment("Cuánto más empujan los propulsores con el Motor de crucero en marcha (D95). / How much harder thrusters push with the Cruise Drive running.")
+                .defineInRange("cruiseFactor", 4.0, 1.0, 50.0);
         b.pop();
         b.push("rocks");
         ROCK_COLLISION_CHUNKS = b
