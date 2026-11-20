@@ -265,5 +265,16 @@
   "create_universal.cruise_drive.status.near": "Standing by: too close to a body or a rock field",
   "create_universal.cruise_drive.status.active": "Running: thrusters push ×4",
   "create_universal.assistant.cruise": "Cruise ×4",
-  "create_universal.assistant.status.climbing": "Autopilot: taking off to space"
+  "create_universal.assistant.status.climbing": "Autopilot: taking off to space",
+  "create_universal.sleep.cooldown": "You are not sleepy yet: you can sleep again in %s min",
+  "create_universal.sleep.no_time": "No time to sleep: %s",
+  "create_universal.sleep.slept": "You slept for %s minutes.",
+  "create_universal.sleep.alarm": "Alarm!",
+  "create_universal.sleep.woken": "The alarm woke you up: %s",
+  "create_universal.sleep.event.arrival": "the autopilot reaches the destination in %s min",
+  "create_universal.sleep.event.body": "the ship will hit %s in %s min",
+  "create_universal.sleep.event.sun": "the ship enters the heat zone of the %s in %s min",
+  "create_universal.sleep.event.rocks": "the ship enters %s in %s min",
+  "create_universal.rocks.asteroid_belt": "the asteroid belt",
+  "create_universal.rocks.saturn_rings": "the rings of Saturn"
 }

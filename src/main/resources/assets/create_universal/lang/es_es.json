@@ -265,5 +265,16 @@
   "create_universal.cruise_drive.status.near": "En espera: demasiado cerca de un astro o de un campo de rocas",
   "create_universal.cruise_drive.status.active": "En marcha: los propulsores empujan ×4",
   "create_universal.assistant.cruise": "Crucero ×4",
-  "create_universal.assistant.status.climbing": "Piloto: despegando hacia el espacio"
+  "create_universal.assistant.status.climbing": "Piloto: despegando hacia el espacio",
+  "create_universal.sleep.cooldown": "Aún no tienes sueño: podrás volver a dormir en %s min",
+  "create_universal.sleep.no_time": "No da tiempo a dormir: %s",
+  "create_universal.sleep.slept": "Has dormido %s minutos.",
+  "create_universal.sleep.alarm": "¡Alarma!",
+  "create_universal.sleep.woken": "La alarma te ha despertado: %s",
+  "create_universal.sleep.event.arrival": "el piloto llega al destino en %s min",
+  "create_universal.sleep.event.body": "la nave va a chocar con %s en %s min",
+  "create_universal.sleep.event.sun": "la nave entra en la zona de calor del %s en %s min",
+  "create_universal.sleep.event.rocks": "la nave entra en %s en %s min",
+  "create_universal.rocks.asteroid_belt": "el cinturón de asteroides",
+  "create_universal.rocks.saturn_rings": "los anillos de Saturno"
 }

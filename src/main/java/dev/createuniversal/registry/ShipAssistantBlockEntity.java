@@ -272,6 +272,9 @@ public class ShipAssistantBlockEntity extends KineticBlockEntity {
         lastThrottle = c.throttle();
         lastThrust = c.thrustWorld();
         eta = c.eta();
+        if (eta > 0) {
+            dev.createuniversal.space.SpaceSleep.arrival(ship, eta, target);
+        }
         pilotStatus = target.equals(EXPLORE) && !exploreFound && !c.status().equals("turning") ? "exploring"
                 : exploreFound && !c.status().equals("arrived") ? "found" : c.status();
         if (c.status().equals("arrived")) {

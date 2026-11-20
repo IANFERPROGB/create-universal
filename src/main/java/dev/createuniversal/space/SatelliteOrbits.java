@@ -85,6 +85,12 @@ public final class SatelliteOrbits {
         return BY_PIECE.containsKey(ship.getUniqueId());
     }
 
+    /** El astro al que da vueltas esta nave, o null (para dormir en el espacio, alpha.13). */
+    public static SolarSystem.Body orbitBodyOf(ServerSubLevel ship) {
+        Orbit o = BY_PIECE.get(ship.getUniqueId());
+        return o != null ? o.body : null;
+    }
+
     /** El planeta o la luna de cuya zona es {@code pos}, o null (Fobos y Deimos cuentan como Marte). */
     private static SolarSystem.Body orbitBody(Vec3 pos, double time) {
         SolarSystem.Body body = SolarSystem.frameBody(pos, time);
