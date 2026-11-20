@@ -197,6 +197,12 @@ public final class ShipDestruction {
                 witnesses.add(p.getUUID());
             }
         }
+        // El dueño, esté donde esté, también ve los restos y recibe el aviso (alpha.13.2, D69).
+        UUID owner = ShipKeeper.owner(group);
+        if (owner != null && !witnesses.contains(owner)) {
+            witnesses.add(owner);
+        }
+        ShipKeeper.destroyed(level.getServer(), group);
         DebrisSites.add(level, c, expires, witnesses);
         CreateUniversal.LOGGER.info("Nave {} ({} piezas, {} jugadores) destruida ({}) en {} ({}, {}, {})", group.get(0).getUniqueId(),
                 group.size(), players, cause.location(), level.dimension().location(), Math.round(c.x), Math.round(c.y), Math.round(c.z));

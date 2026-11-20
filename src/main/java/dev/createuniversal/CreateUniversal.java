@@ -41,6 +41,9 @@ public final class CreateUniversal {
         NeoForge.EVENT_BUS.register(dev.createuniversal.space.ParkedShips.class);
         NeoForge.EVENT_BUS.register(dev.createuniversal.space.SpaceSleep.class);
         dev.createuniversal.space.ShipAnchor.register();
+        dev.createuniversal.space.ShipKeeper.register();
+        modBus.addListener(dev.createuniversal.space.ShipKeeper::registerTickets);
+        NeoForge.EVENT_BUS.register(dev.createuniversal.space.ShipKeeper.class);
         NeoForge.EVENT_BUS.addListener(dev.createuniversal.space.Moonlets::onBreak);
         NeoForge.EVENT_BUS.addListener(dev.createuniversal.space.Moonlets::onPlace);
         NeoForge.EVENT_BUS.addListener(dev.createuniversal.space.Moonlets::onServerStopping);

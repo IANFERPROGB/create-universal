@@ -7,6 +7,7 @@ public final class CUConfig {
     public static final ModConfigSpec SPEC;
     public static final ModConfigSpec.IntValue EXIT_ALTITUDE;
     public static final ModConfigSpec.IntValue DEBRIS_MINUTES;
+    public static final ModConfigSpec.IntValue SHIPS_PER_PLAYER;
     public static final ModConfigSpec.IntValue ROCK_COLLISION_CHUNKS;
     public static final ModConfigSpec.IntValue MAX_ACTIVE_ROCKS;
     public static final ModConfigSpec.IntValue ROCK_RENDER_DISTANCE;
@@ -22,6 +23,9 @@ public final class CUConfig {
         DEBRIS_MINUTES = b
                 .comment("Minutos que duran los restos de una nave destruida y sus objetos (D44). / Minutes the debris of a destroyed ship and its items last.")
                 .defineInRange("debrisMinutes", 60, 1, 10_080);
+        SHIPS_PER_PLAYER = b
+                .comment("Naves de cada jugador que se mantienen cargadas en el espacio aunque no haya nadie cerca (D70). / Ships per player kept loaded in space with nobody around.")
+                .defineInRange("shipsPerPlayer", 10, 0, 100);
         b.pop();
         b.push("rocks");
         ROCK_COLLISION_CHUNKS = b

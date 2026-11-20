@@ -278,5 +278,11 @@
   "create_universal.rocks.asteroid_belt": "el cinturón de asteroides",
   "create_universal.rocks.saturn_rings": "los anillos de Saturno",
   "create_universal.sleep.event.fuel": "la nave se queda sin combustible en %s min",
-  "create_universal.sleep.event.oxygen": "la nave se queda sin oxígeno en %s min"
+  "create_universal.sleep.event.oxygen": "la nave se queda sin oxígeno en %s min",
+  "create_universal.keeper.your_ship": "Tu nave",
+  "create_universal.keeper.over_limit": "Tienes %s naves en el espacio: solo %s se mantienen cargadas cuando no hay nadie cerca.",
+  "create_universal.keeper.danger": "⚠ %s: %s",
+  "create_universal.keeper.fuel": "⚠ %s se queda sin combustible en %s min",
+  "create_universal.keeper.oxygen": "⚠ %s se queda sin oxígeno en %s min",
+  "create_universal.keeper.destroyed": "💥 %s ha sido destruida. Sus restos están marcados en el mapa."
 }

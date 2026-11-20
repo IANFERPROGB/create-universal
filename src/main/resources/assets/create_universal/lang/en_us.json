@@ -278,5 +278,11 @@
   "create_universal.rocks.asteroid_belt": "the asteroid belt",
   "create_universal.rocks.saturn_rings": "the rings of Saturn",
   "create_universal.sleep.event.fuel": "the ship runs out of fuel in %s min",
-  "create_universal.sleep.event.oxygen": "the ship runs out of oxygen in %s min"
+  "create_universal.sleep.event.oxygen": "the ship runs out of oxygen in %s min",
+  "create_universal.keeper.your_ship": "Your ship",
+  "create_universal.keeper.over_limit": "You have %s ships in space: only %s stay loaded when nobody is around.",
+  "create_universal.keeper.danger": "⚠ %s: %s",
+  "create_universal.keeper.fuel": "⚠ %s runs out of fuel in %s min",
+  "create_universal.keeper.oxygen": "⚠ %s runs out of oxygen in %s min",
+  "create_universal.keeper.destroyed": "💥 %s has been destroyed. Its debris is marked on the map."
 }

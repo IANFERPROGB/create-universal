@@ -28,7 +28,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Lo que gasta cada nave con gente a bordo (alpha.13.1, D54, D55): cada 2 s se mide su combustible líquido, su oxígeno
+ * Lo que gasta cada nave con gente a bordo o con dueño (alpha.13.1, D54, D55): cada 2 s se mide su combustible líquido, su oxígeno
  * (el de los oxigenadores y depósitos) y su velocidad, y con lo de los últimos ~16 s se saca a qué ritmo gasta y cuánto
  * acelera. Al dormir en el espacio, eso dice cuándo se acabaría el combustible o el oxígeno (para despertar 5 minutos
  * antes), cómo se mueve la nave si va empujando, y cuánto hay que quitar de sus depósitos tras el salto.
@@ -66,7 +66,7 @@ public final class ShipSupplies {
             return;
         }
         ServerSubLevelContainer container = SubLevelContainer.getContainer(space);
-        if (container == null || space.players().isEmpty()) {
+        if (container == null) {
             SAMPLES.clear();
             return;
         }
@@ -78,9 +78,12 @@ public final class ShipSupplies {
             }
             List<ServerSubLevel> group = ShipGroup.of(s);
             group.forEach(g -> seen.add(g.getUniqueId()));
-            boolean players = false;
-            for (Entity e : ShipDestruction.aboard(space, group)) {
-                players |= e instanceof ServerPlayer;
+            // Las de alguien (siempre cargadas, con avisos al dueño) y las que llevan gente.
+            boolean players = ShipKeeper.owner(group) != null;
+            if (!players) {
+                for (Entity e : ShipDestruction.aboard(space, group)) {
+                    players |= e instanceof ServerPlayer;
+                }
             }
             if (!players) {
                 continue;

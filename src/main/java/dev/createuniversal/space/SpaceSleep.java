@@ -173,7 +173,7 @@ public final class SpaceSleep {
             if (!plan.sleepersAboard()) {
                 continue;
             }
-            Event e = firstEvent(plan, time);
+            Event e = firstEvent(plan, time, JUMP_SECONDS + WAKE_BEFORE, true);
             if (e != null && (first == null || e.t() < first.t())) {
                 first = e;
             }
@@ -299,16 +299,25 @@ public final class SpaceSleep {
     }
 
     /** Lo primero que le pasará a la nave en la próxima media hora (más 5 min), o null. */
-    private static Event firstEvent(Plan plan, double time) {
-        double horizon = JUMP_SECONDS + WAKE_BEFORE;
-        if (plan.arrival() != null && plan.arrival().seconds() >= 0 && plan.arrival().seconds() < horizon) {
+    /** Un peligro en el camino de una nave: cuándo (s) y qué. */
+    public record Danger(double t, Component what) {}
+
+    /** Si la nave va a chocar con un astro, entrar en la zona de calor del Sol o en un campo de rocas en {@code seconds}. */
+    public static Danger danger(ServerLevel space, List<ServerSubLevel> group, double seconds) {
+        Plan plan = plan(space, group, SpaceLayout.time(space), false, null);
+        Event e = firstEvent(plan, SpaceLayout.time(space), seconds, false);
+        return e != null ? new Danger(e.t(), e.what()) : null;
+    }
+
+    private static Event firstEvent(Plan plan, double time, double horizon, boolean withSupplies) {
+        if (withSupplies && plan.arrival() != null && plan.arrival().seconds() >= 0 && plan.arrival().seconds() < horizon) {
             // El piloto automático llega al destino.
             return new Event(plan.arrival().seconds(), Component.translatable("create_universal.sleep.event.arrival",
                     Math.round(plan.arrival().seconds() / 60.0)));
         }
         // Combustible u oxígeno que se acaban.
         Event supplies = null;
-        ShipSupplies.Rates r = plan.rates();
+        ShipSupplies.Rates r = withSupplies ? plan.rates() : ShipSupplies.Rates.NONE;
         if (r.oxygenRate() > 0 && r.oxygen() / r.oxygenRate() < horizon) {
             double t = r.oxygen() / r.oxygenRate();
             supplies = new Event(t, Component.translatable("create_universal.sleep.event.oxygen", Math.round(t / 60.0)));
@@ -329,7 +338,8 @@ public final class SpaceSleep {
         for (int i = 0; i < inRocks0.length; i++) {
             inRocks0[i] = inField(SpaceRocks.fields().get(i), start, time);
         }
-        for (double t = STEP; t <= limit; t += STEP) {
+        double step = Math.min(STEP, horizon / 24.0);
+        for (double t = step; t <= limit; t += step) {
             Vec3 p = plan.path().pos(t);
             double tt = time + t * 20.0;
             for (int i = 0; i < bodies.size(); i++) {
