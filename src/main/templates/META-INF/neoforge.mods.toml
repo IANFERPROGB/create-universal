@@ -10,6 +10,7 @@ issueTrackerURL=""
 modId="${mod_id}"
 version="${mod_version}"
 displayName="${mod_name}"
+logoFile="create_universal_icon.png"
 authors="superian"
 credits="Hecho con Create, Sable, Create Aeronautics y Create Deep Seas. Incluye Gravity Control (Gravity Changer, de Tfarcenim, qouteall, Fusion Flux y Gaider10; licencia MIT)."
 description='''

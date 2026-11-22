@@ -1,5 +1,7 @@
 # Create Universal
 
+![Create Universal](images/banner.png)
+
 Mod de **NeoForge 1.21.1** que lleva las naves de **Create Aeronautics / Sable** al espacio: un sistema solar entero a
 escala, con órbitas reales, planetas y lunas donde aterrizar, supervivencia en el vacío y todo lo necesario para viajar
 entre ellos.
