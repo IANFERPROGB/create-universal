@@ -42,3 +42,11 @@ repo/
 ### Create Universal ###
 # Jars de terceros sacados del modpack: solo para compilar, nunca se publican
 libs/
+
+### Cuadernos del proyecto (solo en local)
+MODLOG.md
+PROGRESS.md
+DISENO_MOD_ESPACIO.md
+IDEAS_FUTURAS.md
+MODPACK_INVENTARIO.md
+docs/
