@@ -49,7 +49,12 @@ el espacio, dormir (minutos y espera) y fuerza del motor de crucero.
 - Hecho por superian.
 - Lleva dentro **Gravity Changer / Gravity Control** de Tfarcenim (licencia MIT).
 - Relieve de la Luna y de Marte: datos de la NASA (LOLA, MOLA). Texturas de los astros: NASA.
+- Algunas texturas de máquinas parten de la carcasa de latón de Create (licencia MIT).
 - Gracias a los autores de Create, Sable, Create Aeronautics, Create Propulsion y Create Deep Seas.
+
+## Licencia
+
+MIT (ver `LICENSE`). Gravity Control lleva su propia licencia MIT dentro del jar.
 
 ## Para desarrollar
 

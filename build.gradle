@@ -204,3 +204,8 @@ idea {
         downloadJavadoc = true
     }
 }
+
+// La licencia del mod (MIT) va también dentro del jar.
+tasks.named('jar', Jar).configure {
+    from('LICENSE') { rename { 'LICENSE_create_universal' } }
+}
